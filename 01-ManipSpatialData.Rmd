@@ -1,0 +1,30 @@
+---
+title: "01-ManipSpatialData"
+author: "Dimitrios Markou"
+date: "2024-07-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Intro to Spatial Data
+
+Spatial data is any type of vector or raster data that represents a feature or phenomena across geographic space.
+
+| Vector data is used to represent features with points, lines and polygons.
+
+Examples may include individual bird observations, rivers, or conservation area boundaries.
+
+| Raster data is used to represent spatially continuous data with a grid, where each cell has one value.
+
+Examples may include types of environmental data like elevation or temperature.
+
+The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,*, and *.prj* extensions.
+
+Raster data files are typically stored with a TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) will be explored in the next chapter.
+
+INTRO on the importance of hotspots/priority conservation areas. DESCRIPTION of KBA's and Priority Places. This chapter will explore how to read in polygon shapefiles and nature counts data and then clip and visualize this data...
+
+# Reading
