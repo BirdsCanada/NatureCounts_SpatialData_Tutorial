@@ -9,21 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-library(sf)
-library(terra)
-library(ggplot2)
-library(ggspatial)
-library(leaflet)
-library(leaflet.extras)
-library(leaflet.providers)
-```
+# Chapter 1 Manipulating Spatial Data (Part 1)
 
-INTRO on the importance of hotspots/priority conservation areas. DESCRIPTION of KBA's and Priority Places. This chapter will explore how to read in polygon shapefiles and nature counts data and then clip and visualize this data ...
+Conservation impact can be optimized when focusing our efforts on specific areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk. [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) are examples of such areas that meet a specific set of criteria and possess significant conservation potential.
 
-The spatial data used in this tutorial was downloaded from the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and the ECCC's [Priority Places for Species at Risk (Terrestrial)](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
+Integrating NatureCounts data with spatial data layers like KBA's, Priority Places, and environmental data, can help prioritize future conservation strategies at various scales. The data used in this tutorial was downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
-# Intro to Spatial Data
+# 2.1 Spatial Data
 
 Spatial data is any type of vector or raster data that represents a feature or phenomena across geographic space.
 
@@ -33,13 +25,76 @@ Spatial data is any type of vector or raster data that represents a feature or p
 
 The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,*, and *.prj* extensions.
 
-Raster data files are typically stored with a TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. We provide a tutorial on [Raster data manipulation](#02-ManipSpatialDataPt2) in the next chapter.
+Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) is covered in the next chapter.
 
-# Organizing spatial data
+This tutorial will require the following packages:
 
-Creating individual folders is recommended
+```{r}
+library(naturecounts)
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+```
 
-We also might want to rename our downloaded files to something more meaningful or distinguishable on our disK. To do so, we provide this helpful function:
+# 2.2 Reading in spatial data
+
+The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best for working with spatial data (point, line, polygon, multipolygon etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
+
+*Example 1*: You want to retrieve NatureCounts data from the Breeding Bird Surveys (50 stops, Canada) that spans the Canadian Lake Superior KBA, exclusively. You navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, and download the data, and assign your files a meaningful name (see section 2.3). While you are able to download the spatial data for Lake Superior directly from the Map Viewer, we can also filter larger datasets in R.
+
+First, we'll read in our spatial data using the `sf` package:
+
+```{r}
+ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/ProvOntario_KBA/ontario_kba.shp")
+```
+
+When we examine the spatial dataframe, it appears that there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
+
+```{r}
+ontario_kba <- ontario_kba %>% st_make_valid()
+  
+ontario_kba <- ontario_kba %>% distinct()
+```
+
+Our spatial data is also accompanied by a CSV file that contains important attributes (landcover, species, etc) concerning our KBAs. Let's read in the accompanying CSV file for our KBA layer:
+
+```{r}
+kba_attributes <- read.csv("Data/KBA/ProvOntario_KBA/ontario_kba.csv")
+```
+
+Great! We can now join these dataframes using the handy `tidyverse` package. However, we'll want to select for specific columns first to avoid redundancies before performing our join:
+
+```{r}
+kba_attributes <- kba_attributes %>%
+  select("SiteCode",
+         "DateAssessed",
+         "PercentProtected",
+         "BoundaryGeneralized",
+         "Level",
+         "CriteriaMet",
+         "ConservationActions",
+         "Landcover",
+         "Province",
+         "Species")
+```
+
+Both dataframes now contain unique columns, after our selection. We apply the `full_join()` function:
+
+```{r}
+ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
+```
+
+# 2.3 Organizing spatial data downloads
+
+Spatial data can be complex and storage-intensive and become difficult to access
+
+We also might want to rename our downloaded files to something more meaningful or distinguishable on our disk. To do so, we provide this helpful function:
 
 ```{r}
 # Define the original base name and the new base name
@@ -70,55 +125,74 @@ rename_shapefile <- function(original_base_name, new_base_name, shapefile_direct
 rename_shapefile(original_base_name, new_base_name, shapefile_directory, shapefile_extensions)
 ```
 
-# Reading in spatial data
+# 2.4 Visualizing spatial data in R
 
-The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best for working with spatial data (point, line, polygon, multipolygon etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
-
-You're interested in mapping all the KBA's currently recognized in Ontario. You navigate the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter for all KBA's in the province. Now, let's read in our spatial data using the `sf` package:
-
-```{r}
-ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/ProvOntario_KBA/ontario_kba.shp")
-```
-
-
-How can we avoid duplicates?
-
-
-
-This shapefile is also accompanied by a CSV file with important attributes concerning our KBAs.
-
-Let's read in the accompanying CSV file for our KBA layer:
-
-```{r}
-kba_attributes <- read.csv("Data/KBA/ProvOntario_KBA/ontario_kba.csv")
-```
-
-
-We can also visualize the KBA layer with an interactive map, using the leaflet package:
+We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package:
 
 ```{r}
 leaflet(width = "100%") %>%
   addTiles() %>%
   addPolygons(data=ontario_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "red") %>% addFullscreenControl() %>%
-  addLegend(colors = c("red"),labels = c("Canadian Lake Superior"),position = "bottomright")
+  addLegend(colors = c("red"),labels = c("Ontario KBAs"),position = "bottomright")
 ```
+
+We can also filter **ontario_kba** to retrieve only the Canadian Lake Superior KBA:
+
+```{r}
+lake_superior_kba <- ontario_kba %>% 
+  filter(Name_EN == "Canadian Lake Superior") # filters based on a variable condition
+```
+
+Then we can visualize it just the same:
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data=lake_superior_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>% addFullscreenControl() %>%
+  addLegend(colors = c("violet"),labels = c("Lake Superior KBA"),position = "bottomright")
+```
+
+# 2.4 Reading in NatureCounts data
+
+The [NatureCounts Introductory R Tutorial](#link) is a great start to use the `naturecounts` R package and covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
+
+Let's search NatureCounts for the Breeding Bird Survey dataset (Code BBS50-CAN):
+
+```{r}
+collections <- meta_collections()
+View(meta_collections())
+```
+
+Then let's filter and download data specifically for Ontario:
+
+```{r}
+ontario_bbird_survey <- nc_data_dl(collections = "BBS50-CAN", region = list(statprov = "ON"), username = "dimimarkou", info = "spatial_data_tutorial")
+```
+
+We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordiante reference system (CRS) to match our **lake_superior_kba** projection.
 
 The CRS of our KBA sf object can be returned with st_crs()
 
 ```{r}
-sf::st_crs(kba_layer)
+sf::st_crs(lake_superior_kba)
 ```
 
-We can also transform the CRS of our sf object
+Our KBA sf object is projected using the WGS 84 (EPSG = 4326) CRS. This is how we can convert our **ontario_bbird_survey** to an sf object using the same CRS:
 
 ```{r}
-kba_layer <- sf::st_transform(kba_layer, crs = )
+ontario_bbird_survey <- st_as_sf(ontario_bbird_survey,
+                        coords = c("longitude", "latitude"), crs = 4326)
 ```
 
-To drop the geometry of a sf object
+Now let's ensure that the conversion was successful:
 
 ```{r}
-kba_no_geom <- sf::st_drop_geometry(kba_layer)
+print(ontario_bbird_survey) # view the sf object
 ```
 
-# Applying geoprocessing functions
+There are a few other useful functions that may be applied to sf objects:
+
+| sf::st_transform() - transforms the CRS of a specified CRS object
+| sf:: st_drop_geometry() - removes the geometry column of a sf object
+
+# 2.5 Applying geoprocessing functions
