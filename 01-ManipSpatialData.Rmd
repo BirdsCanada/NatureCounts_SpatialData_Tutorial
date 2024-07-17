@@ -37,6 +37,7 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(ggspatial)
+library(mapview)
 library(leaflet)
 library(leaflet.extras)
 library(leaflet.providers)
@@ -54,7 +55,7 @@ First, we'll read in our spatial data using the `sf` package:
 ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/ProvOntario_KBA/ontario_kba.shp")
 ```
 
-When we examine the spatial dataframe, it appears that there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
+`sf` objects are stored in R as a spatial dataframe which contains the attribute table of the vector along with the geometry type. When we examine the dataframe, it looks like there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
 
 ```{r}
 ontario_kba <- ontario_kba %>% st_make_valid()
@@ -62,7 +63,7 @@ ontario_kba <- ontario_kba %>% st_make_valid()
 ontario_kba <- ontario_kba %>% distinct()
 ```
 
-Our spatial data is also accompanied by a CSV file that contains important attributes (landcover, species, etc) concerning our KBAs. Let's read in the accompanying CSV file for our KBA layer:
+Our spatial data is also accompanied by a CSV file that contains additional useful attributes (landcover, species, etc) concerning our KBAs. Let's read in the accompanying CSV file for our KBA layer:
 
 ```{r}
 kba_attributes <- read.csv("Data/KBA/ProvOntario_KBA/ontario_kba.csv")
@@ -136,6 +137,12 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("red"),labels = c("Ontario KBAs"),position = "bottomright")
 ```
 
+Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes like so:
+
+```{r}
+mapview::mapview(ontario_kba, zcol = "PercentProtected")
+```
+
 We can also filter **ontario_kba** to retrieve only the Canadian Lake Superior KBA:
 
 ```{r}
@@ -143,7 +150,14 @@ lake_superior_kba <- ontario_kba %>%
   filter(Name_EN == "Canadian Lake Superior") # filters based on a variable condition
 ```
 
-Then we can visualize it just the same:
+We can create a basic plot using the function plot() combined with st_geometry()
+
+```{r}
+plot(st_geometry(lake_superior_kba), axes = TRUE,
+                                     col = "NA", border = "red")
+```
+
+Or visualize the KBA with an interactive map like we did before:
 
 ```{r}
 leaflet(width = "100%") %>%
@@ -151,6 +165,7 @@ leaflet(width = "100%") %>%
   addPolygons(data=lake_superior_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>% addFullscreenControl() %>%
   addLegend(colors = c("violet"),labels = c("Lake Superior KBA"),position = "bottomright")
 ```
+
 
 # 2.4 Reading in NatureCounts data
 
@@ -169,15 +184,15 @@ Then let's filter and download data specifically for Ontario:
 ontario_bbird_survey <- nc_data_dl(collections = "BBS50-CAN", region = list(statprov = "ON"), username = "dimimarkou", info = "spatial_data_tutorial")
 ```
 
-We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordiante reference system (CRS) to match our **lake_superior_kba** projection.
+We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordinate reference system (CRS) to match our **lake_superior_kba** projection.
 
-The CRS of our KBA sf object can be returned with st_crs()
+The CRS of our KBA sf object can be returned with `st_crs()`:
 
 ```{r}
 sf::st_crs(lake_superior_kba)
 ```
 
-Our KBA sf object is projected using the WGS 84 (EPSG = 4326) CRS. This is how we can convert our **ontario_bbird_survey** to an sf object using the same CRS:
+Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **ontario_bbird_survey** to an sf object using the same CRS:
 
 ```{r}
 ontario_bbird_survey <- st_as_sf(ontario_bbird_survey,
@@ -192,7 +207,33 @@ print(ontario_bbird_survey) # view the sf object
 
 There are a few other useful functions that may be applied to sf objects:
 
-| sf::st_transform() - transforms the CRS of a specified CRS object
-| sf:: st_drop_geometry() - removes the geometry column of a sf object
+| `sf::st_transform()` - transforms the CRS of a specified CRS object
+| `sf:: st_drop_geometry()` - removes the geometry column of a sf object
+
+For example, `st_transform()` can be applied like so to ensure that the CRS of our spatial objects match:
+```{r}
+ontario_bbird_survey <- st_transform(ontario_bbird_survey, crs = st_crs(lake_superior_kba))
+```
+
 
 # 2.5 Applying geoprocessing functions
+
+```{r}
+ls_bbird_survey <- sf::st_intersection(lake_superior_kba, ontario_bbird_survey)
+```
+```{r}
+ls_bbird_survey <- ontario_bbird_survey[st_within(ontario_bbird_survey, lake_superior_kba), ]
+```
+
+
+
+After geoprocessing our data, we can write out any sf objects to Shapefiles on a disk.
+
+```{r}
+st_write(ls_bbird_survey,
+         "data/ls_bbird_survey.shp",
+         driver = "ESRI Shapefile",
+         delete_layer = TRUE)
+```
+
+The argument delete_layer = TRUE is used to overwrite a file
