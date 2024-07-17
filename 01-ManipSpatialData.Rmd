@@ -23,11 +23,11 @@ Spatial data is any type of vector or raster data that represents a feature or p
 
 | Raster data is used to represent spatially continuous data with a grid, where each cell has one value. This may include types of environmental data like elevation or temperature.
 
-The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,*, and *.prj* extensions.
+The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,* and *.prj* extensions.
 
-Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) is covered in the next chapter.
+Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) will be in covered in the next chapter.
 
-This tutorial will require the following packages:
+This tutorial requires the following packages:
 
 ```{r}
 library(naturecounts)
@@ -47,9 +47,9 @@ library(leaflet.providers)
 
 The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best for working with spatial data (point, line, polygon, multipolygon etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
-*Example 1*: You want to retrieve NatureCounts data from the Breeding Bird Surveys (50 stops, Canada) that spans the Canadian Lake Superior KBA, exclusively. You navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, and download the data, and assign your files a meaningful name (see section 2.3). While you are able to download the spatial data for Lake Superior directly from the Map Viewer, we can also filter larger datasets in R.
+*Example 1*: You want to assess Wood Duck distribution across the KBA's in Ontario using eBird data. You'll want to navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, download the data, and assign your files a meaningful name (see section 2.6).
 
-First, we'll read in our spatial data using the `sf` package:
+First, we'll read in our KBA polygons using the `sf` package:
 
 ```{r}
 ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/ProvOntario_KBA/ontario_kba.shp")
@@ -58,9 +58,7 @@ ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData
 `sf` objects are stored in R as a spatial dataframe which contains the attribute table of the vector along with the geometry type. When we examine the dataframe, it looks like there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
 
 ```{r}
-ontario_kba <- ontario_kba %>% st_make_valid()
-  
-ontario_kba <- ontario_kba %>% distinct()
+ontario_kba <- ontario_kba %>% st_make_valid() %>% distinct()
 ```
 
 Our spatial data is also accompanied by a CSV file that contains additional useful attributes (landcover, species, etc) concerning our KBAs. Let's read in the accompanying CSV file for our KBA layer:
@@ -85,13 +83,146 @@ kba_attributes <- kba_attributes %>%
          "Species")
 ```
 
-Both dataframes now contain unique columns, after our selection. We apply the `full_join()` function:
+Both dataframes now contain unique columns, after our selection. We apply the `full_join()` function to hold all attributes within one dataframe:
 
 ```{r}
 ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
 ```
 
-# 2.3 Organizing spatial data downloads
+# 2.3 Visualizing spatial data in R
+
+We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package:
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data=ontario_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "red") %>% addFullscreenControl() %>%
+  addLegend(colors = c("red"),labels = c("Ontario KBAs"),position = "bottomright")
+```
+
+Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes like so:
+
+```{r}
+mapview::mapview(ontario_kba, zcol = "PercentProtected")
+```
+
+In this example, were interested in all the KBA polygons of Ontario. However, if you were working with a larger dataset, it is possible to filter your dataframe to retrieve only specific polygons that meet certain criteria relevant to your research. For example, say we only wanted KBA's greater than 100km\^2 in size:
+
+```{r}
+kba_name <- ontario_kba %>% 
+  dplyr::filter(Area > 100) # filters based on a variable condition
+```
+
+# 2.4 Reading in NatureCounts data
+
+The [NatureCounts Introductory R Tutorial](#link) is a great start to use the `naturecounts` R package and covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
+
+Let's search NatureCounts for the EBIRD-CA-ON dataset to assess Wood Duck distribution across provincial KBA's:
+
+```{r}
+collections <- meta_collections()
+View(meta_collections())
+```
+
+```{r}
+search_species("wood duck")
+```
+
+Then let's filter and download data specifically for the Wood Ducks in Ontario:
+
+```{r}
+ebird_on <- nc_data_dl(collections = "EBIRD-CA-ON", species = 360, username = "testuser", info = "spatial_data_tutorial")
+```
+
+We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordinate reference system (CRS).
+
+The CRS of our KBA sf object can be returned with `st_crs()`:
+
+```{r}
+sf::st_crs(ontario_kba)
+```
+
+Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **ebird_on** dataframe to an sf object using the same CRS:
+
+```{r}
+ebird_on_sf <- sf::st_as_sf(ebird_on,
+                        coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Now let's ensure that the conversion was successful. You'll notice a new geometry column where each observation is a point:
+
+```{r}
+str(ebird_on_sf) # view the sf object
+```
+
+There are a few other useful functions that may be applied to sf objects:
+
+| `sf::st_transform()` - transforms the CRS of a specified CRS object
+| `sf:: st_drop_geometry()` - removes the geometry column of a sf object
+
+For example, `st_transform()` can be applied like so to project our spatial object using a different CRS like NAD83 / UTM zone 16N (EPSG = 26916):
+
+```{r}
+ontario_kba <- sf::st_transform(ontario_kba, crs = 26916) 
+```
+
+and to ensure that the CRS of our spatial objects match:
+
+```{r}
+ebird_on_sf <- st_transform(ebird_on_sf, crs = st_crs(ontario_kba))
+```
+
+# 2.5 Applying geoprocessing functions
+
+Geoprocessing functions allow us to manipulate spatial objects based on interactions between their geometries. There are several useful functions integrated into the sf package including:
+
+| `st_intersection` -
+| `st_within` -
+
+To identify Wood Duck observations from eBird taken within Ontario KBA's, we can apply the `st_intersection()` function:
+
+```{r}
+wood_ducks_kba <- sf::st_intersection(ontario_kba, ebird_on_sf)
+```
+
+```{r}
+# If need be, transform your spatial data back to EPSG:4326 to visualize with leaflet
+ontario_kba <- st_transform(ontario_kba, crs = 4326)
+wood_ducks_kba <- st_transform(wood_ducks_kba, crs = 4326)
+```
+
+Apply leaflet once more to visualize our polygon data and point data, this time using the `addCircleMarkers` argument:
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data = ontario_kba, color = "black", weight = 2, smoothFactor = 1, 
+  opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>%
+  addCircleMarkers(data = wood_ducks_kba, radius = 5, color = "green", 
+                   stroke = FALSE, fillOpacity = 0.8) %>%
+  addFullscreenControl() %>%
+  addLegend(colors = c("violet", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
+```
+
+After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk if needed:
+
+```{r}
+st_write(wood_ducks_kba,
+         "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/wood_ducks_kba.shp",
+         driver = "ESRI Shapefile",
+         delete_layer = TRUE)
+```
+
+```{r}
+st_write(ontario_kba,
+         "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/ontario_kba.shp",
+         driver = "ESRI Shapefile",
+         delete_layer = TRUE)
+```
+
+The argument delete_layer = TRUE is used to overwrite a file
+
+# EXTRA Organizing spatial data downloads
 
 Spatial data can be complex and storage-intensive and become difficult to access
 
@@ -125,115 +256,3 @@ rename_shapefile <- function(original_base_name, new_base_name, shapefile_direct
 # Rename the shapefile and its accompanying files
 rename_shapefile(original_base_name, new_base_name, shapefile_directory, shapefile_extensions)
 ```
-
-# 2.4 Visualizing spatial data in R
-
-We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package:
-
-```{r}
-leaflet(width = "100%") %>%
-  addTiles() %>%
-  addPolygons(data=ontario_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "red") %>% addFullscreenControl() %>%
-  addLegend(colors = c("red"),labels = c("Ontario KBAs"),position = "bottomright")
-```
-
-Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes like so:
-
-```{r}
-mapview::mapview(ontario_kba, zcol = "PercentProtected")
-```
-
-We can also filter **ontario_kba** to retrieve only the Canadian Lake Superior KBA:
-
-```{r}
-lake_superior_kba <- ontario_kba %>% 
-  filter(Name_EN == "Canadian Lake Superior") # filters based on a variable condition
-```
-
-We can create a basic plot using the function plot() combined with st_geometry()
-
-```{r}
-plot(st_geometry(lake_superior_kba), axes = TRUE,
-                                     col = "NA", border = "red")
-```
-
-Or visualize the KBA with an interactive map like we did before:
-
-```{r}
-leaflet(width = "100%") %>%
-  addTiles() %>%
-  addPolygons(data=lake_superior_kba,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>% addFullscreenControl() %>%
-  addLegend(colors = c("violet"),labels = c("Lake Superior KBA"),position = "bottomright")
-```
-
-
-# 2.4 Reading in NatureCounts data
-
-The [NatureCounts Introductory R Tutorial](#link) is a great start to use the `naturecounts` R package and covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
-
-Let's search NatureCounts for the Breeding Bird Survey dataset (Code BBS50-CAN):
-
-```{r}
-collections <- meta_collections()
-View(meta_collections())
-```
-
-Then let's filter and download data specifically for Ontario:
-
-```{r}
-ontario_bbird_survey <- nc_data_dl(collections = "BBS50-CAN", region = list(statprov = "ON"), username = "dimimarkou", info = "spatial_data_tutorial")
-```
-
-We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordinate reference system (CRS) to match our **lake_superior_kba** projection.
-
-The CRS of our KBA sf object can be returned with `st_crs()`:
-
-```{r}
-sf::st_crs(lake_superior_kba)
-```
-
-Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **ontario_bbird_survey** to an sf object using the same CRS:
-
-```{r}
-ontario_bbird_survey <- st_as_sf(ontario_bbird_survey,
-                        coords = c("longitude", "latitude"), crs = 4326)
-```
-
-Now let's ensure that the conversion was successful:
-
-```{r}
-print(ontario_bbird_survey) # view the sf object
-```
-
-There are a few other useful functions that may be applied to sf objects:
-
-| `sf::st_transform()` - transforms the CRS of a specified CRS object
-| `sf:: st_drop_geometry()` - removes the geometry column of a sf object
-
-For example, `st_transform()` can be applied like so to ensure that the CRS of our spatial objects match:
-```{r}
-ontario_bbird_survey <- st_transform(ontario_bbird_survey, crs = st_crs(lake_superior_kba))
-```
-
-
-# 2.5 Applying geoprocessing functions
-
-```{r}
-ls_bbird_survey <- sf::st_intersection(lake_superior_kba, ontario_bbird_survey)
-```
-```{r}
-ls_bbird_survey <- ontario_bbird_survey[st_within(ontario_bbird_survey, lake_superior_kba), ]
-```
-
-
-
-After geoprocessing our data, we can write out any sf objects to Shapefiles on a disk.
-
-```{r}
-st_write(ls_bbird_survey,
-         "data/ls_bbird_survey.shp",
-         driver = "ESRI Shapefile",
-         delete_layer = TRUE)
-```
-
-The argument delete_layer = TRUE is used to overwrite a file
