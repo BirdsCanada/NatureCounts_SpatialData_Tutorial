@@ -222,7 +222,7 @@ st_write(ontario_kba,
 
 The argument delete_layer = TRUE is used to overwrite a file
 
-# EXTRA Organizing spatial data downloads
+# 2.6 Organizing spatial data downloads
 
 Spatial data can be complex and storage-intensive and become difficult to access
 
