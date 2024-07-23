@@ -1,0 +1,48 @@
+---
+title: "02-ManipSpatialData_Part2"
+author: "Dimitrios Markou"
+date: "2024-07-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# 2.? Organizing spatial data downloads
+
+Spatial data can be complex and storage-intensive and become difficult to access
+
+We also might want to rename our downloaded files to something more meaningful or distinguishable on our disk. To do so, we provide this helpful function:
+
+```{r}
+# Define the original base name and the new base name
+original_base_name <- "old_shapefile_name"
+new_base_name <- "new_shapefile_name"
+
+# Define the directory containing the shapefile
+shapefile_directory <- "path/to/shapefile/directory"
+
+# List of shapefile extensions
+shapefile_extensions <- c(".shp", ".shx", ".dbf", ".prj", ".cpg")
+
+# Function to rename files
+rename_shapefile <- function(original_base_name, new_base_name, shapefile_directory, extensions) {
+  for (ext in extensions) {
+    original_file <- file.path(shapefile_directory, paste0(original_base_name, ext))
+    new_file <- file.path(shapefile_directory, paste0(new_base_name, ext))
+    
+    if (file.exists(original_file)) {
+      file.rename(original_file, new_file)
+    } else {
+      message(paste("File not found:", original_file))
+    }
+  }
+}
+
+# Rename the shapefile and its accompanying files
+rename_shapefile(original_base_name, new_base_name, shapefile_directory, shapefile_extensions)
+```
+
+

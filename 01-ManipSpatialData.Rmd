@@ -47,7 +47,7 @@ library(leaflet.providers)
 
 The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
-*Example 1*: You want to assess Wood Duck distribution across the KBA's in Ontario using eBird data. You'll want to navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, download the data, and assign your files a meaningful name (see section 2.6).
+*Example 1*: You want to assess Wood Duck distribution across Ontario KBA's using Ontario Breeding Bird Atlas data. You'll want to navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, download the data, and assign your files a meaningful name.
 
 First, we'll read in our KBA polygons using the `sf` package:
 
@@ -117,7 +117,7 @@ kba_name <- ontario_kba %>%
 
 The [NatureCounts Introductory R Tutorial](#link) is a great start to use the `naturecounts` R package and covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
-Let's search NatureCounts for the EBIRD-CA-ON dataset to assess Wood Duck distribution across provincial KBA's:
+Let's search NatureCounts for the ONATLAS3PC dataset to assess Wood Duck distribution across Ontario KBA's:
 
 ```{r}
 collections <- meta_collections()
@@ -131,10 +131,10 @@ search_species("wood duck")
 Then let's filter and download data specifically for the Wood Ducks in Ontario:
 
 ```{r}
-atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "dimimarkou", info = "spatial_data_tutorial")
+atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "testuser", info = "spatial_data_tutorial")
 ```
 
-We can then convert our NatureCounts data into a spatial object. To do so, we can deploy the `st_as_sf` function and specify the coordinate reference system (CRS).
+We can then convert our NatureCounts data into a spatial object. To do so, we deploy the `st_as_sf` function and specify the coordinate reference system (CRS).
 
 The CRS of our KBA sf object can be returned with `st_crs()`:
 
@@ -142,7 +142,7 @@ The CRS of our KBA sf object can be returned with `st_crs()`:
 sf::st_crs(ontario_kba)
 ```
 
-Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **ebird_on** dataframe to an sf object using the same CRS:
+Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **atlas_on* dataframe to an sf object using the same CRS:
 
 ```{r}
 atlas_on_sf <- sf::st_as_sf(atlas_on,
@@ -172,14 +172,14 @@ and to ensure that the CRS of our spatial objects match:
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 ```
 
-# 2.5 Applying geoprocessing functions
+# 2.5 Geoprocessing functions
 
 Geoprocessing functions allow us to manipulate spatial objects based on interactions between their geometries. There are several useful functions integrated into the sf package including:
 
 | `st_intersection` -
 | `st_within` -
 
-To identify Wood Duck observations from eBird taken within Ontario KBA's, we can apply the `st_intersection()` function:
+To identify Wood Ducks observed in Ontario KBA's, we can apply the `st_intersection()` function:
 
 ```{r}
 wood_ducks_kba <- sf::st_intersection(ontario_kba, atlas_on_sf)
@@ -204,7 +204,7 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("violet", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
 ```
 
-After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk if needed:
+After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk:
 
 ```{r}
 st_write(wood_ducks_kba,
@@ -213,14 +213,7 @@ st_write(wood_ducks_kba,
          delete_layer = TRUE)
 ```
 
-```{r}
-st_write(ontario_kba,
-         "Data/ontario_kba.shp",
-         driver = "ESRI Shapefile",
-         delete_layer = TRUE)
-```
-
-The argument delete_layer = TRUE is used to overwrite a file
+where the argument delete_layer = TRUE is used to overwrite a file if needed.
 
 
 # 2.6 Priority Places
@@ -244,34 +237,24 @@ To read in our spatial data object, we apply the `st_read` function and specify 
 ```{r}
 priori_place_polygons <- st_read(dsn = gdb_path, layer = "PriorityPlacesBoundary")
 ```
+Were interested in Wood Duck distribution across the Long Point Walsingham Forest Priority Place. We'll use `dplyr` to filter based on a variable condition:
 
 ```{r}
 long_point_polygon <- priori_place_polygons %>%
-  dplyr::filter(Name == "Long Point Walsingham Forest") # filters based on a variable condition
+  dplyr::filter(Name == "Long Point Walsingham Forest") # filters based on multipolygon name 
 ```
 
-```{r}
-long_point_polygon<- st_transform(long_point_polygon, crs = 4326)
-```
+Then reproject the Wood Duck data to match our Priority Place using `st_transform`: 
 
 ```{r}
-leaflet(width = "100%") %>%
-  addTiles() %>%
-  addPolygons(data=long_point_polygon,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "darkgreen") %>% addFullscreenControl() %>%
-  addLegend(colors = c("darkgreen"),labels = c("Long Point Walsingham Forest"),position = "bottomright")
+atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(long_point_polygon))
 ```
 
+Next, we'll apply our geoprocessing function to find the Wood Duck observations that intersect with our chosen Priority Place:
 ```{r}
-long_point_polygon <- sf::st_transform(long_point_polygon, crs = 26916) 
+wood_ducks_longpoint <- sf::st_intersection(long_point_polygon, atlas_on_sf)
 ```
-
-```{r}
-ebird_on_sf <- st_transform(ebird_on_sf, crs = st_crs(long_point_polygon))
-```
-
-```{r}
-wood_ducks_longpoint <- sf::st_intersection(long_point_polygon, ebird_on_sf)
-```
+Finally, we'll transform our spatial objects one more time before visualizing them with `leaflet`: 
 ```{r}
 long_point_polygon <- st_transform(long_point_polygon, crs = 4326)
 ```
@@ -288,41 +271,9 @@ leaflet(width = "100%") %>%
   addCircleMarkers(data = wood_ducks_longpoint, radius = 5, color = "green", 
                    stroke = FALSE, fillOpacity = 0.8) %>%
   addFullscreenControl() %>%
-  addLegend(colors = c("red", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
+  addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
 
 
-# 2.? Organizing spatial data downloads
 
-Spatial data can be complex and storage-intensive and become difficult to access
 
-We also might want to rename our downloaded files to something more meaningful or distinguishable on our disk. To do so, we provide this helpful function:
-
-```{r}
-# Define the original base name and the new base name
-original_base_name <- "old_shapefile_name"
-new_base_name <- "new_shapefile_name"
-
-# Define the directory containing the shapefile
-shapefile_directory <- "path/to/shapefile/directory"
-
-# List of shapefile extensions
-shapefile_extensions <- c(".shp", ".shx", ".dbf", ".prj", ".cpg")
-
-# Function to rename files
-rename_shapefile <- function(original_base_name, new_base_name, shapefile_directory, extensions) {
-  for (ext in extensions) {
-    original_file <- file.path(shapefile_directory, paste0(original_base_name, ext))
-    new_file <- file.path(shapefile_directory, paste0(new_base_name, ext))
-    
-    if (file.exists(original_file)) {
-      file.rename(original_file, new_file)
-    } else {
-      message(paste("File not found:", original_file))
-    }
-  }
-}
-
-# Rename the shapefile and its accompanying files
-rename_shapefile(original_base_name, new_base_name, shapefile_directory, shapefile_extensions)
-```
