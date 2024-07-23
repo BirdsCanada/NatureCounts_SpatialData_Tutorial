@@ -222,7 +222,75 @@ st_write(ontario_kba,
 
 The argument delete_layer = TRUE is used to overwrite a file
 
-# 2.6 Organizing spatial data downloads
+
+# 2.6 Priority Places
+
+*Example 2*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place.
+
+First, lets create a path to our downloaded Priority Place file:
+
+```{r}
+gdb_path <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/PriorityPlaces.gdb"
+```
+
+Then, let's inspect the spatial data: 
+
+```{r}
+gdb_layers <- st_layers(gdb_path)
+print(gdb_layers)
+```
+To read in our spatial data object, we apply the `st_read` function and specify our desired data layer like so:
+
+```{r}
+priori_place_polygons <- st_read(dsn = gdb_path, layer = "PriorityPlacesBoundary")
+```
+```{r}
+long_point_polygon <- priori_place_polygons %>%
+  dplyr::filter(Name == "Long Point Walsingham Forest") # filters based on a variable condition
+```
+
+```{r}
+long_point_polygon<- st_transform(long_point_polygon, crs = 4326)
+```
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data=long_point_polygon,color = "black", weight = 2, smoothFactor = 1,opacity = 1.0, fillOpacity = 0.5, fillColor = "darkgreen") %>% addFullscreenControl() %>%
+  addLegend(colors = c("darkgreen"),labels = c("Long Point Walsingham Forest"),position = "bottomright")
+```
+```{r}
+long_point_polygon <- sf::st_transform(long_point_polygon, crs = 26916) 
+```
+
+```{r}
+ebird_on_sf <- st_transform(ebird_on_sf, crs = st_crs(long_point_polygon))
+```
+
+```{r}
+wood_ducks_longpoint <- sf::st_intersection(long_point_polygon, ebird_on_sf)
+```
+```{r}
+long_point_polygon <- st_transform(long_point_polygon, crs = 4326)
+```
+ 
+```{r}
+wood_ducks_longpoint <- st_transform(wood_ducks_longpoint, crs = 4326)
+```
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data = long_point_polygon, color = "black", weight = 2, smoothFactor = 1, 
+  opacity = 1.0, fillOpacity = 0.5, fillColor = "red") %>%
+  addCircleMarkers(data = wood_ducks_longpoint, radius = 5, color = "green", 
+                   stroke = FALSE, fillOpacity = 0.8) %>%
+  addFullscreenControl() %>%
+  addLegend(colors = c("red", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
+```
+
+
+# 2.? Organizing spatial data downloads
 
 Spatial data can be complex and storage-intensive and become difficult to access
 
