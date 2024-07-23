@@ -45,14 +45,14 @@ library(leaflet.providers)
 
 # 2.2 Reading in spatial data
 
-The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best for working with spatial data (point, line, polygon, multipolygon etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
+The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
 *Example 1*: You want to assess Wood Duck distribution across the KBA's in Ontario using eBird data. You'll want to navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, download the data, and assign your files a meaningful name (see section 2.6).
 
 First, we'll read in our KBA polygons using the `sf` package:
 
 ```{r}
-ontario_kba <- sf::st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/ProvOntario_KBA/ontario_kba.shp")
+ontario_kba <- sf::st_read("Data/KBA/ProvOntario_KBA/ontario_kba.shp")
 ```
 
 `sf` objects are stored in R as a spatial dataframe which contains the attribute table of the vector along with the geometry type. When we examine the dataframe, it looks like there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
@@ -208,14 +208,14 @@ After geoprocessing our data in R, we can write out any sf objects to Shapefiles
 
 ```{r}
 st_write(wood_ducks_kba,
-         "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/wood_ducks_kba.shp",
+         "Data/wood_ducks_kba.shp",
          driver = "ESRI Shapefile",
          delete_layer = TRUE)
 ```
 
 ```{r}
 st_write(ontario_kba,
-         "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/ontario_kba.shp",
+         "Data/ontario_kba.shp",
          driver = "ESRI Shapefile",
          delete_layer = TRUE)
 ```
