@@ -9,40 +9,297 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Chapter 2 Manipulating Spatial Data (Part 2)
+
+*
+*
+*
+
+INTRODUCTION
+
+*
+*
+*
+
+The data used in this tutorial was retrieved from NatureCounts, the Canadian Council of Ecological Areas, and the ECCC through the weathercan() R package. 
+
+This tutorial requires the following packages:
+
 ```{r}
-# 2.? Organizing spatial data downloads
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(mapview)
+library(weathercan)
+library(naturecounts)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+library(ggspatial)
+library(RColorBrewer)
+library(raster)
+library(sp)
+library(rgdal)
+library(gstat)
+library(terra)
+```
 
-Spatial data can be complex and storage-intensive and become difficult to access
+*Example 3*: You would like to map Cedar Waxwing distribution and mean temperature over the Atlantic Maritime ecoregion for June and July of each survey year (2006-2010). 
 
-We also might want to rename our downloaded files to something more meaningful or distinguishable on our disk. To do so, we provide this helpful function:
+# Preparing weathercan data
+
+*
+*
+blurb on weathercan
+*
+*
 
 ```{r}
-# Define the original base name and the new base name
-original_base_name <- "old_shapefile_name"
-new_base_name <- "new_shapefile_name"
+stations <- weathercan::stations()
+head(stations)
+```
 
-# Define the directory containing the shapefile
-shapefile_directory <- "path/to/shapefile/directory"
+```{r}
+mar_stations <- stations %>%
+  filter(prov %in% c("NB", "NS", "PI"),
+         interval == "day",
+         end >= 2023)
+```
 
-# List of shapefile extensions
-shapefile_extensions <- c(".shp", ".shx", ".dbf", ".prj", ".cpg")
+```{r}
+mar_weather <- weather_dl(station_ids = mar_stations$station_id,
+                         start = "2006-01-01",
+                         end = "2011-01-01",
+                         interval = "day", quiet = TRUE)
+```
+First, we need to convert the date column to Date data type:
 
-# Function to rename files
-rename_shapefile <- function(original_base_name, new_base_name, shapefile_directory, extensions) {
-  for (ext in extensions) {
-    original_file <- file.path(shapefile_directory, paste0(original_base_name, ext))
-    new_file <- file.path(shapefile_directory, paste0(new_base_name, ext))
-    
-    if (file.exists(original_file)) {
-      file.rename(original_file, new_file)
-    } else {
-      message(paste("File not found:", original_file))
-    }
-  }
-}
+```{r}
+mar_weather$date <- as.Date(mar_weather$date)
+```
 
-# Rename the shapefile and its accompanying files
-rename_shapefile(original_base_name, new_base_name, shapefile_directory, shapefile_extensions)
+Then, we can filter the data for June and July from 2006 to 2010:
+
+```{r}
+mar_weather_filter <- mar_weather %>%
+  filter(format(date, "%m") %in% c("06", "07"),
+         format(date, "%Y") %in% c("2006", "2007", "2008", "2009", "2010"))
+```
+
+We'll now calculate the mean temperature:
+
+```{r}
+mean_temp <- mar_weather_filter %>%
+  group_by(station_id) %>%
+  summarise(mean_temp = mean(mean_temp, na.rm = TRUE))
+```
+
+Summarize the unique coordinates for each weather station:
+
+```{r}
+station_coords <- mar_weather_filter %>%
+  group_by(station_id) %>%
+  summarize(latitude = first(lat),
+            longitude = first(lon),
+            elevation = first(elev),
+            .groups = "drop")
+```
+
+Then merge mean temperature and coordinates data 
+
+```{r}
+mar_temp_data <- merge(mean_temp, station_coords, by = "station_id")
+```
+
+Convert the merged temperature / coordinate data to a spatial object: 
+
+```{r}
+mar_temp_data_sf <- st_as_sf(mar_temp_data, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Read in the Atlantic Canada DEM that will act as a scaffold for our weather data interpolation: 
+
+```{r}
+atl_canada_dem <- rast("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Atlantic Canada Spatial Data/Atlantic Canada DEM in Various Output Formats/DEM_USGS_16bit_format.tif")
+
+atl_canada_dem
+```
+Retrieve the current projection of the DEM: 
+
+```{r}
+terra::crs(atl_canada_dem)
+```
+```{r}
+plot(atl_canada_dem)
+```
+
+```{r}
+library(leaflet)
+
+# Define a color palette
+pal <- colorNumeric(palette = "Spectral", domain = values(atl_canada_dem), na.color = "transparent")
+
+# Create the leaflet map
+leaflet() %>%
+  addTiles() %>%  # Default basemap in EPSG:3857
+  addRasterImage(atl_canada_dem, colors = pal, opacity = 0.8, project = FALSE) %>%
+  addLegend(pal = pal, values = values(atl_canada_dem), title = "Elevation")
+```
+
+```{r}
+library(leaflet)
+
+# Define a color palette
+pal <- colorNumeric(palette = "Spectral", domain = values(atl_canada_dem), na.color = "transparent")
+
+# Create a leaflet map with the reprojected raster
+leaflet() %>%
+  addTiles() %>%  # Default basemap (EPSG:3857)
+  addRasterImage(atl_canada_dem, colors = pal, opacity = 0.8, project = FALSE) %>%
+  addLegend(pal = pal, values = values(atl_canada_dem), title = "Elevation")
+```
+
+```{r}
+library(terra)
+library(leaflet)
+
+# Load the raster data
+atl_canada_dem <- rast("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Atlantic Canada Spatial Data/Atlantic Canada DEM in Various Output Formats/DEM_USGS_16bit_format.tif")
+
+# Check the CRS and extent
+print(crs(atl_canada_dem))
+print(ext(atl_canada_dem))
+
+# Define and apply extent if needed
+new_extent <- ext(-1239515.985, 619567.765, 3366469.655, 4708133.405)
+atl_canada_dem <- crop(atl_canada_dem, new_extent)
+
+# Verify the extent
+print(ext(atl_canada_dem))
+
+# Define a color palette
+pal <- colorNumeric(palette = "Spectral", domain = values(atl_canada_dem), na.color = "transparent")
+
+# Create the leaflet map
+leaflet() %>%
+  addTiles() %>%
+  addRasterImage(atl_canada_dem, colors = pal, opacity = 0.8, project = FALSE) %>%
+  addLegend(pal = pal, values = values(atl_canada_dem), title = "Elevation")
+
 ```
 
 
+
+Read in the ecozones shapefile:
+
+```{r}
+ecozones <- st_read("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Ecozones/Canada_Ecozones_V5b_31s_15M_simplify.shp")
+```
+
+```{r}
+atlantic_mar_ecozone <- ecozones %>% 
+  dplyr::filter(Name == "Atlantic Maritime")
+```
+
+```{r}
+# Define the bounding box and resolution
+bbox <- st_bbox(atlantic_mar_ecozone)
+res <- 10  # Resolution of 0.1 degrees
+
+# Create a grid covering the extent of the ecozone
+grid <- st_make_grid(atlantic_mar_ecozone, cellsize = c(res, res), what = "polygons")
+
+# Convert grid to stars object
+raster_template <- st_as_stars(st_rasterize(grid, atlantic_mar_ecozone))
+```
+```{r}
+# Rasterize the ecozone shapefile
+atlantic_mar_ecozone_rast <- st_rasterize(atlantic_mar_ecozone, raster_template)
+```
+
+# Prepare the NatureCounts data
+
+```{r}
+collections <- meta_collections()
+View(meta_collections())
+```
+
+```{r}
+search_species("cedar waxwing")
+```
+
+```{r}
+maritimes_atlas <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "dimimarkou", info = "spatial_data_tutorial")
+```
+
+Convert the weather data to a spatial object using the station coordinates:
+
+```{r}
+maritimes_atlas_sf <- sf::st_as_sf(maritimes_atlas,
+                        coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Create date and doy columns, which may be useful later to map by survey year:
+
+```{r}
+maritimes_atlas_sf <- format_dates(maritimes_atlas_sf)
+```
+
+```{r}
+maritimes_atlas_sf <- st_transform(maritimes_atlas_sf, crs = 4326)
+```
+
+```{r}
+library(leaflet)
+library(sf)
+library(RColorBrewer)
+
+# Check if the color palette works
+unique_ids <- unique(ecozones_filter$ID)
+color_palette <- colorFactor(palette = "YlOrRd", domain = unique_ids)
+
+# Basic leaflet map without legends or layers control
+leaflet() %>%
+  addTiles() %>%
+  addPolygons(data = ecozones_filter, 
+              color = "black", 
+              weight = 2, 
+              smoothFactor = 1, 
+              opacity = 1.0, 
+              fillOpacity = 0.5, 
+              fillColor = ~color_palette(ID)) %>%
+  addCircleMarkers(data = maritimes_atlas_sf, 
+                   radius = 2, 
+                   color = "black", 
+                   stroke = FALSE, 
+                   fillOpacity = 0.8)
+```
+
+```{r}
+unique_years <- unique(maritimes_atlas_sf$survey_year)
+
+# Create a color palette for the years
+year_colors <- colorFactor(topo.colors(length(unique_years)), unique_years)
+
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addCircleMarkers(data = maritimes_atlas_sf, 
+                   radius = 5, 
+                   color = ~year_colors(survey_year), 
+                   stroke = FALSE, 
+                   fillOpacity = 0.8) %>%
+  addFullscreenControl() %>%
+  addLegend(pal = year_colors, values = unique_years, title = "survey year", position = "bottomright")
+```
+
+```{r}
+ggplot(data = maritimes_atlas_sf) +
+  annotation_map_tile(type = "osm", zoom = 6) +
+  geom_sf(aes(color = factor(survey_year)), size = 2, alpha = 0.8) +
+  scale_color_viridis_d(option = "plasma") +
+  facet_wrap(~ survey_year) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Survey Points by Year (2006 - 2010)",
+       color = "Survey Year")
+```
