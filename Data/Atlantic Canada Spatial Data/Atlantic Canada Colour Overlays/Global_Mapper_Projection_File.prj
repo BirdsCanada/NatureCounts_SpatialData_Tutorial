@@ -1,0 +1,15 @@
+Projection     MERCATOR
+Datum          NAD27
+Zunits         NO
+Units          METERS
+Xshift         0.000000
+Yshift         0.000000
+Parameters
+-56 0 0.00 /* central meridian
+
+46 0 0.00 /* latitude of the origin
+
+0.000000 /* false easting (meters)
+
+0.000000 /* false northing (meters)
+
