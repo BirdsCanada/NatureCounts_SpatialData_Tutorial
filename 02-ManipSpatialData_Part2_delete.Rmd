@@ -1,0 +1,291 @@
+---
+title: "02-ManipSpatialData_Part2"
+author: "Dimitrios Markou"
+date: "2024-07-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 2 Manipulating Spatial Data (Part 2)
+
+*
+*
+*
+
+INTRODUCTION
+
+*
+* 
+*
+
+The data used in this tutorial was retrieved from NatureCounts, the Canadian Council of Ecological Areas, and the ECCC through the weathercan() R package. 
+
+This tutorial requires the following packages:
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(mapview)
+library(weathercan)
+library(naturecounts)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+library(ggspatial)
+library(RColorBrewer)
+library(raster)
+library(sp)
+library(rgdal)
+library(gstat)
+library(terra)
+```
+
+*Example 3*: You would like to map Cedar Waxwing distribution and mean temperature over the Atlantic Maritime ecoregion for June and July of each survey year (2006-2010). 
+
+# 2.1 Preparing weathercan data
+
+*
+*
+blurb on weathercan
+*
+*
+
+```{r}
+stations <- weathercan::stations()
+head(stations)
+```
+
+```{r}
+mar_stations <- stations %>%
+  filter(prov %in% c("NB", "NS"),
+         interval == "day",
+         end >= 2023)
+```
+
+```{r}
+mar_weather <- weather_dl(station_ids = mar_stations$station_id,
+                         start = "2006-01-01",
+                         end = "2011-01-01",
+                         interval = "day", quiet = TRUE)
+```
+First, we need to convert the date column to Date data type:
+
+```{r}
+mar_weather$date <- as.Date(mar_weather$date)
+```
+
+Then, we can filter the data for June and July from 2006 to 2010:
+
+```{r}
+mar_weather_filter <- mar_weather %>%
+  filter(format(date, "%m") %in% c("06", "07"),
+         format(date, "%Y") %in% c("2006", "2007", "2008", "2009", "2010"))
+```
+
+We'll now calculate the mean temperature:
+
+```{r}
+mean_temp <- mar_weather_filter %>%
+  group_by(station_id) %>%
+  summarise(mean_temp = mean(mean_temp, na.rm = TRUE))
+```
+
+Summarize the unique coordinates for each weather station:
+
+```{r}
+station_coords <- mar_weather_filter %>%
+  group_by(station_id) %>%
+  summarize(latitude = first(lat),
+            longitude = first(lon),
+            elevation = first(elev),
+            .groups = "drop")
+```
+
+Then merge mean temperature and coordinates data:
+
+```{r}
+mar_temp_data <- merge(mean_temp, station_coords, by = "station_id")
+```
+
+Convert the merged temperature / coordinate data to a spatial object: 
+
+```{r}
+mar_temp_data_sf <- st_as_sf(mar_temp_data, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Let's visualize average temperature over the Priority Places of Nova Scotia, New Brunswick, and Prince Edward Island, respectively. 
+
+```{r}
+gdb_path <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/PriorityPlaces.gdb"
+```
+
+To read in our spatial data object, we apply the `st_read` function and specify our desired data layer like so:
+
+```{r}
+priori_place_polygons <- st_read(dsn = gdb_path, layer = "PriorityPlacesBoundary")
+```
+
+We're interested in mean_temp for the Priority Places contained within the Maritime provinces.  We'll use `dplyr` to filter based on a variable condition: 
+
+```{r}
+maritime_polygons <- priori_place_polygons %>%
+  dplyr::filter(ProvTerr %in% c("NB", "NS"))
+ # filters based on province/territory
+```
+
+```{r}
+glimpse(maritime_polygons)
+```
+Next we'll convert the spatial weathercan data to the same CRS as the Priority Place polygons:
+
+```{r}
+mar_temp_data_sf <- st_transform(mar_temp_data_sf, crs = st_crs(maritime_polygons))
+
+```
+
+Now we can join the spatial weathercan data with the Priority Place data and group the data by relevant columns before calculating the mean temperature across all stations within each polygon:
+
+```{r}
+mar_temp_summary <- maritime_polygons %>%
+  st_join(mar_temp_data_sf) %>%
+  group_by(Name, ProvTerr, AreaHa, SHAPE_Area) %>%
+  summarize(n_stations = length(unique(station_id)),
+            mean_temp = mean(mean_temp, na.rm = TRUE)) %>%
+  ungroup()
+```
+Plot the mean_temp data for each Priority Place using mapview:
+
+```{r}
+mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE)
+```
+
+# 2.2 Prepare the NatureCounts data
+
+```{r}
+collections <- meta_collections()
+View(meta_collections())
+```
+
+```{r}
+search_species("cedar waxwing")
+```
+
+```{r}
+maritimes_atlas <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "dimimarkou", info = "spatial_data_tutorial")
+```
+
+Convert the weather data to a spatial object using the station coordinates:
+
+```{r}
+maritimes_atlas_sf <- sf::st_as_sf(maritimes_atlas,
+                        coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Create date and doy columns, which may be useful later to map by survey year:
+
+```{r}
+maritimes_atlas_sf <- format_dates(maritimes_atlas_sf)
+```
+
+```{r}
+maritimes_atlas_sf <- sf::st_transform(maritimes_atlas_sf, crs = 26916) 
+```
+
+```{r}
+maritime_polygons <- st_transform(maritime_polygons, crs = st_crs(maritimes_atlas_sf))
+```
+
+Clip the atlas data to include observations found within the priority places:
+
+```{r}
+cw_priori_place_obs <- sf::st_intersection(maritime_polygons, maritimes_atlas_sf)
+```
+Transform the CRS of our spatial data layers so that they are suitable for mapping:
+
+```{r}
+cw_priori_place_obs <- st_transform(cw_priori_place_obs, crs = 4326)
+```
+
+```{r}
+mar_temp_summary <-  st_transform(mar_temp_summary, crs = 4326)
+```
+
+Now we can start visualizing our data in a variety of ways!
+
+```{r}
+library(leaflet)
+library(sf)
+library(RColorBrewer)
+
+# Check if the color palette works
+unique_ids <- unique(mar_temp_summary$Name)
+color_palette <- colorFactor(palette = "YlOrRd", domain = unique_ids)
+
+# Basic leaflet map without legends or layers control
+leaflet() %>%
+  addTiles() %>%
+  addPolygons(data = mar_temp_summary, 
+              color = "black", 
+              weight = 2, 
+              smoothFactor = 1, 
+              opacity = 1.0, 
+              fillOpacity = 0.5, 
+              fillColor = ~color_palette(Name)) %>%
+  addCircleMarkers(data = cw_priori_place_obs, 
+                   radius = 2, 
+                   color = "black", 
+                   stroke = FALSE, 
+                   fillOpacity = 0.8)
+```
+
+```{r}
+unique_years <- unique(cw_priori_place_obs$survey_year)
+
+# Create a color palette for the years
+year_colors <- colorFactor(topo.colors(length(unique_years)), unique_years)
+
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addCircleMarkers(data = cw_priori_place_obs, 
+                   radius = 5, 
+                   color = ~year_colors(survey_year), 
+                   stroke = FALSE, 
+                   fillOpacity = 0.8) %>%
+  addFullscreenControl() %>%
+  addLegend(pal = year_colors, values = unique_years, title = "survey year", position = "bottomright")
+```
+
+```{r}
+ggplot(data = cw_priori_place_obs) +
+  annotation_map_tile(type = "osm", zoom = 6) +
+  geom_sf(aes(color = factor(survey_year)), size = 2, alpha = 0.8) +
+  scale_color_viridis_d(option = "plasma") +
+  facet_wrap(~ survey_year) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(title = "Survey Points by Year (2006 - 2010)",
+       color = "Survey Year")
+```
+
+Plot the mean_temp and Cedar Waxwing observation data for each Priority Place using mapview:
+
+```{r}
+map_temp <- mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE, layer.name = "Mean Temperature")
+```
+
+```{r}
+map_cw <- mapview(cw_priori_place_obs, 
+                  col.regions = "black",  
+                  cex = 2,               
+                  layer.name = "Cedar waxwing Observation")
+```
+
+```{r}
+combined_map <- map_temp + map_cw
+combined_map 
+```
+
