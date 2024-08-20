@@ -46,7 +46,7 @@ library(terra)
 
 *Example 3*: You would like to map Cedar Waxwing distribution and mean temperature over the Atlantic Maritime ecoregion for June and July of each survey year (2006-2010). 
 
-# Preparing weathercan data
+# 2.1 Preparing weathercan data
 
 *
 *
@@ -163,7 +163,7 @@ Plot the mean_temp data for each Priority Place using mapview:
 mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE)
 ```
 
-# Prepare the NatureCounts data
+# 2.2 Prepare the NatureCounts data
 
 ```{r}
 collections <- meta_collections()
@@ -270,6 +270,7 @@ ggplot(data = cw_priori_place_obs) +
   labs(title = "Survey Points by Year (2006 - 2010)",
        color = "Survey Year")
 ```
+
 Plot the mean_temp and Cedar Waxwing observation data for each Priority Place using mapview:
 
 ```{r}
