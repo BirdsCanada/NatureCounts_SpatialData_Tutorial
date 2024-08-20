@@ -285,6 +285,6 @@ map_cw <- mapview(cw_priori_place_obs,
 
 ```{r}
 combined_map <- map_temp + map_cw
-combined_map
+combined_map 
 ```
 
