@@ -2,5 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+<<<<<<< HEAD
 Data/Atlantic Canada Spatial Data/Atlantic Canada DEM in Various Output Formats/LatLonZ_Grid_Format.xyz
 
+=======
+>>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
