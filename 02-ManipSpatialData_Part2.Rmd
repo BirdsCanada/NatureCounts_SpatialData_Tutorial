@@ -227,6 +227,8 @@ mar_temp_summary <-  st_transform(mar_temp_summary, crs = 4326)
 
 Now we can start visualizing our data in a variety of ways!
 
+We're interested in mapping mean_temp and Cedar Waxwing observation data for each Priority Place:
+
 ```{r}
 # Create a binary color palette for mean temperature
 unique_temps <- unique(mar_temp_summary$mean_temp)
@@ -252,7 +254,7 @@ addLegend(pal = binary_temp_palette, values = unique_temps,
             title = "Mean Temperature", position = "topright")
 ```
 
-A similar map can also be achieved using `mapview`:
+A similar map that can also be achieved using `mapview`:
 
 ```{r}
 map_temp <- mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE, layer.name = "Mean Temperature")
@@ -304,6 +306,7 @@ leaflet(width = "100%") %>%
             title = "Mean Temperature", position = "topright")
 
 ```
+
 Or plot the observations in different panels based on survey year:
 
 ```{r}
@@ -322,10 +325,3 @@ ggplot(data = cw_priori_place_obs) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
-
-Plot the mean_temp and Cedar Waxwing observation data for each Priority Place using mapview:
-
-
-
-
-
