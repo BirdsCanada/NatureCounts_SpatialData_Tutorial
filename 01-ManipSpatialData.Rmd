@@ -15,11 +15,7 @@ Conservation impact can be optimized when focusing our efforts on specific areas
 
 Integrating NatureCounts data with spatial data layers like KBA's, Priority Places, and environmental data, can help prioritize future conservation strategies at various scales. The data used in this tutorial was downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
-<<<<<<< HEAD
 # 1.1 Spatial Data
-=======
-# 2.1 Spatial Data
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 Spatial data is any type of vector or raster data that represents a feature or phenomena across geographic space.
 
@@ -47,11 +43,7 @@ library(leaflet.extras)
 library(leaflet.providers)
 ```
 
-<<<<<<< HEAD
 # 1.2 Reading in spatial data
-=======
-# 2.2 Reading in spatial data
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
@@ -97,11 +89,7 @@ Both dataframes now contain unique columns, after our selection. We apply the `f
 ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
 ```
 
-<<<<<<< HEAD
 # 1.3 Visualizing spatial data in R
-=======
-# 2.3 Visualizing spatial data in R
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package:
 
@@ -125,11 +113,7 @@ kba_name <- ontario_kba %>%
   dplyr::filter(Area > 100) # filters based on a variable condition
 ```
 
-<<<<<<< HEAD
 # 1.4 Reading in NatureCounts data
-=======
-# 2.4 Reading in NatureCounts data
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 The [NatureCounts Introductory R Tutorial](#link) is a great start to use the `naturecounts` R package and covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
@@ -188,11 +172,7 @@ and to ensure that the CRS of our spatial objects match:
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 ```
 
-<<<<<<< HEAD
 # 1.5 Geoprocessing functions
-=======
-# 2.5 Geoprocessing functions
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 Geoprocessing functions allow us to manipulate spatial objects based on interactions between their geometries. There are several useful functions integrated into the sf package including:
 
@@ -235,12 +215,7 @@ st_write(wood_ducks_kba,
 
 where the argument delete_layer = TRUE is used to overwrite a file if needed.
 
-
-<<<<<<< HEAD
 # 1.6 Priority Places
-=======
-# 2.6 Priority Places
->>>>>>> 112863c2c1b07ccdf128c8528fdd55ff8a6db47c
 
 *Example 2*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place.
 
