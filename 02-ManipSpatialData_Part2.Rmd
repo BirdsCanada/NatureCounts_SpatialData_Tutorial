@@ -6,21 +6,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 2 Manipulating Spatial Data (Part 2)
 
--   
+This chapter will help the user determine the average temperature across weather stations within specific areas of interest (i.e. Priority Places). It will then help the user visualize bird observations within these areas using much of the same procedures as covered in Chapter 1.
 
--   
-
--   
-
-INTRODUCTION
-
--   
-
--   
-
--   
-
-The data used in this tutorial was retrieved from NatureCounts, the Canadian Council of Ecological Areas, and the ECCC through the weathercan() R package.
+To do so, this tutorial incorporates historical weather data from Environment and Climate Change Canada (ECCC) with data from NatureCounts and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
 This tutorial requires the following packages:
 
@@ -37,23 +25,13 @@ library(leaflet.providers)
 library(ggspatial)
 library(RColorBrewer)
 library(raster)
-library(sp)
-library(rgdal)
-library(gstat)
-library(terra)
 ```
-
-*Example 3*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year (2006-2010).
 
 # 2.1 Preparing weathercan data
 
--   
+`weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
--   blurb on weathercan
-
--   
-
--   
+*Example 3*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year of the Maritimes Breeding Bird Atlas (2006-2010). June and July are important egg-laying months for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
 
 ```{r}
 stations <- weathercan::stations()
