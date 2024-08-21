@@ -142,7 +142,7 @@ The CRS of our KBA sf object can be returned with `st_crs()`:
 sf::st_crs(ontario_kba)
 ```
 
-Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **atlas_on* dataframe to an sf object using the same CRS:
+Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our \*\*atlas_on\* dataframe to an sf object using the same CRS:
 
 ```{r}
 atlas_on_sf <- sf::st_as_sf(atlas_on,
@@ -225,17 +225,19 @@ First, lets create a path to our downloaded Priority Place file:
 gdb_path <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/PriorityPlaces.gdb"
 ```
 
-Then, let's inspect the spatial data: 
+Then, let's inspect the spatial data:
 
 ```{r}
 gdb_layers <- st_layers(gdb_path)
 print(gdb_layers)
 ```
+
 To read in our spatial data object, we apply the `st_read` function and specify our desired data layer like so:
 
 ```{r}
 priori_place_polygons <- st_read(dsn = gdb_path, layer = "PriorityPlacesBoundary")
 ```
+
 Were interested in Wood Duck distribution across the Long Point Walsingham Forest Priority Place. We'll use `dplyr` to filter based on a variable condition:
 
 ```{r}
@@ -243,21 +245,24 @@ long_point_polygon <- priori_place_polygons %>%
   dplyr::filter(Name == "Long Point Walsingham Forest") # filters based on multipolygon name 
 ```
 
-Then reproject the Wood Duck data to match our Priority Place using `st_transform`: 
+Then reproject the Wood Duck data to match our Priority Place using `st_transform`:
 
 ```{r}
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(long_point_polygon))
 ```
 
 Next, we'll apply our geoprocessing function to find the Wood Duck observations that intersect with our chosen Priority Place:
+
 ```{r}
 wood_ducks_longpoint <- sf::st_intersection(long_point_polygon, atlas_on_sf)
 ```
-Finally, we'll transform our spatial objects one more time before visualizing them with `leaflet`: 
+
+Finally, we'll transform our spatial objects one more time before visualizing them with `leaflet`:
+
 ```{r}
 long_point_polygon <- st_transform(long_point_polygon, crs = 4326)
 ```
- 
+
 ```{r}
 wood_ducks_longpoint <- st_transform(wood_ducks_longpoint, crs = 4326)
 ```
@@ -272,7 +277,3 @@ leaflet(width = "100%") %>%
   addFullscreenControl() %>%
   addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
-
-
-
-
