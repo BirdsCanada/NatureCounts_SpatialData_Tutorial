@@ -33,10 +33,13 @@ library(raster)
 
 *Example 3*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year of the Maritimes Breeding Bird Atlas (2006-2010). June and July are important egg-laying months for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
 
+First, let's take a look at the built in **stations** dataset:
+
 ```{r}
 stations <- weathercan::stations()
 head(stations)
 ```
+Next we can filter the weather data based on province and only include New Brunswick (NB) and Nova Scotia (NS) stations:
 
 ```{r}
 mar_stations <- stations %>%
@@ -45,14 +48,15 @@ mar_stations <- stations %>%
          end >= 2023)
 ```
 
+We'll narrow down our weather data download even further to only include data that covers the survey years of the Maritimes Breeding Bird Atlas (2006-2010):
+
 ```{r}
 mar_weather <- weather_dl(station_ids = mar_stations$station_id,
                          start = "2006-01-01",
                          end = "2011-01-01",
                          interval = "day", quiet = TRUE)
 ```
-
-First, we need to convert the date column to Date data type:
+Now we need to convert the date column to Date data type. This will allow us to apply more filters based on month and survey year.
 
 ```{r}
 mar_weather$date <- as.Date(mar_weather$date)
@@ -161,7 +165,7 @@ search_species("cedar waxwing")
 ```
 
 ```{r}
-maritimes_atlas <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "dimimarkou", info = "spatial_data_tutorial")
+maritimes_atlas <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "testuser", info = "spatial_data_tutorial")
 ```
 
 Convert the weather data to a spatial object using the station coordinates:

@@ -25,7 +25,7 @@ Spatial data is any type of vector or raster data that represents a feature or p
 
 The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,* and *.prj* extensions.
 
-Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) will be in covered in the next chapter.
+Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. [Raster data manipulation](#02-ManipSpatialDataPt2) will be in covered in subsequent chapters.
 
 This tutorial requires the following packages:
 
@@ -45,7 +45,7 @@ library(leaflet.providers)
 
 # 1.2 Reading in spatial data
 
-The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is heading for retirement by the end of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
+The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is no longer in user as of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
 *Example 1*: You want to assess Wood Duck distribution across Ontario KBA's using Ontario Breeding Bird Atlas data. You'll want to navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), filter for all KBA's in Ontario, download the data, and assign your files a meaningful name.
 
@@ -142,7 +142,7 @@ The CRS of our KBA sf object can be returned with `st_crs()`:
 sf::st_crs(ontario_kba)
 ```
 
-Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our \*\*atlas_on\* dataframe to an sf object using the same CRS:
+Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. This is how we can convert our **atlas_on** dataframe to an sf object using the same CRS:
 
 ```{r}
 atlas_on_sf <- sf::st_as_sf(atlas_on,
@@ -198,7 +198,7 @@ leaflet(width = "100%") %>%
   addTiles() %>%
   addPolygons(data = ontario_kba, color = "black", weight = 2, smoothFactor = 1, 
   opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>%
-  addCircleMarkers(data = wood_ducks_kba, radius = 5, color = "green", 
+  addCircleMarkers(data = wood_ducks_kba, radius = 3, color = "green", 
                    stroke = FALSE, fillOpacity = 0.8) %>%
   addFullscreenControl() %>%
   addLegend(colors = c("violet", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
