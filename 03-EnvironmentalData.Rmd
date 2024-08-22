@@ -10,3 +10,155 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Chapter 3 Environmental Data
+
+The [Whooping Crane nesting area and summer range](https://kbacanada.org/site/?SiteCode=NT002) is located approximately 75 km west of Fort Smith, Northwest Territories.
+
+```{r}
+library(naturecounts)
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
+library(mapview)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+```
+
+# Visualizing the study area 
+
+Our first step is to get an appreciation for the study area by downloading the KBA boundary / environmental data and rendering a quick map.
+
+Data downloads can sometimes have clunky names which are the opposite of R-friendly. Here is a useful function we can apply to our downloaded KBA shapefile and accompanying files to change their basenames:
+
+```{r}
+rename_shapefile <- function(directory, old_name, new_name) {
+  # Define the file extensions typically associated with shapefiles
+  extensions <- c(".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".cpg", ".xml", ".qix")
+  
+  # Loop through each extension and rename the corresponding file
+  for (ext in extensions) {
+    old_file <- file.path(directory, paste0(old_name, ext))
+    new_file <- file.path(directory, paste0(new_name, ext))
+    
+    # Check if the old file exists before attempting to rename
+    if (file.exists(old_file)) {
+      file.rename(old_file, new_file)
+    }
+  }
+}
+
+  # Apply the function 
+rename_shapefile("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/WhoopingCrane_KBA", "kba.20240822070858", "whooping_crane_kba")
+```
+
+Read in the KBA boundary 
+
+```{r}
+whooping_crane_kba <- sf::st_read("Data/KBA/WhoopingCrane_KBA/whooping_crane_kba.shp")
+```
+```{r}
+whooping_crane_kba <- whooping_crane_kba %>% st_make_valid() %>% distinct()
+```
+
+```{r}
+kba_attributes <- read.csv("Data/KBA/WhoopingCrane_KBA/whooping_crane_kba.csv")
+```
+
+```{r}
+kba_attributes <- kba_attributes %>%
+  select("SiteCode",
+         "DateAssessed",
+         "PercentProtected",
+         "BoundaryGeneralized",
+         "Level",
+         "CriteriaMet",
+         "ConservationActions",
+         "Landcover",
+         "Province",
+         "Species")
+```
+
+```{r}
+whooping_crane_kba <- full_join(whooping_crane_kba, kba_attributes, by = "SiteCode")
+```
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data = whooping_crane_kba, color = "black", weight = 2, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.6, fillColor = "limegreen") %>%
+  addFullscreenControl() %>%
+  addLegend(colors = c("limegreen"), 
+            labels = c("Whooping Crane Nesting Area and Summer Range"), 
+            position = "bottomright") %>%
+  addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
+```
+
+# Retrieving Whooping Crane data from NatureCounts
+
+```{r}
+collections <- meta_collections()
+View(meta_collections())
+```
+
+Upon inspection, we see that there are at least two ATLAS collections relevant to our research. The ABATLAS1 and ABATLAS2 collections both cover a wide range of survey years (1987-1991 and 2000-2005, respectively). 
+
+```{r}
+search_species("whooping crane")
+```
+Let's download data from all collections using the relevant project_id and species_id: 
+
+```{r}
+whooping_crane_data <- nc_data_dl(collections = c("ABATLAS1", "ABATLAS2"), species = 4030, username = "dimimarkou", info = "spatial_data_tutorial")
+```
+Convert the ATLAS data into a spatial object: 
+
+```{r}
+whooping_crane_data_sf<- sf::st_as_sf(whooping_crane_data,
+                        coords = c("longitude", "latitude"), crs = 4326)
+```
+
+To apply geoprocessing function, we have to reproject our KBA and ATLAS spatial data layers:
+
+```{r}
+whooping_crane_kba <- sf::st_transform(whooping_crane_kba, crs = 26916) 
+
+whooping_crane_data_sf <- st_transform(whooping_crane_data_sf, crs = st_crs(whooping_crane_kba))
+```
+
+Perform an intersection to find which observations are within the target KBA:
+
+```{r}
+whooping_crane_data_sf <- sf::st_intersection(whooping_crane_kba, whooping_crane_data_sf)
+```
+
+Transform both spatial data layers back to a CRS suitable for mapping:
+
+```{r}
+whooping_crane_kba <- st_transform(whooping_crane_kba, crs = 4326)
+whooping_crane_data_sf <- st_transform(whooping_crane_data_sf, crs = 4326)
+```
+
+Visualize the Whooping Crane observations within the KBA:
+
+```{r}
+leaflet(width = "100%") %>%
+  addTiles() %>%
+  addPolygons(data = whooping_crane_kba, color = "black", weight = 2, smoothFactor = 1,
+              opacity = 1.0, fillOpacity = 0.6, fillColor = "limegreen") %>%
+   addCircleMarkers(data = whooping_crane_data_sf, radius = 3, color = "black", stroke = FALSE, fillOpacity = 0.8) %>%
+  addFullscreenControl() %>%
+  addLegend(colors = c("limegreen"), 
+            labels = c("Whooping Crane Nesting Area and Summer Range"), 
+            position = "bottomright") %>%
+  addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
+```
+
+
+
+
+
+
