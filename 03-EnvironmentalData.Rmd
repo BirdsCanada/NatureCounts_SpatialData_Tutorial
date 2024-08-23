@@ -17,6 +17,7 @@ The [Whooping Crane nesting area and summer range](https://kbacanada.org/site/?S
 library(naturecounts)
 library(sf)
 library(terra)
+library(luna)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -157,8 +158,40 @@ leaflet(width = "100%") %>%
   addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
 ```
 
+# Downloading MODIS data 
 
+```{r}
+modis_products <- getProducts("^MOD|^MYD|^MCD")
+head(modis_products)
+```
+```{r}
+product <- "MCD12Q1"
+productInfo(product)
+```
+MCD12Q1 provides global land cover types at yearly intervals (2001-2022). We'll grab data from years corresponding to the ABATLAS2 surveys:
 
+```{r}
+start <- "2000-01-01"
+end <- "2006-01-01"
+```
 
+```{r}
+datadir <- file.path("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data", "MODIS")
+dir.create(datadir, showWarnings = FALSE)
+```
+
+```{r}
+modis_data <- luna::getNASA(product, start, end, aoi= whooping_crane_data_sf, download=TRUE,
+                     path=datadir, username="dimimarkou", password=",xx4=_#Q?VPBxBm")
+modis_data
+```
+
+```{r}
+file_list <- list.files(datadir, pattern = "\\.hdf$", full.names = TRUE)
+
+modis_rast <- rast(file_list)
+
+print(modis_rast)
+```
 
 
