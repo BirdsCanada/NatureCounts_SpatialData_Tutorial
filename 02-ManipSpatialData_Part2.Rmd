@@ -17,7 +17,6 @@ library(dplyr)
 library(ggplot2)
 library(sf)
 library(mapview)
-library(weathercan)
 library(naturecounts)
 library(leaflet)
 library(leaflet.extras)
@@ -25,6 +24,12 @@ library(leaflet.providers)
 library(ggspatial)
 library(RColorBrewer)
 library(raster)
+
+#since weathercan is not avaiable in the recent version of R, we install the pacakge a little differently
+install.packages("weathercan", 
+                 repos = c("https://ropensci.r-universe.dev", 
+                           "https://cloud.r-project.org"))
+library(weathercan)
 ```
 
 # 2.1 Preparing weathercan data
@@ -39,6 +44,7 @@ First, let's take a look at the built in **stations** dataset:
 stations <- weathercan::stations()
 head(stations)
 ```
+
 Next we can filter the weather data based on province and only include New Brunswick (NB) and Nova Scotia (NS) stations:
 
 ```{r}
@@ -56,6 +62,7 @@ mar_weather <- weather_dl(station_ids = mar_stations$station_id,
                          end = "2011-01-01",
                          interval = "day", quiet = TRUE)
 ```
+
 Now we need to convert the date column to Date data type. This will allow us to apply more filters based on month and survey year.
 
 ```{r}
@@ -104,7 +111,7 @@ mar_temp_data_sf <- st_as_sf(mar_temp_data, coords = c("longitude", "latitude"),
 Let's visualize average temperature over the Priority Places of Nova Scotia and New Brunswick, respectively.
 
 ```{r}
-gdb_path <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/PriorityPlaces.gdb"
+gdb_path <- "Data/Priority Places/PriorityPlaces.gdb"
 ```
 
 To read in our spatial data object, we apply the `st_read` function and specify our desired data layer like so:
