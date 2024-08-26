@@ -13,7 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Conservation impact can be optimized when focusing our efforts on specific areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk. [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) are examples of such areas that meet a specific set of criteria and possess significant conservation potential.
 
-Integrating NatureCounts data with spatial data layers like KBA's, Priority Places, and environmental data, can help prioritize future conservation strategies at various scales. The data used in this tutorial was downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
+Integrating NatureCounts data with spatial data layers like KBA's, Priority Places, and environmental data, can help prioritize future conservation strategies at various scales. The data used in this tutorial are
+
+downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
 # 1.1 Spatial Data
 
@@ -185,6 +187,8 @@ To identify Wood Ducks observed in Ontario KBA's, we can apply the `st_intersect
 wood_ducks_kba <- sf::st_intersection(ontario_kba, atlas_on_sf)
 ```
 
+You will get a `warning` message, which you can safely ignore.
+
 ```{r}
 # If need be, transform your spatial data back to EPSG:4326 to visualize with leaflet
 ontario_kba <- st_transform(ontario_kba, crs = 4326)
@@ -198,10 +202,10 @@ leaflet(width = "100%") %>%
   addTiles() %>%
   addPolygons(data = ontario_kba, color = "black", weight = 2, smoothFactor = 1, 
   opacity = 1.0, fillOpacity = 0.5, fillColor = "violet") %>%
-  addCircleMarkers(data = wood_ducks_kba, radius = 3, color = "green", 
+  addCircleMarkers(data = wood_ducks_kba, radius = 3, color = "orange", 
                    stroke = FALSE, fillOpacity = 0.8) %>%
   addFullscreenControl() %>%
-  addLegend(colors = c("violet", "green"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
+  addLegend(colors = c("violet", "orange"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
 ```
 
 After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk:
@@ -222,7 +226,7 @@ where the argument delete_layer = TRUE is used to overwrite a file if needed.
 First, lets create a path to our downloaded Priority Place file:
 
 ```{r}
-gdb_path <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/PriorityPlaces.gdb"
+gdb_path <- "Data/Priority Places/PriorityPlaces.gdb"
 ```
 
 Then, let's inspect the spatial data:
