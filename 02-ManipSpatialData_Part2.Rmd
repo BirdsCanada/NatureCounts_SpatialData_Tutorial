@@ -1,4 +1,9 @@
-title: "02-ManipSpatialData_Part2" author: "Dimitrios Markou" date: "2024-07-23" output: html_document
+---
+title: "02-ManipSpatialData_Part2"
+author: "Dimitrios Markou"
+date: "2024-07-23"
+output: html_document
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -10,7 +15,11 @@ This chapter will help the user determine the average temperature across weather
 
 To do so, this tutorial incorporates historical weather data from Environment and Climate Change Canada (ECCC) with data from NatureCounts and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
-This tutorial requires the following packages:
+# 2.0 Learning Objectives 
+
+By the end of **Chapter 2 - Manipulating Spatial Data (Part 2)**, users will know how to:
+
+This R tutorial requires the following **packages**:
 
 ```{r}
 library(dplyr)
@@ -36,7 +45,7 @@ library(weathercan)
 
 `weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
-*Example 3*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year of the Maritimes Breeding Bird Atlas (2006-2010). June and July are important egg-laying months for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
+*Example 4*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year of the Maritimes Breeding Bird Atlas (2006-2010). June and July are important egg-laying months for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
 
 First, let's take a look at the built in **stations** dataset:
 
@@ -179,7 +188,7 @@ search_species("cedar waxwing")
 maritimes_atlas <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "testuser", info = "spatial_data_tutorial")
 ```
 
-Convert the weather data to a spatial object using the station coordinates:
+Convert the NatureCounts data to a spatial object using the station coordinates:
 
 ```{r}
 maritimes_atlas_sf <- sf::st_as_sf(maritimes_atlas,
@@ -297,24 +306,5 @@ leaflet(width = "100%") %>%
   addLegend(pal = year_colors, values = unique_years, title = "Survey Year", position = "bottomright") %>%
   addLegend(pal = binary_temp_palette, values = unique_temps, 
             title = "Mean Temperature", position = "topright")
-
-```
-
-Or plot the observations in different panels based on survey year:
-
-```{r}
-ggplot(data = cw_priori_place_obs) +
-  annotation_map_tile(type = "osm", zoom = 6) +
-  geom_sf(aes(color = factor(survey_year)), size = 2, alpha = 0.8) +
-  scale_color_viridis_d(option = "plasma") +
-  facet_wrap(~ survey_year) +
-  theme_minimal() +
-  theme(legend.position = "bottom") +
-  labs(title = "Cedar Waxwing distribution by year (2006 - 2010)",
-       color = "Survey Year") +
-  coord_sf(xlim = c(-68, -59), ylim = c(43, 48), 
-           expand = FALSE,
-           crs = st_crs(4326)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
