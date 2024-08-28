@@ -32,7 +32,7 @@ library(leaflet.providers)
 
 Our first step is to get an appreciation for the study area by downloading the KBA boundary / environmental data and rendering a quick map.
 
-Data downloads can sometimes have clunky names which are the opposite of R-friendly. Here is a useful function we can apply to our downloaded KBA shapefile and accompanying files to change their basenames:
+Data downloads can sometimes have clunky names which are the opposite of R-friendly. Here is a useful function we can apply to our downloaded KBA shapefile and accompanying files to change their basename:
 
 ```{r}
 rename_shapefile <- function(directory, old_name, new_name) {
@@ -70,7 +70,7 @@ kba_attributes <- read.csv("Data/KBA/WhoopingCrane_KBA/whooping_crane_kba.csv")
 
 ```{r}
 kba_attributes <- kba_attributes %>%
-  select("SiteCode",
+  dplyr::select("SiteCode",
          "DateAssessed",
          "PercentProtected",
          "BoundaryGeneralized",
@@ -121,6 +121,17 @@ Convert the ATLAS data into a spatial object:
 whooping_crane_data_sf<- sf::st_as_sf(whooping_crane_data,
                         coords = c("longitude", "latitude"), crs = 4326)
 ```
+
+To write this spatial data object as a shapefile: 
+
+```{r}
+sf::st_write(whooping_crane_data_sf, "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/WhoopingCrane/whooping_crane_data.shp")
+```
+```{r}
+sf::st_write(whooping_crane_kba, "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/WhoopingCrane/whooping_crane_kba.shp")
+```
+
+
 
 To apply geoprocessing function, we have to reproject our KBA and ATLAS spatial data layers:
 
@@ -187,11 +198,54 @@ modis_data
 ```
 
 ```{r}
-file_list <- list.files(datadir, pattern = "\\.hdf$", full.names = TRUE)
+# List of HDF files
+hdf_files <- list.files(path = "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/MODIS", pattern = "\\.hdf$", full.names = TRUE)
 
-modis_rast <- rast(file_list)
-
-print(modis_rast)
+length(hdf_files)
 ```
+Inspect the data: 
+
+```{r}
+file_name <- basename(hdf_files)
+
+date_ts <- str_extract(file_name, pattern = "[0-9]{7}")
+
+date_ts <- str_replace(date_ts,
+                       pattern = "A",
+                       replacement = "")
+
+date_ts <- lubridate::as_date(date_ts, format = "%Y%j")
+
+date_data <- as.data.frame(date_ts)
+
+year <- year(date_ts)
+
+date_data <- cbind(date_data, year)
+
+df_group <- group_by(date_data, year)
+
+date_data <- summarize(df_group, n())
+
+print(date_ts)
+
+print(date_data)
+```
+
+```{r}
+datadir <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/MODIS"
+mf <- file.path(datadir, "MCD12Q1.A2001001.h12v02.061.2022146050005.hdf")
+
+library(terra)
+r <- rast(mf[1])
+r
+```
+```{r}
+sds_list <- sds(mf)
+print(sds_list)
+```
+
+
+
+
 
 
