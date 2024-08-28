@@ -25,7 +25,7 @@ library(ggspatial)
 library(RColorBrewer)
 library(raster)
 
-#since weathercan is not avaiable in the recent version of R, we install the pacakge a little differently
+#since weathercan is not available in the recent version of R, we install the package a little differently
 install.packages("weathercan", 
                  repos = c("https://ropensci.r-universe.dev", 
                            "https://cloud.r-project.org"))
@@ -160,7 +160,11 @@ mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE)
 
 # 2.2 Prepare the NatureCounts data
 
-Now that we've downloaded the temperature data and determined the mean temperature of each Priority Place, we can now add in our NatureCounts data to visualize Cedar Waxwing distribution.
+Now that we've downloaded the temperature data and determined the mean temperature of each Priority Place, we can add in our NatureCounts data to visualize Cedar Waxwing distribution.
+
+To download data you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
+
+> The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
 
 ```{r}
 collections <- meta_collections()
