@@ -65,11 +65,11 @@ To download bird data you need to [sign up](https://naturecounts.ca/nc/default/r
 
 > The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
 
-*Example 1*: You would like to visualize the summer spatio-temporal distribution of Cedar Waxwing's for each survey year of the Maritimes Breeding Bird Atlas (2006-2010).
+*Example 1*: You would like to visualize the spatio-temporal distribution of Cedar Waxwing observations in June of each survey year using data from the Maritimes Breeding Bird Atlas (2006-2010).
 
-The [NatureCounts Introductory R Tutorial](#link) is where you should start if you're new to the `naturecounts` R package. It covers how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
+The [NatureCounts Introductory R Tutorial](#link) is where you should start if you're new to the `naturecounts` R package. It explains how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
-Let's fetch the NatureCounts data:
+First let's fetch the NatureCounts data:
 
 ```{r}
 collections <- meta_collections()
@@ -79,6 +79,7 @@ View(meta_collections())
 ```{r}
 search_species("cedar waxwing")
 ```
+
 Perform the data download:
 
 ```{r}
@@ -91,56 +92,53 @@ Create date and doy columns:
 cedar_waxwing <- format_dates(cedar_waxwing)
 ```
 
+Filter the Cedar Waxwing data to only include observations from the month of June:
+
+```{r}
+cedar_waxwing_june <- cedar_waxwing %>%
+  filter(survey_month == 6)
+```
+
 Convert the NatureCounts data to a spatial object using the point count coordinates:
 
 ```{r}
-cedar_waxwing_sf <- sf::st_as_sf(cedar_waxwing,
+cedar_waxwing_june_sf <- sf::st_as_sf(cedar_waxwing_june,
                         coords = c("longitude", "latitude"), crs = 4326)
 ```
 
-```{r}
-leaflet() %>%
-  addTiles() %>%
-  addCircleMarkers(data = cedar_waxwing_sf, 
-                   radius = 2, 
-                   color = "black", 
-                   stroke = FALSE, 
-                   fillOpacity = 0.8)
-```
-
+Finally, use `ggplot2` to visualize the spatio-temporal distribution of Cedar Waxwing observations across the Maritime provinces by color-coding the data points by **survey_year** and creating a multi-panel plot based on this discrete variable:
 
 ```{r}
-ggplot(data = cedar_waxwing_sf) +
-  annotation_map_tile(type = "osm", zoom = 6) +
-  geom_sf(aes(color = factor(survey_year)), size = 1, alpha = 0.8) +
-  scale_color_viridis_d(option = "plasma") +
+ggplot(data = cedar_waxwing_june_sf) +
+  # Select a basemap
+  annotation_map_tile(type = "cartolight", zoom = NULL) +
+  # Plot the points, color-coded by survey_year
+  geom_sf(aes(color = as.factor(survey_year)), size = 1) +
+  # Facet by survey_year to create the multi-paneled map
   facet_wrap(~ survey_year) +
+  # Customize the color scale
+  scale_color_brewer(palette = "Set1", name = "Survey Year") +
+  # Add a theme with a minimal design and change the font styles, to your preference
   theme_minimal() +
+  theme(
+    plot.title = element_text(family = "Times", size = 12, face = "bold"),
+    axis.title = element_text(family = "Times", size = 10),
+    axis.text = element_text(family = "Times", size = 8),
+    legend.title = element_text(family = "Times", size = 10),
+    legend.text = element_text(family = "Times", size = 10),
+    # Adjust the facet label font
+    strip.text = element_text(family = "Times", size = 12, face = "bold")
+  ) +
   theme(legend.position = "bottom") +
-  labs(title = "Cedar Waxwing distribution by year (2006 - 2010)",
-       color = "Survey Year") +
-  coord_sf(xlim = c(-68, -59), ylim = c(43, 48), 
-           expand = FALSE,
-           crs = st_crs(4326)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  # To make the points in the legend larger without affecting map points
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  # Define the title and axis names
+  labs(title = "Cedar Waxwing June Observations by Survey Year",
+       x = "Longitude",
+       y = "Latitude")
 ```
 
-```{r}
-# Plotting
-ggplot(data = cedar_waxwing_sf) +
-  geom_sf(aes(color = survey_year)) +  # Use color to distinguish years
-  facet_wrap(~ survey_year) +  # Create a panel for each survey year
-  labs(title = "Cedar Waxwing Observations by Survey Year",
-       color = "Survey Year") +
-  theme_minimal() +
-  theme(legend.position = "bottom")  # Adjust legend position if needed
-```
-
-
-
-
-
-The following sections (1.3 - 1.7) comprise a sequential methodology that will help the user visualize NatureCounts data using [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) maps.
+The map above provides a simple visualization of NatureCounts data over a broad spatial and temporal scale. However, mapping data in specific areas of ecological importance might also be relevant to your work. The following sections (**1.3** - **1.7**) work in sequence to help the user visualize NatureCounts data using [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) maps.
 
 # 1.3 Reading in spatial data
 
@@ -205,11 +203,11 @@ Similarly, the package `mapview` (based on leaflet) can also be used to make int
 mapview::mapview(ontario_kba, zcol = "PercentProtected")
 ```
 
-In this example, were interested in all the KBA polygons of Ontario. However, if you were working with a larger dataset, it is possible to filter your dataframe to retrieve only specific polygons that meet certain criteria relevant to your research. For example, say we only wanted KBA's greater than 100km\^2 in size:
+In this example, were interested in all the KBA polygons of Ontario. However, if you were working with a larger data set, it is possible to filter your dataframe to retrieve only specific polygons that meet certain criteria relevant to your research. To do so, we can apply filters based on a variable condition. For example, say we only wanted KBA's greater than 100km\^2 in size:
 
 ```{r}
-kba_name <- ontario_kba %>% 
-  dplyr::filter(Area > 100) # filters based on a variable condition
+# kba_name <- ontario_kba %>% 
+  # dplyr::filter(Area > 100) 
 ```
 
 # 1.5 Reading in NatureCounts data
@@ -228,7 +226,7 @@ search_species("wood duck")
 Then let's filter and download data specifically for the Wood Ducks in Ontario:
 
 ```{r}
-atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "testuser", info = "spatial_data_tutorial")
+atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "dimimarkou", info = "spatial_data_tutorial")
 ```
 
 We can then convert our NatureCounts data into a spatial object. To do so, we deploy the `st_as_sf` function and specify the coordinate reference system (CRS).
@@ -255,7 +253,7 @@ str(atlas_on_sf) # view the sf object
 There are a few other useful functions that may be applied to sf objects:
 
 | `sf::st_transform()` - transforms the CRS of a specified CRS object
-| `sf:: st_drop_geometry()` - removes the geometry column of a sf object
+| `sf::st_drop_geometry()` - removes the geometry column of a sf object
 
 For example, `st_transform()` can be applied like so to project our spatial object using a different CRS like NAD83 / UTM zone 16N (EPSG = 26916):
 
@@ -271,10 +269,14 @@ atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 
 # 1.6 Geoprocessing functions
 
-Geoprocessing functions allow us to manipulate spatial objects based on interactions between their geometries. There are several useful functions integrated into the sf package including:
+Geoprocessing functions allow us to manipulate or compute spatial objects based on interactions between their geometries. There are several useful functions integrated into the `sf` package including:
 
-| `st_intersection` -
-| `st_within` -
+| `st_intersection(x, y)` - creates geometry of the shared portion of x and y
+| `st_crop(x, y, ..., xmin, ymin, xmax, ymax)` - creates geometry of x that intersects a specified range
+| `st_difference(x, y)` - creates geometry from x that does not intersect with y 
+| `st_area`, `st_length`, and `st_distance` can also be used to compute geometric measurements
+
+More resources, including as `sf` package **cheatsheat** can be found [here](https://github.com/r-spatial/sf).
 
 To identify Wood Ducks observed in Ontario KBA's, we can apply the `st_intersection()` function:
 
@@ -303,18 +305,15 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("violet", "orange"), labels = c("Ontario KBA", "Wood Duck Observations"), position = "bottomright")
 ```
 
-After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk:
+After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk, if necessary:
 
 ```{r}
-st_write(wood_ducks_kba,
-         "Data/wood_ducks_kba.shp",
-         driver = "ESRI Shapefile",
-         delete_layer = TRUE)
+# st_write(wood_ducks_kba,"Data/wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-where the argument delete_layer = TRUE is used to overwrite a file if needed.
+where the argument delete_layer = TRUE is used to overwrite a file.
 
-# 1.7 Priority Places
+# 1.7 Priority Places Example
 
 *Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place.
 
@@ -376,3 +375,5 @@ leaflet(width = "100%") %>%
   addFullscreenControl() %>%
   addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
+
+**Congratulations**! You've completed **Chapter 1 - Manipulating Spatial Data (Part 1)**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Chapter 2](02-ManipSpatialData_Part2.Rmd), you will explore more spatial data visualization while joining temperature data to a study area.
