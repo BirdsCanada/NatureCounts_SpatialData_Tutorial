@@ -50,7 +50,7 @@ library(weathercan)
 
 `weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
-*Example 4*: You would like to map Cedar Waxwing distribution and mean temperature across the Priority Places of New Brunswick and Nova Scotia for June and July of each survey year of the Maritimes Breeding Bird Atlas (2006-2010). June and July are important egg-laying months for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
+*Example 4*: You would like to combine yearly temperature values (2006-2010) with yearly Cedar Waxwing observation counts across the Maritime provinces to explore possible trends and visualize the data using a spatio-temporal map. The summer monthds are an important egg-laying period for the Cedar Waxwing and mean temperature might affect the abundance of food in the later part of the summer for this species.
 
 First, let's take a look at the built in **stations** dataset:
 
