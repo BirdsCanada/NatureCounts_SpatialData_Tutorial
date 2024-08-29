@@ -11,13 +11,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 2 Manipulating Spatial Data (Part 2)
 
-This chapter will help the user determine the average temperature across weather stations within specific areas of interest (i.e. Priority Places). It will then help the user visualize bird observations within these areas using much of the same procedures as covered in Chapter 1.
+Spatial data mapping is useful when exploring possible associations between species occurrences and environmental variables. Integrating diverse environmental datasets with NatureCounts data and creating maps can help inform species distribution models, delimit predictor variables, and provide us clever ways to communicate our data.
 
-To do so, this tutorial incorporates historical weather data from Environment and Climate Change Canada (ECCC) with data from NatureCounts and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
-
-# 2.0 Learning Objectives 
+# 2.0 Learning Objectives
 
 By the end of **Chapter 2 - Manipulating Spatial Data (Part 2)**, users will know how to:
+
+-   Download and preprocess climate data in R
+-   Summarize climate data over a region of interest
+-   Combine climate data with NatureCounts observations
+-   Visualize NatureCounts and climate data using spatio-temporal maps
+
+**Data**: this tutorial incorporates historical weather data from Environment and Climate Change Canada (ECCC) with data from NatureCounts and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
 This R tutorial requires the following **packages**:
 
@@ -41,7 +46,7 @@ install.packages("weathercan",
 library(weathercan)
 ```
 
-# 2.1 Preparing weathercan data
+# 2.1 Preparing Climate Data
 
 `weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
@@ -167,11 +172,11 @@ Plot the mean_temp data for each Priority Place using mapview:
 mapview(mar_temp_summary, zcol = "mean_temp", legend = TRUE)
 ```
 
-# 2.2 Prepare the NatureCounts data
+# 2.2 Preparing NatureCounts Data
 
-Now that we've downloaded the temperature data and determined the mean temperature of each Priority Place, we can add in our NatureCounts data to visualize Cedar Waxwing distribution.
+If you haven't done so already in [Chapter 1](01-ManipSpatialData.Rmd), you can go ahead and download the NatureCounts data for the Cedar Waxwing.
 
-To download data you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
+Reminder that, to download data, you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
 
 > The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
 
@@ -228,6 +233,8 @@ mar_temp_summary <-  st_transform(mar_temp_summary, crs = 4326)
 ```
 
 Now we can start visualizing our data in a variety of ways!
+
+# 2.3 Environmental Data Mapping
 
 We're interested in mapping mean_temp and Cedar Waxwing observation data for each Priority Place:
 
@@ -308,3 +315,5 @@ leaflet(width = "100%") %>%
             title = "Mean Temperature", position = "topright")
 
 ```
+
+Congratulations!
