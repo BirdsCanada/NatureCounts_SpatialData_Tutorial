@@ -273,7 +273,7 @@ Geoprocessing functions allow us to manipulate or compute spatial objects based 
 
 | `st_intersection(x, y)` - creates geometry of the shared portion of x and y
 | `st_crop(x, y, ..., xmin, ymin, xmax, ymax)` - creates geometry of x that intersects a specified range
-| `st_difference(x, y)` - creates geometry from x that does not intersect with y 
+| `st_difference(x, y)` - creates geometry from x that does not intersect with y
 | `st_area`, `st_length`, and `st_distance` can also be used to compute geometric measurements
 
 More resources, including as `sf` package **cheatsheat** can be found [here](https://github.com/r-spatial/sf).
