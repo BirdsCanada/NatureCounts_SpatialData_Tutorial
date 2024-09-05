@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 1 Manipulating Spatial Data (Part 1)
 
+##### Author: Dimitrios Markou
+
 Mapping the spatial distribution of avian and environmental data is critical to our understanding of ecological processes. Conservation impact is most effective when focused on areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk.
 
 By integrating NatureCounts data with spatial and environmental layers, researchers can address key questions and prioritize future conservation strategies over broad spatial and temporal scales. The [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial) serves as a guide on how to visualize and analyse NatureCounts, spatial, and environmental data in R to help users meet their conservation and research goals.
@@ -83,7 +85,7 @@ search_species("cedar waxwing")
 Perform the data download:
 
 ```{r}
-cedar_waxwing <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "dimimarkou", info = "spatial_data_tutorial")
+cedar_waxwing <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "testuser", info = "spatial_data_tutorial")
 ```
 
 Create date and doy columns:
