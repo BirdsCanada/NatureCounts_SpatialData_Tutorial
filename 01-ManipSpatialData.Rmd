@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 1 Manipulating Spatial Data (Part 1)
+# Chapter 1: Manipulating Spatial Data
 
 ##### Author: Dimitrios Markou
 
