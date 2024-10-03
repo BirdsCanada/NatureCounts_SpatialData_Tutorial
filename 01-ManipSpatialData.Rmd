@@ -192,6 +192,7 @@ ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
 # 1.4 Visualizing spatial data in R
 
 We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package.
+
 ```{r}
 leaflet(width = "100%") %>%
   addTiles() %>%
@@ -200,6 +201,7 @@ leaflet(width = "100%") %>%
 ```
 
 Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes like so:
+
 ```{r}
 mapview::mapview(ontario_kba, zcol = "PercentProtected")
 ```
@@ -215,7 +217,8 @@ In this example, were interested in all the KBA polygons of Ontario. However, if
 
 # 1.5 Reading in NatureCounts data
 
-Let's search NatureCounts for the Ontario Breeding Bird Atlas (ONATLAS3PC) dataset to assess Wood Duck distribution across Ontario KBA's.The steps here are similar to those your used for Cedar Waxwing. 
+Let's search NatureCounts for the Ontario Breeding Bird Atlas (ONATLAS3PC) dataset to assess Wood Duck distribution across Ontario KBA's.The steps here are similar to those your used for Cedar Waxwing.
+
 ```{r}
 collections <- meta_collections()
 View(meta_collections())
@@ -226,6 +229,7 @@ search_species("wood duck")
 ```
 
 Then let's filter and download data specifically for the Wood Ducks in Ontario.
+
 ```{r}
 atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "testuser", info = "spatial_data_tutorial")
 ```
@@ -233,17 +237,20 @@ atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "te
 We can then convert our NatureCounts data into a spatial object. To do so, we deploy the `st_as_sf` function and specify the coordinate reference system (CRS).
 
 The CRS of our KBA sf object can be returned with `st_crs()`.
+
 ```{r}
 sf::st_crs(ontario_kba)
 ```
 
 Our KBA sf object is stored with World Geodetic System 1984 (WGS 84) coordinates, EPSG = 4326. Now we can convert our **atlas_on** dataframe to an sf object using the same CRS.
+
 ```{r}
 atlas_on_sf <- sf::st_as_sf(atlas_on,
                         coords = c("longitude", "latitude"), crs = 4326)
 ```
 
 Now let's ensure that the conversion was successful. You'll notice a new geometry column where each observation is a point.
+
 ```{r}
 str(atlas_on_sf) # view the sf object
 ```
@@ -254,11 +261,13 @@ There are a few other useful functions that may be applied to sf objects:
 | `sf::st_drop_geometry()` - removes the geometry column of a sf object
 
 For example, `st_transform()` can be applied to project our spatial object using a different CRS like NAD83 / UTM zone 16N (EPSG = 26916).
+
 ```{r}
 ontario_kba <- sf::st_transform(ontario_kba, crs = 26916) 
 ```
 
 It can also be used to ensure that the CRS of our spatial objects match.
+
 ```{r}
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 ```
@@ -275,11 +284,13 @@ Geoprocessing functions allow us to manipulate or compute spatial objects based 
 More resources, including as `sf` package **cheatsheat** can be found [here](https://github.com/r-spatial/sf).
 
 To identify Wood Ducks observed in Ontario KBA's, we can apply the `st_intersection()` function.
+
 ```{r}
 wood_ducks_kba <- sf::st_intersection(ontario_kba, atlas_on_sf)
 ```
 
 You will get a `warning` message, which you can safely ignore.
+
 ```{r}
 # If need be, transform your spatial data back to EPSG:4326 to visualize with leaflet
 ontario_kba <- st_transform(ontario_kba, crs = 4326)
@@ -287,6 +298,7 @@ wood_ducks_kba <- st_transform(wood_ducks_kba, crs = 4326)
 ```
 
 Apply leaflet once more to visualize our polygon data and point data, this time using the `addCircleMarkers` argument.
+
 ```{r}
 leaflet(width = "100%") %>%
   addTiles() %>%
@@ -299,48 +311,55 @@ leaflet(width = "100%") %>%
 ```
 
 After geoprocessing our data in R, we can write out any sf objects to Shapefiles on a disk, where the argument delete_layer = TRUE is used to overwrite a file.
+
 ```{r}
 # st_write(wood_ducks_kba,"wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
-
 
 # 1.7 Priority Places Example
 
 *Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place.
 
 First, lets create a path to our downloaded Priority Place file.
+
 ```{r}
 gdb_path <- "PriorityPlaces.gdb"
 ```
 
-Then, let's inspect the spatial data. 
+Then, let's inspect the spatial data.
+
 ```{r}
 gdb_layers <- st_layers(gdb_path)
 print(gdb_layers)
 ```
 
 To read in our spatial data object, we apply the `st_read` function and specify our desired data layer.
+
 ```{r}
 priori_place_polygons <- st_read(dsn = gdb_path, layer = "PriorityPlacesBoundary")
 ```
 
 Were interested in Wood Duck distribution across the Long Point Walsingham Forest Priority Place. We'll use `dplyr` to filter based on a variable condition.
+
 ```{r}
 long_point_polygon <- priori_place_polygons %>%
   dplyr::filter(Name == "Long Point Walsingham Forest") # filters based on multipolygon name 
 ```
 
 Then reproject the Wood Duck data to match our Priority Place using `st_transform`.
+
 ```{r}
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(long_point_polygon))
 ```
 
 Next, we'll apply our geoprocessing function to find the Wood Duck observations that intersect with our chosen Priority Place.
+
 ```{r}
 wood_ducks_longpoint <- sf::st_intersection(long_point_polygon, atlas_on_sf)
 ```
 
 Finally, we'll transform our spatial objects one more time before visualizing them with `leaflet`.
+
 ```{r}
 long_point_polygon <- st_transform(long_point_polygon, crs = 4326)
 ```
