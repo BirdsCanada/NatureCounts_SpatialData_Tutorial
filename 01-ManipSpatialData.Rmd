@@ -318,7 +318,7 @@ After geoprocessing our data in R, we can write out any sf objects to Shapefiles
 
 # 1.7 Priority Places Example
 
-*Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place.
+*Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place. Data for this section may be downloaded from the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
 First, lets create a path to our downloaded Priority Place file.
 
