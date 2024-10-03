@@ -15,15 +15,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Spatial data mapping can help explore possible associations between species occurrences, climate, and other environmental variables. Integrating diverse datasets with NatureCounts data can, therefore, help inform species distribution models, select predictor variables, and provide us clever ways to communicate our data.
 
-In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond. This tutorial will bind using spatio-temporal maps.
+In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
 # 2.0 Learning Objectives
 
 By the end of **Chapter 2 - Climate Data**, users will know how to:
 
 -   Download and preprocess vector and raster climate data in R
--   Combine climate data with NatureCounts observations
--   Visualize NatureCounts and climate data using spatio-temporal maps
+-   Combine NatureCounts observations with climate data
+-   Visualize NatureCounts and climate data using plots and spatio-temporal maps
 
 This tutorial utilizes the following bird occurrence, spatial, and climate data sources:
 
@@ -78,6 +78,7 @@ View(search_species("whooping crane"))
 ```
 
 To download the NatureCounts data, you can specify the collection and species code relevant to your research:
+
 ```{r}
 abatlas1_whooping <- nc_data_dl(collections = "ABATLAS1", species = 4030, username = "testuser", info = "spatial_data_tutorial")
 ```
@@ -90,7 +91,6 @@ abatlas2_whooping <- nc_data_dl(collections = "ABATLAS2", species = 4030, userna
 abirdrecs_whooping <- nc_data_dl(collections = "ABBIRDRECS", species = 4030, username = "testuser", info = "spatial_data_tutorial")
 ```
 
-
 Reminder! eBird collections comprise data of Access Level 4. To access these collections you must sign up for a free account and make a [data request](https://naturecounts.ca/nc/default/explore.jsp#table).
 
 ```{r}
@@ -98,21 +98,22 @@ ebird_whooping <- nc_data_dl(collections = "EBIRD-CA-PR", species = 4030, userna
 ```
 
 The NatureCounts data is now downloaded and, because it is all formatted using the BMDE schema, you can easily combine it together using a binding function:
+
 ```{r}
 whooping_crane_data <- bind_rows(abatlas1_whooping, abatlas2_whooping, abirdrecs_whooping, ebird_whooping)
 whooping_crane_data
 ```
 
+Grouping the NatureCounts data might provide more meaningful insight on species occurrences at each site and how they might vary across time and space. To create date and doy columns and ensure that the ObservationCount column is in the correct **numeric** format we can apply the `format_dates` and `mutate` functions :
 
-Grouping the Whooping Crane data might provide more meaningful insight on species occurrence and how it varies across time and space. First, it is important that you create date and doy columns and ensure that the ObservationCount column is in the correct `numeric` format:
 ```{r}
 whooping_crane_data <- whooping_crane_data %>%
   format_dates() %>% # create the date and doy columns 
   mutate(ObservationCount = as.numeric(ObservationCount)) # convert to numeric
 ```
 
+You can then summarise species occurrence by SiteCode and date while keeping the coordinate information for each site using the `group_by` and `summarise` functions:
 
-You can then summarise species occurrence by SiteCode and date while keeping the coordinate information for each site:
 ```{r}
 species_occurrence_summary <- whooping_crane_data %>%
   group_by(SiteCode, date, longitude, latitude) %>%
@@ -120,7 +121,8 @@ species_occurrence_summary <- whooping_crane_data %>%
   ungroup()
 ```
 
-Lastly, you can summarize the NatureCounts data once more to get the annual total counts of Whooping Cranes, say between 1985 and 2011:
+Lastly, you can summarize the NatureCounts data once more to get the annual total counts of Whooping Cranes, say between 1985 and 2011. To do so, we can 1) produce a regular dataframe called **cranes_summary** by dropping the geometry column (`st_drop_geometry`) 2) create the **date** column using `lubridate` and group by year 3) calculate the **annual_count** by using the `summarise` and `sum` functions and 4) filter for NA values and by **year:**
+
 ```{r}
 cranes_summary <- species_occurrence_summary %>%
   st_drop_geometry() %>%
@@ -137,12 +139,14 @@ cranes_summary
 `weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
 First, let's take a look at the built in **stations** dataset:
+
 ```{r}
 stations <- weathercan::stations()
 head(stations)
 ```
 
 Weather data can also be filtered based on province, interval, station operation period, and elevation to exclude extreme measurements in the weather data download:
+
 ```{r}
 prov_stations <- stations %>%
   filter(prov %in% c("AB"),
@@ -159,6 +163,8 @@ birch_station <- stations_search(name = "BIRCH MOUNTAIN LO", interval = "day")
 buckton_station <- stations_search(name = "BUCKTON LO", interval = "day")
 wood_buff_stations <- rbind(birch_station, buckton_station) # combine 
 ```
+
+Perform the weather data download (give it a few minutes):
 
 ```{r message = FALSE}
 weather <- weather_dl(station_ids = wood_buff_stations$station_id,
@@ -177,12 +183,13 @@ NOTE - Larger data downloads can be performed based on filtered stations data-se
 ```
 
 Next, convert the date column to Date data type. This will allow you to apply more filters based on month and survey year:
+
 ```{r}
 weather$date <- as.Date(weather$date)
 ```
 
+Finally, to summarize the weather data by calculating the annual mean summer temperature and precipitation we can use the familiar `filter`, `group_by`, and `summarise` functions:
 
-Finally, to summarize the weather data by calculating the annual mean summer temperature and precipitation:
 ```{r}
 yearly_climate <- weather %>%
   filter(lubridate::month(date) %in% 5:8) %>%  # Filter for summer months May (5) through August (8)
@@ -196,15 +203,15 @@ yearly_climate
 
 # 2.3 Climate Data Analysis
 
+Now that you have prepared the NatureCounts and weathercan climate data in sections **2.1** and **2.2**, respectively you can combine the data together for analysis.
 
-Now that you have prepared the NatureCounts and weathercan climate data in sections 2.1 and 2.2, respectively you can combine the data together for analysis.
 ```{r}
 cranes_climate_summary <- left_join(cranes_summary, yearly_climate)
 cranes_climate_summary
 ```
 
-
 To visualize average annual summer temperature and total count, you can use a scatterplot:
+
 ```{r}
 ggplot(cranes_climate_summary, aes(x = yearly_avg_temp, y = annual_count)) +
   geom_point(color = "blue", size = 3, alpha = 0.7) +  # Simple blue points
@@ -216,8 +223,8 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_temp, y = annual_count)) +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
 
-
 Or do the same for annual summer precipitation:
+
 ```{r}
 ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
   geom_point(color = "blue", size = 3, alpha = 0.7) +  # Simple blue points
@@ -233,8 +240,10 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 [WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. In this next section you will manipulate climate data rasters and associate them with NatureCounts data.
 
+After dowloading the WorldClim data to your directory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function:
+
 ```{r}
-worldclim_list <- list.files(path = "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/worldclim", pattern = "\\.tif$", full.names = TRUE)
+worldclim_list <- list.files(path = "C:/Users/dimit/Birds Canada/Data/worldclim", pattern = "\\.tif$", full.names = TRUE)
 
 # Read and stack the raster files
 worldclim_stack <- rast(worldclim_list)
@@ -244,11 +253,13 @@ print(worldclim_stack)
 ```
 
 Great! The raster stack which includes the 19 bio-climatic variables has been read into R successfully. We can simplify the layer names which represent each variable, respectively:
+
 ```{r}
 names(worldclim_stack) <- paste0("bio", 1:19)
 ```
 
 Let's take a look at the first layer 'bio1' which is Annual Mean Temperature. To do so, you can subset the layers of the SpatRaster with \$ or two sets of square brackets [ [ ] ].
+
 ```{r}
 # Plot the first bio-climatic layer (e.g., bio1: Annual Mean Temperature)
 plot(worldclim_stack[["bio1"]], main = "Annual Mean Temperature (bio1)")
@@ -257,23 +268,27 @@ plot(worldclim_stack[["bio1"]], main = "Annual Mean Temperature (bio1)")
 summary(worldclim_stack)
 ```
 
-Convert the species_occurences_summary, which summarises species occurrence by SiteCode, into a spatial object:
+Convert the **species_occurences_summary**, which summarises species occurrence by SiteCode, into a spatial object using the `st_as_sf` function:
+
 ```{r}
 cranes_sf <- sf::st_as_sf(species_occurrence_summary,
                         coords = c("longitude", "latitude"), crs = 4326)
 ```
 
 Extract the bio-climatic variable values for each bird observation site, respectively.
+
 ```{r}
 bioclim_values <- extract(worldclim_stack, cranes_sf)
 ```
 
 Then combine the bio-climatic values with the NatureCounts data:
+
 ```{r}
 bioclim_data <- cbind(cranes_sf, bioclim_values, longitude = species_occurrence_summary$longitude, latitude =  species_occurrence_summary$latitude)
 ```
 
-Filter the data to only include observations made post 1970:
+Filter the data to only include observations made post 1970 to match the temporal resolution of the climate dataset:
+
 ```{r}
 bioclim_data <- bioclim_data %>%
   mutate(date = as.Date(date)) %>%
@@ -283,22 +298,14 @@ summary(bioclim_data)
 
 # 2.5 Climate Data Analysis
 
-We can now extract the value of each bioclimatic variable for each bird observation site, respectively. First we'll filter the `cranes_sf` dataset to only include observations from 1950 to present:
+Combine the bioclimatic values with the NatureCounts data:
 
 ```{r}
-cranes_sf_filtered <- cranes_sf %>%
-  mutate(date = as.Date(date)) %>%
-  filter(year(date) >= "1950")
+bioclim_data <- cbind(cranes_sf, bioclim_values, longitude = species_occurrence_summary$longitude, latitude = species_occurrence_summary$latitude)
+bioclim_data
 ```
 
-```{r}
-bioclim_values <- extract(worldclim_stack, cranes_sf_filtered)
-```
-
-Then combine the bioclimatic values with the NatureCounts data:
-```{r}
-bioclim_data <- cbind(cranes_sf_filtered, bioclim_values, species_occurrence_summary$longitude, species_occurrence_summary$latitude)
-```
+Visualize the distribution of **bio1** compared to **total_count**:
 
 ```{r}
 # Scatter plot of bird observations against a bioclimatic variable (bio1)
@@ -309,6 +316,8 @@ ggplot(data = bioclim_data, aes(x = bio15, y = total_count)) +
        y = "ObservationCount") +
   theme_minimal()
 ```
+
+Map the NatureCounts data by grouping it by **SiteCode**, sizing the points by **total_count** and colorizing them by a bio-climatic variable (**bio1**):
 
 ```{r}
 bioclim_data <- st_transform(bioclim_data, crs = 4326)
