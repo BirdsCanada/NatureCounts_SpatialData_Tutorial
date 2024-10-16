@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-Spatial data mapping can help explore possible associations between species occurrences, climate, and other environmental variables. Integrating diverse datasets with NatureCounts data can, therefore, help inform species distribution models, select predictor variables, and provide us clever ways to communicate our data.
+Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide us clear way to communicate your data.
 
 In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
@@ -77,31 +77,16 @@ search_species("whooping crane")
 View(search_species("whooping crane"))
 ```
 
-To download the NatureCounts data, you can specify the collection and species code relevant to your research:
+To download the NatureCounts data, you can specify the collection and species code relevant to your research. Replace `testuser` with your user name.
 
 ```{r}
-abatlas1_whooping <- nc_data_dl(collections = "ABATLAS1", species = 4030, username = "testuser", info = "spatial_data_tutorial")
+whooping_crane_data <- nc_data_dl(collections = c("ABATLAS1", "ABATLAS2", "ABBIRDRECS"), species = 4030, username = "testuser", info = "spatial_data_tutorial")
 ```
 
-```{r}
-abatlas2_whooping <- nc_data_dl(collections = "ABATLAS2", species = 4030, username = "testuser", info = "spatial_data_tutorial")
-```
+eBird has the greatest number of Whooping Crane records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and make a [data request](https://naturecounts.ca/nc/default/explore.jsp#table). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
 
 ```{r}
-abirdrecs_whooping <- nc_data_dl(collections = "ABBIRDRECS", species = 4030, username = "testuser", info = "spatial_data_tutorial")
-```
-
-Reminder! eBird collections comprise data of Access Level 4. To access these collections you must sign up for a free account and make a [data request](https://naturecounts.ca/nc/default/explore.jsp#table).
-
-```{r}
-ebird_whooping <- nc_data_dl(collections = "EBIRD-CA-PR", species = 4030, username = "dimimarkou", info = "spatial_data_tutorial")
-```
-
-The NatureCounts data is now downloaded and, because it is all formatted using the BMDE schema, you can easily combine it together using a binding function:
-
-```{r}
-whooping_crane_data <- bind_rows(abatlas1_whooping, abatlas2_whooping, abirdrecs_whooping, ebird_whooping)
-whooping_crane_data
+whooping_crane_data <- nc_data_dl(collections = c("ABATLAS1", "ABATLAS2", "ABBIRDRECS","EBIRD-CA-PR"), species = 4030, username = "testuser", info = "spatial_data_tutorial")
 ```
 
 Grouping the NatureCounts data might provide more meaningful insight on species occurrences at each site and how they might vary across time and space. To create date and doy columns and ensure that the ObservationCount column is in the correct **numeric** format we can apply the `format_dates` and `mutate` functions :
@@ -164,7 +149,7 @@ buckton_station <- stations_search(name = "BUCKTON LO", interval = "day")
 wood_buff_stations <- rbind(birch_station, buckton_station) # combine 
 ```
 
-Perform the weather data download (give it a few minutes):
+Now you can perform the weather data download (give it a few minutes).
 
 ```{r message = FALSE}
 weather <- weather_dl(station_ids = wood_buff_stations$station_id,
@@ -206,11 +191,11 @@ yearly_climate
 Now that you have prepared the NatureCounts and weathercan climate data in sections **2.1** and **2.2**, respectively you can combine the data together for analysis.
 
 ```{r}
-cranes_climate_summary <- left_join(cranes_summary, yearly_climate)
+cranes_climate_summary <- left_join(cranes_summary, yearly_climate, by="year")
 cranes_climate_summary
 ```
 
-To visualize average annual summer temperature and total count, you can use a scatterplot:
+To visualize average annual summer temperature and total count, you can use a scatterplot.
 
 ```{r}
 ggplot(cranes_climate_summary, aes(x = yearly_avg_temp, y = annual_count)) +
@@ -240,10 +225,20 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 [WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. In this next section you will manipulate climate data rasters and associate them with NatureCounts data.
 
-After dowloading the WorldClim data to your directory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function:
+Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
+
+After dowloading the WorldClim data to your working directory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function.
+
+This code will get the path to your working directory.
 
 ```{r}
-worldclim_list <- list.files(path = "C:/Users/dimit/Birds Canada/Data/worldclim", pattern = "\\.tif$", full.names = TRUE)
+getwd()
+```
+
+Now point the `list.file` to this directory using the sample code below.
+
+```{r}
+worldclim_list <- list.files(path = "C:/YOUR/PATH/HERE", pattern = "\\.tif$", full.names = TRUE)
 
 # Read and stack the raster files
 worldclim_stack <- rast(worldclim_list)
@@ -281,7 +276,7 @@ Extract the bio-climatic variable values for each bird observation site, respect
 bioclim_values <- extract(worldclim_stack, cranes_sf)
 ```
 
-Then combine the bio-climatic values with the NatureCounts data:
+Then combine the bio-climatic values with the NatureCounts data.
 
 ```{r}
 bioclim_data <- cbind(cranes_sf, bioclim_values, longitude = species_occurrence_summary$longitude, latitude =  species_occurrence_summary$latitude)
@@ -298,7 +293,7 @@ summary(bioclim_data)
 
 # 2.5 Climate Data Analysis
 
-Combine the bioclimatic values with the NatureCounts data:
+Combine the bioclimatic values with the NatureCounts data.
 
 ```{r}
 bioclim_data <- cbind(cranes_sf, bioclim_values, longitude = species_occurrence_summary$longitude, latitude = species_occurrence_summary$latitude)
