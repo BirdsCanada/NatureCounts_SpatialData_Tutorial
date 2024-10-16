@@ -33,7 +33,7 @@ By the end of **Chapter 1 - Manipulating Spatial Data**, users will know how to:
 
 This R tutorial requires the following **packages**:
 
-```{r}
+```{r, message = FALSE}
 library(naturecounts)
 library(sf)
 library(terra)
