@@ -11,13 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 3 Environmental Data
 
-The [Whooping Crane nesting area and summer range](https://kbacanada.org/site/?SiteCode=NT002) is located approximately 75 km west of Fort Smith, Northwest Territories.
+##### Author: Dimitrios Markou
 
-```{r}
+# 3.0 Learning Objectives
+
+By the end of **Chapter 3 - EnvironmentalData**, users will know how to:
+
+-   Process digital elevation model and landcover data
+-   Calculate Normalized Difference Vegetation Index (NDVI)
+-   Link NatureCounts data to environmental data
+
+This R tutorial requires the following packages:
+
+```{r, eval = TRUE, warning = FALSE, message = FALSE}
 library(naturecounts)
 library(sf)
 library(terra)
-library(luna)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -28,224 +37,157 @@ library(leaflet.extras)
 library(leaflet.providers)
 ```
 
-# Visualizing the study area 
+# 3.1 Study Area - La Mauricie National Park
 
-Our first step is to get an appreciation for the study area by downloading the KBA boundary / environmental data and rendering a quick map.
-
-Data downloads can sometimes have clunky names which are the opposite of R-friendly. Here is a useful function we can apply to our downloaded KBA shapefile and accompanying files to change their basename:
+Read in the National Park polygons:
 
 ```{r}
-rename_shapefile <- function(directory, old_name, new_name) {
-  # Define the file extensions typically associated with shapefiles
-  extensions <- c(".shp", ".shx", ".dbf", ".prj", ".sbn", ".sbx", ".cpg", ".xml", ".qix")
-  
-  # Loop through each extension and rename the corresponding file
-  for (ext in extensions) {
-    old_file <- file.path(directory, paste0(old_name, ext))
-    new_file <- file.path(directory, paste0(new_name, ext))
-    
-    # Check if the old file exists before attempting to rename
-    if (file.exists(old_file)) {
-      file.rename(old_file, new_file)
-    }
-  }
-}
-
-  # Apply the function 
-rename_shapefile("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/KBA/WhoopingCrane_KBA", "kba.20240822070858", "whooping_crane_kba")
-```
-
-Read in the KBA boundary 
-
-```{r}
-whooping_crane_kba <- sf::st_read("Data/KBA/WhoopingCrane_KBA/whooping_crane_kba.shp")
-```
-```{r}
-whooping_crane_kba <- whooping_crane_kba %>% st_make_valid() %>% distinct()
+national_parks <- st_read("C:/Users/dimit/Birds Canada/Data/nationalparks/vw_Places_Public_lieux_public_APCA.shp")
 ```
 
 ```{r}
-kba_attributes <- read.csv("Data/KBA/WhoopingCrane_KBA/whooping_crane_kba.csv")
+mauricie_boundary <- national_parks %>%
+  filter(OBJECTID == "21")
 ```
 
-```{r}
-kba_attributes <- kba_attributes %>%
-  dplyr::select("SiteCode",
-         "DateAssessed",
-         "PercentProtected",
-         "BoundaryGeneralized",
-         "Level",
-         "CriteriaMet",
-         "ConservationActions",
-         "Landcover",
-         "Province",
-         "Species")
-```
+# 3.2 NatureCounts Data
 
-```{r}
-whooping_crane_kba <- full_join(whooping_crane_kba, kba_attributes, by = "SiteCode")
-```
-
-```{r}
-leaflet(width = "100%") %>%
-  addTiles() %>%
-  addPolygons(data = whooping_crane_kba, color = "black", weight = 2, smoothFactor = 1,
-              opacity = 1.0, fillOpacity = 0.6, fillColor = "limegreen") %>%
-  addFullscreenControl() %>%
-  addLegend(colors = c("limegreen"), 
-            labels = c("Whooping Crane Nesting Area and Summer Range"), 
-            position = "bottomright") %>%
-  addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
-```
-
-# Retrieving Whooping Crane data from NatureCounts
+Explore the NatureCounts collections:
 
 ```{r}
 collections <- meta_collections()
 View(meta_collections())
 ```
 
-Upon inspection, we see that there are at least two ATLAS collections relevant to our research. The ABATLAS1 and ABATLAS2 collections both cover a wide range of survey years (1987-1991 and 2000-2005, respectively). 
+In this example, we will use data from the Quebec Breeding Bird Atlas ...
+
+Download data from NatureCounts:
 
 ```{r}
-search_species("whooping crane")
-```
-Let's download data from all collections using the relevant project_id and species_id: 
-
-```{r}
-whooping_crane_data <- nc_data_dl(collections = c("ABATLAS1", "ABATLAS2"), species = 4030, username = "dimimarkou", info = "spatial_data_tutorial")
-```
-Convert the ATLAS data into a spatial object: 
-
-```{r}
-whooping_crane_data_sf<- sf::st_as_sf(whooping_crane_data,
-                        coords = c("longitude", "latitude"), crs = 4326)
+quebec_atlas <- nc_data_dl(collections = "BCATLAS1BE_RAW", region = list(subnational2 = "CA.BC.CP"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
-To write this spatial data object as a shapefile: 
+Convert the NatureCounts data to a spatial object:
 
 ```{r}
-sf::st_write(whooping_crane_data_sf, "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/WhoopingCrane/whooping_crane_data.shp")
-```
-```{r}
-sf::st_write(whooping_crane_kba, "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/Priority Places/WhoopingCrane/whooping_crane_kba.shp")
+
 ```
 
-
-
-To apply geoprocessing function, we have to reproject our KBA and ATLAS spatial data layers:
+Clip the NatureCounts data to the area of interest using geoprocessing functions:
 
 ```{r}
-whooping_crane_kba <- sf::st_transform(whooping_crane_kba, crs = 26916) 
 
-whooping_crane_data_sf <- st_transform(whooping_crane_data_sf, crs = st_crs(whooping_crane_kba))
 ```
 
-Perform an intersection to find which observations are within the target KBA:
+# 3.3 DEM, DSM & DTM
 
-```{r}
-whooping_crane_data_sf <- sf::st_intersection(whooping_crane_kba, whooping_crane_data_sf)
+BLURB on DEM vs DTM vs DSM LiDAR-derived products
+
+Set the path to your TIF file directory:
+
+```{r, eval = FALSE}
+dir_path <- "path/to/your/directory"
 ```
 
-Transform both spatial data layers back to a CRS suitable for mapping:
-
-```{r}
-whooping_crane_kba <- st_transform(whooping_crane_kba, crs = 4326)
-whooping_crane_data_sf <- st_transform(whooping_crane_data_sf, crs = 4326)
+```{r, eval = TRUE, echo = FALSE}
+dir_path <- "C:/Users/dimit/Birds Canada/Data/mauricie"
 ```
 
-Visualize the Whooping Crane observations within the KBA:
+Create a mosaic of the adjacent DTM rasters:
 
-```{r}
-leaflet(width = "100%") %>%
-  addTiles() %>%
-  addPolygons(data = whooping_crane_kba, color = "black", weight = 2, smoothFactor = 1,
-              opacity = 1.0, fillOpacity = 0.6, fillColor = "limegreen") %>%
-   addCircleMarkers(data = whooping_crane_data_sf, radius = 3, color = "black", stroke = FALSE, fillOpacity = 0.8) %>%
-  addFullscreenControl() %>%
-  addLegend(colors = c("limegreen"), 
-            labels = c("Whooping Crane Nesting Area and Summer Range"), 
-            position = "bottomright") %>%
-  addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
+```{r, eval = TRUE}
+# list all the TIFF files in your directory
+dtm_files <- list.files(dir_path, pattern = "\\.tif$", full.names = TRUE)
+
+# Read into a list of SpatRaster objects
+dtm_list <- lapply(dtm_files, rast)
+
+# Combine into a single SpatRaster object
+dtm_mosaic <- do.call(mosaic, dtm_list)
+
+# Print information about the stack
+print(dtm_mosaic)
 ```
 
-# Downloading MODIS data 
+Let's check if the DTM and national park boundary have the same crs by using the `st_crs` function and equality operator (**==**) which will generate either TRUE or FALSE:
 
-```{r}
-modis_products <- getProducts("^MOD|^MYD|^MCD")
-head(modis_products)
-```
-```{r}
-product <- "MCD12Q1"
-productInfo(product)
-```
-MCD12Q1 provides global land cover types at yearly intervals (2001-2022). We'll grab data from years corresponding to the ABATLAS2 surveys:
-
-```{r}
-start <- "2000-01-01"
-end <- "2006-01-01"
+```{r, eval = TRUE}
+st_crs(dtm_mosaic) == st_crs(mauricie_boundary)
 ```
 
+To reproject the spatial data with the same crs, we can use the `st_transform` function:
+
 ```{r}
-datadir <- file.path("C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data", "MODIS")
-dir.create(datadir, showWarnings = FALSE)
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(dtm_mosaic))
 ```
 
-```{r}
-modis_data <- luna::getNASA(product, start, end, aoi= whooping_crane_data_sf, download=TRUE,
-                     path=datadir, username="dimimarkou", password=",xx4=_#Q?VPBxBm")
-modis_data
+We can then use the base `plot` function to visualize the terrain of Mauricie National Park:
+
+```{r, eval = TRUE, warning = FALSE}
+# Plot the DTM mosaic
+plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
+
+# Overlay the National Park boundary
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-```{r}
-# List of HDF files
-hdf_files <- list.files(path = "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/MODIS", pattern = "\\.hdf$", full.names = TRUE)
+# 3.4 Cropping and masking
 
-length(hdf_files)
+**Cropping** reduces the extent of a raster to the extent of another raster or vector.
+
+**Masking** assigns NA values to cells of a raster not covered by a vector.
+
+To mask a raster to a vector extent we will use the `mask` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector: 
+```{r, warning = FALSE}
+mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
-Inspect the data: 
+Visualize the output from 
 
 ```{r}
-file_name <- basename(hdf_files)
+# Set up a 1x2 plotting layout
+par(mfrow = c(1, 2))
 
-date_ts <- str_extract(file_name, pattern = "[0-9]{7}")
+# Plot dtm_mosaic
+plot(dtm_mosaic, main = "regional DTM")
 
-date_ts <- str_replace(date_ts,
-                       pattern = "A",
-                       replacement = "")
-
-date_ts <- lubridate::as_date(date_ts, format = "%Y%j")
-
-date_data <- as.data.frame(date_ts)
-
-year <- year(date_ts)
-
-date_data <- cbind(date_data, year)
-
-df_group <- group_by(date_data, year)
-
-date_data <- summarize(df_group, n())
-
-print(date_ts)
-
-print(date_data)
-```
-
-```{r}
-datadir <- "C:/Users/dimit/Birds Canada/NatureCounts_SpatialData_Tutorial/Data/MODIS"
-mf <- file.path(datadir, "MCD12Q1.A2001001.h12v02.061.2022146050005.hdf")
-
-library(terra)
-r <- rast(mf[1])
-r
-```
-```{r}
-sds_list <- sds(mf)
-print(sds_list)
+# Plot mauricie_mask
+plot(mauricie_mask, main = "mask DTM")
 ```
 
 
 
 
+```{r}
+mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
+```
+
+# 3.5 Reclassification 
+
+# 3.6 Summary Statistics
+
+To calculate the summary statistics for the values of individual SpatRaster layers you can use the `global()` function like so:
+
+```{r}
+global(dtm_mosaic, fun = "mean", na.rm = TRUE)
+```
+
+It is also possible to make and implement a function to calculate multiple summary statistics simultaneously:
+
+```{r}
+my_summary_stats <- function(x) {
+  out <- c(mean = mean(x, na.rm = TRUE), 
+              sd = sd(x, na.rm = TRUE), 
+              min = min(x, na.rm = TRUE), 
+              max = max(x, na.rm = TRUE))
+  return(out)
+}
+global(dtm_mosaic, fun = my_summary_stats)
+```
+
+# 4.0 Landcover Data
+
+2020 Land Cover of Canada: <https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/81252d30-5102-46db-a9c5-6ab1ccd5dcd7>
+
+2015 Land Cover of Canada: <https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6/resource/54200576-6203-4c1f-b646-924a1df3e08b>
 
 
