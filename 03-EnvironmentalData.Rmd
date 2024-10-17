@@ -41,10 +41,11 @@ library(leaflet.providers)
 
 Read in the National Park polygons:
 
-```{r}
+```{r, message = FALSE}
 national_parks <- st_read("C:/Users/dimit/Birds Canada/Data/nationalparks/vw_Places_Public_lieux_public_APCA.shp")
 ```
 
+Filter the national_parks dataset for La Mauricie National Park:
 ```{r}
 mauricie_boundary <- national_parks %>%
   filter(OBJECTID == "21")
@@ -64,19 +65,33 @@ In this example, we will use data from the Quebec Breeding Bird Atlas ...
 Download data from NatureCounts:
 
 ```{r}
-quebec_atlas <- nc_data_dl(collections = "BCATLAS1BE_RAW", region = list(subnational2 = "CA.BC.CP"), username = "testuser", info = "spatial_data_tutorial")
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial")
+```
+eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and make a data request. Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
+
+```{r, eval = FALSE}
+qc_birds <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "dimimarkou", info = "spatial_data_tutorial")
+```
+
+To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the format_dates and mutate functions :
+
+```{r}
+quebec_atlas <- quebec_atlas %>%
+  format_dates() %>% # create the date and doy columns 
+  mutate(ObservationCount = as.numeric(ObservationCount)) # convert to numeric
 ```
 
 Convert the NatureCounts data to a spatial object:
-
 ```{r}
+quebec_atlas_sf <- sf::st_as_sf(quebec_atlas,
+                        coords = c("longitude", "latitude"), crs = 4326)
 
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(quebec_atlas_sf))
 ```
 
 Clip the NatureCounts data to the area of interest using geoprocessing functions:
-
 ```{r}
-
+mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
 ```
 
 # 3.3 DEM, DSM & DTM
@@ -141,8 +156,8 @@ To mask a raster to a vector extent we will use the `mask` function from the `te
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
-Visualize the output from 
 
+Visualize the regional and masked DTM's with a two-panel plot:
 ```{r}
 # Set up a 1x2 plotting layout
 par(mfrow = c(1, 2))
@@ -151,14 +166,7 @@ par(mfrow = c(1, 2))
 plot(dtm_mosaic, main = "regional DTM")
 
 # Plot mauricie_mask
-plot(mauricie_mask, main = "mask DTM")
-```
-
-
-
-
-```{r}
-mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
+plot(mauricie_mask, main = "masked DTM")
 ```
 
 # 3.5 Reclassification 
