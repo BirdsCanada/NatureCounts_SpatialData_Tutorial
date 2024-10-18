@@ -18,8 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 By the end of **Chapter 3 - EnvironmentalData**, users will know how to:
 
 -   Process Digital Terrain Model (DTM) and Landcover data
--   Calculate Normalized Difference Vegetation Index (NDVI)
 -   Link NatureCounts data to environmental data for analysis
+-   Calculate species diversity indices 
 
 This R tutorial requires the following packages:
 
@@ -120,7 +120,7 @@ mauricie_birds_summary <- mauricie_birds %>%
 mauricie_birds_summary
 ```
 
-If you wanted to summarize total count for each species at each site, respectively you could adjust the pipe like so:
+If you wanted to summarize total count for each species at each site, respectively you could adjust the pipe like so using `pivot_wider()`:
 
 ```{r}
 mauricie_species_summary <- mauricie_birds %>%
@@ -183,7 +183,7 @@ To reproject the spatial data with the same crs, we can use the `st_transform()`
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(dtm_mosaic))
 ```
 
-We can then use the base `plot()` function to visualize the terrain of Mauricie National Park:
+We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park:
 
 ```{r regional_dtm, eval = TRUE, warning = FALSE}
 # Plot the DTM mosaic
@@ -199,7 +199,7 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 **Masking** assigns NA values to cells of a raster not covered by a vector.
 
-To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector:
+To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector using `vect()`:
 
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
@@ -226,7 +226,7 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 # 3.5 Reclassification
 
-When communicating our data, it might be useful to reclassify a range of raster values into categories or classes. Reclassifying rasters is easily achieved using `terra` and the `classify` function.
+When communicating our data, it might be useful to reclassify a range of raster values into classes. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
 
 First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so:
 
@@ -236,7 +236,7 @@ dtm_rcl_matrix <- matrix(c(0, 200, 1,
                            400, 1000, 3), byrow = TRUE, ncol = 3)
 ```
 
-Then, apply the `classify` function using the reclassification matrix:
+Then, apply the `classify()` function using the reclassification matrix:
 
 ```{r}
 dtm_mosaic_reclass <- classify(dtm_mosaic, dtm_rcl_matrix)
@@ -283,7 +283,7 @@ To calculate the summary statistics for the values of individual SpatRaster laye
 global(mauricie_mask, fun = "mean", na.rm = TRUE)
 ```
 
-It is also possible to make and implement a function to calculate multiple summary statistics simultaneously (give this a few minutes):
+It is also possible to make and implement a function to calculate multiple summary statistics simultaneously. For example, `my_summary_stats` calculates the max, min, mean and sd of an input numeric vector `x` and returns the summary statistics in a vector (give this a few minutes):
 
 ```{r}
 my_summary_stats <- function(x) {
@@ -295,7 +295,12 @@ my_summary_stats <- function(x) {
 }
 global(mauricie_mask, fun = my_summary_stats)
 ```
-
+```{r, warning = FALSE}
+terra::hist(mauricie_mask, axes = TRUE, 
+            main = "DTM of La Mauricie National Park",
+            xlab = "Elevation (m)",
+            col = "Green")
+```
 # 3.7 Mapping
 
 ```{r}
@@ -319,6 +324,41 @@ plot(st_geometry(mauricie_site_summary),
 
 # 3.8 Landcover Data
 
-2020 Land Cover of Canada: <https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/81252d30-5102-46db-a9c5-6ab1ccd5dcd7>
+Land cover vs land use
 
-2015 Land Cover of Canada: <https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6/resource/54200576-6203-4c1f-b646-924a1df3e08b>
+Read the landcover dataset using `terra::rast()`.
+
+```{r}
+landcover <- rast("C:/Users/dimit/Birds Canada/Data/landcover-2015-classification.tif")
+landcover
+```
+
+Transform the crs of the National Park boundary to match that of the landcover dataset.
+
+```{r}
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
+```
+
+Crop the national dataset to reduce the extent of the raster to the extent of the Natiional Park.
+
+```{r}
+landcover_crop <- crop(landcover, vect(mauricie_boundary))
+```
+
+Plot the landcover raster and National Park boundary.
+
+```{r, eval = TRUE, warning = FALSE}
+plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
+
+# Overlay the Mauricie boundary on the first plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+```
+```{r}
+unique_vales <- unique(landcover_crop)
+unique_vales
+```
+```{r}
+freq(landcover_crop)
+```
+
+
