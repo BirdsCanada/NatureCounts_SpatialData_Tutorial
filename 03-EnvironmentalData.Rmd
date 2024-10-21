@@ -19,7 +19,7 @@ By the end of **Chapter 3 - EnvironmentalData**, users will know how to:
 
 -   Process Digital Terrain Model (DTM) and Landcover data
 -   Link NatureCounts data to environmental data for analysis
--   Calculate species diversity indices 
+-   Calculate species diversity indices
 
 This R tutorial requires the following packages:
 
@@ -49,7 +49,7 @@ This tutorial uses the following spatial data:
 
 [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
 
-Read the National Park polygons into R:
+Read the National Park polygons into R.
 
 ```{r eval = FALSE}
 national_parks <- st_read("path/to/your/shp")
@@ -59,7 +59,7 @@ national_parks <- st_read("path/to/your/shp")
 national_parks <- st_read("C:/Users/dimit/Birds Canada/Data/nationalparks/vw_Places_Public_lieux_public_APCA.shp")
 ```
 
-Filter the national_parks dataset for La Mauricie National Park:
+Filter the national_parks dataset for La Mauricie National Park.
 
 ```{r}
 mauricie_boundary <- national_parks %>%
@@ -91,7 +91,7 @@ quebec_atlas <- quebec_atlas %>%
   filter(!is.na(longitude) & !is.na(latitude))  # remove rows with missing coordinates
 ```
 
-To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively:
+To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
 
 ```{r}
 quebec_atlas_sf <- sf::st_as_sf(quebec_atlas,
@@ -106,7 +106,7 @@ Clip the NatureCounts data to the National Park boundary using `st_intersection(
 mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
 ```
 
-Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`. 
+Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
 
 ```{r}
 mauricie_birds_summary <- mauricie_birds %>%
@@ -118,7 +118,7 @@ mauricie_birds_summary <- mauricie_birds %>%
 mauricie_birds_summary
 ```
 
-If you wanted to summarize total count for each species at each site, respectively you could adjust the pipe like so using `pivot_wider()`:
+If you wanted to summarize total count for each species at each site, respectively you could adjust the pipe like so using `pivot_wider()`.
 
 ```{r}
 mauricie_species_summary <- mauricie_birds %>%
@@ -145,7 +145,7 @@ Digital elevation datasets store topographic information like elevation or slope
 
 Light Detection and Ranging (LiDAR) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
 
-Set the path to your TIF file directory:
+Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
 dir_path <- "path/to/your/directory"
@@ -155,7 +155,7 @@ dir_path <- "path/to/your/directory"
 dir_path <- "C:/Users/dimit/Birds Canada/Data/mauricie"
 ```
 
-Create a mosaic of the adjacent DTM rasters:
+Create a mosaic of the adjacent DTM rasters.
 
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
@@ -171,19 +171,19 @@ dtm_mosaic <- do.call(mosaic, dtm_list)
 print(dtm_mosaic)
 ```
 
-Let's check if the DTM and National Park boundary have the same crs by using the `st_crs()` function and equality operator (**==**) which will generate either TRUE or FALSE:
+Let's check if the DTM and National Park boundary have the same crs by using the `st_crs()` function and equality operator (**==**) which will generate either TRUE or FALSE.
 
 ```{r, eval = TRUE}
 st_crs(dtm_mosaic) == st_crs(mauricie_boundary)
 ```
 
-To reproject the spatial data with the same crs, we can use the `st_transform()` function:
+To reproject the spatial data with the same CRS, we can use the `st_transform()` function.
 
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(dtm_mosaic))
 ```
 
-We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park:
+We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park.
 
 ```{r regional_dtm, eval = TRUE, warning = FALSE}
 # Plot the DTM mosaic
@@ -199,13 +199,13 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 **Masking** assigns NA values to cells of a raster not covered by a vector.
 
-To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector using `vect()`:
+To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector using `vect()`.
 
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-Visualize the regional and masked DTM's with a two-panel plot:
+Visualize the regional and masked DTM's with a two-panel plot.
 
 ```{r masked_dem, eval = TRUE, warning = FALSE}
 # Set up a 1x2 plotting layout
@@ -295,12 +295,16 @@ my_summary_stats <- function(x) {
 }
 global(mauricie_mask, fun = my_summary_stats)
 ```
+
+You can also create a histogram of the raster DTM data.
+
 ```{r, warning = FALSE}
 terra::hist(mauricie_mask, axes = TRUE, 
-            main = "DTM of La Mauricie National Park",
+            main = "Elevation values within La Mauricie National Park",
             xlab = "Elevation (m)",
             col = "Green")
 ```
+
 # 3.7 Mapping
 
 ```{r}
@@ -309,7 +313,7 @@ mauricie_site_summary <- mauricie_birds %>%
   group_by(SiteCode) %>%
   summarize(total_count = sum(ObservationCount, na.rm = TRUE))
 
-mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_mask))
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_mask)) # Match the CRS
 
 # Plot the mauricie_mask raster
 plot(mauricie_mask, main = "Mauricie Mask with Site Summary Points")
@@ -322,9 +326,31 @@ plot(st_geometry(mauricie_site_summary),
      cex = 0.5)      # Point size
 ```
 
+To extract the elevation values at each site.
+
+```{r}
+mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_mask)) # Match the CRS
+
+mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
+
+elevation_values <- terra::extract(mauricie_mask, mauricie_birds_vect) # Extracts the elevation values for each point
+
+elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elevation_values[, 2]) # Creates the record_id and elevation columns 
+```
+
+To include the elevation values to the mauricie_birds dataset.
+
+```{r}
+mauricie_birds$elevation <- elevation_values[, 2] # attaches the 2nd column of the elevation_values dataset to mauricie_birds
+```
+
 # 3.8 Landcover Data
 
-Land cover vs land use
+**Land use** describes the purpose that the land serves i.e. recreation, wildlife habitat, agriculture, etc.
+
+**Land cover** describes the surface cover on the ground i.e. vegetation, urban, water, bare soil, etc.
+
+See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada.
 
 Read the landcover dataset using `terra::rast()`.
 
@@ -353,12 +379,16 @@ plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Ma
 # Overlay the Mauricie boundary on the first plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
+
+To extract all the pixel values found in the cropped raster.
+
 ```{r}
 unique_vales <- unique(landcover_crop)
 unique_vales
 ```
+
+To determine the number of pixels associated with each pixel value.
+
 ```{r}
 freq(landcover_crop)
 ```
-
-
