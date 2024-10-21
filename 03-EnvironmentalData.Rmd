@@ -106,16 +106,13 @@ Clip the NatureCounts data to the National Park boundary using `st_intersection(
 mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
 ```
 
-Tidyverse functions can help us summarize our data in a variety of ways. For example, if you wanted to know the annual bird count for each year:
+Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`. 
 
 ```{r}
 mauricie_birds_summary <- mauricie_birds %>%
-  group_by(SiteCode, date) %>%
-  summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>%
-  ungroup() %>%
   mutate(year = lubridate::year(date)) %>%
   group_by(year) %>%
-  summarise(annual_count = sum(total_count, na.rm = TRUE)) %>%
+  summarise(annual_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>%
   filter(!is.na(year))  # remove rows with missing year
 mauricie_birds_summary
 ```
