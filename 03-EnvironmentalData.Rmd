@@ -18,8 +18,9 @@ knitr::opts_chunk$set(echo = TRUE)
 By the end of **Chapter 3 - EnvironmentalData**, users will know how to:
 
 -   Process Digital Terrain Model (DTM) and Landcover data
+-   Crop, mask, and reclassify raster data
+-   Calculate NDWI and NDVI indices
 -   Link NatureCounts data to environmental data for analysis
--   Calculate species diversity indices
 
 This R tutorial requires the following packages:
 
@@ -41,7 +42,13 @@ This tutorial uses the following spatial data.
 
 1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
-2.  [Forêt ouverte (lidar-derived products)](https://ww8754ecw.donneesquebec.ca/recherche/dataset/produits-derives-de-base-du-lidar/resource/1fb86026-791c-45d2-88d7-5ebd73) - Digital Terrain Models (DTMs)
+2.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
+
+    **Step 1**: Navigate to the Lidar data site. Under Données et ressources \> Carte interactive \> Forêt ouverte select the Téléchargement option to explore the Lidar tiles on an interactive map (Explorer \> Accéder).
+
+    **Step 2**: Using the search bar, search for Parc national de la Mauricie. Under Layers, toggle on Parc nationaux du Canada to visualize the park boundary. You can also import your own .shp or .kml file using the Import and Export tab.
+
+    **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
 
 3.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Landcover map (30 m resolution)
 
@@ -84,21 +91,27 @@ Write the boundary as a shapefile to your disk.
 
 st_write(mauricie_boundary, "mauricie_boundary.shp")
 
-#you will want the KML file for section 3.8
+# you will want the KML file for section 3.8
 st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
-
 ```
 
 # 3.2 NatureCounts Data
 
 To assess the species distribution within the National Park, we will use data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
 
-Dn't forget to replace `testuse` with your NatureCounts username. You will be promted for your password.
+
+Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
+
+Read in the list of species represented in NatureCounts:
+
+```{r}
+species_names <- search_species()
+```
 
 Download NatureCounts data:
 
 ```{r}
-quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial")
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
 ```
 
 eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
@@ -129,6 +142,12 @@ Clip the NatureCounts data to the National Park boundary using `st_intersection(
 
 ```{r, warning=FALSE}
 mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
+```
+Append the species names to the clipped NatureCounts dataset based on `species_id` code. 
+
+```{r}
+mauricie_birds <- mauricie_birds %>%
+  left_join(species_names, by = "species_id")
 ```
 
 Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
@@ -697,8 +716,4 @@ ndvi_values <- terra::extract(mauricie_sl_ndvi, mauricie_birds_vect) # Extracts 
 ndvi_values <- cbind(record_id = mauricie_birds$record_id, ndvi = ndvi_values[, 2]) # Creates the record_id and ndvi columns 
 ```
 
-To append the elevation, pixel, and NDVI values to the `mauricie_birds` dataset:
-
-```{r}
-mauricie_birds$elevation <- elevation_values[, 2] # attaches the 2nd column of the elevation_values dataset to mauricie_birds
-```
+Congratulations! You completed Chapter 3 - Environmental Data. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping, masking, and reclassification procedures 3) calculated summary statistics 4) calculated NDWI and NDVI using satellite imagery and 5) extracted environmental data over an area of interest. The next chapter in this series will help equip you with analysis tools including zero-filling and occupancy modelling strategies. 
