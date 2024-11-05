@@ -410,7 +410,7 @@ To access Copernicus satellite imagery, navigate [here](https://browser.dataspac
 
 1)  Click the **Create an area of interest** tab and select the **Upload a file to create an area of interest** option. Upload the KML National Park boundary file we created in section 3.1.
 
-2)  In the **Search** tab, select SENTINEL-2 and the appropriate time range to retrieve the following image:
+2)  In the **Search** tab, select SENTINEL-2 and the appropriate time range to retrieve the following image. You can also copy/paste the product name into the search bar to find the image. 
 
     **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
 
