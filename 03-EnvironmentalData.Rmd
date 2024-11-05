@@ -704,10 +704,4 @@ ndvi_values <- terra::extract(mauricie_sl_ndvi, mauricie_birds_vect) # Extracts 
 ndvi_values <- cbind(record_id = mauricie_birds$record_id, ndvi = ndvi_values[, 2]) # Creates the record_id and ndvi columns 
 ```
 
-To append the elevation, pixel, and NDVI values to the `mauricie_birds` dataset:
-
-```{r}
-mauricie_birds$elevation <- elevation_values[, 2] # attaches the 2nd column of the elevation_values dataset to mauricie_birds
-```
-
 Congratulations!
