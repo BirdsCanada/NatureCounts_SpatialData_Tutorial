@@ -704,4 +704,4 @@ ndvi_values <- terra::extract(mauricie_sl_ndvi, mauricie_birds_vect) # Extracts 
 ndvi_values <- cbind(record_id = mauricie_birds$record_id, ndvi = ndvi_values[, 2]) # Creates the record_id and ndvi columns 
 ```
 
-Congratulations!
+Congratulations! You completed Chapter 3 - Environmental Data. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping, masking, and reclassification procedures 3) calculated summary statistics 4) calculated NDWI and NDVI using satellite imagery and 5) extracted environmental data over an area of interest. The next chapter in this series will help equip you with analysis tools including zero-filling and occupancy modelling strategies. 
