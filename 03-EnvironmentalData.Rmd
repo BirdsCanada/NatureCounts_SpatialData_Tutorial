@@ -18,8 +18,9 @@ knitr::opts_chunk$set(echo = TRUE)
 By the end of **Chapter 3 - EnvironmentalData**, users will know how to:
 
 -   Process Digital Terrain Model (DTM) and Landcover data
+-   Crop, mask, and reclassify raster data
+-   Calculate NDWI and NDVI indices
 -   Link NatureCounts data to environmental data for analysis
--   Calculate species diversity indices
 
 This R tutorial requires the following packages:
 
@@ -41,7 +42,13 @@ This tutorial uses the following spatial data:
 
 1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
-2.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/dataset/produits-derives-de-base-du-lidar/resource/1fb86026-791c-45d2-88d7-58754ecebd73) - Digital Terrain Models (DTMs)
+2.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
+
+    **Step 1**: Navigate to the Lidar data site. Under Données et ressources \> Carte interactive \> Forêt ouverte select the Téléchargement option to explore the Lidar tiles on an interactive map (Explorer \> Accéder).
+
+    **Step 2**: Using the search bar, search for Parc national de la Mauricie. Under Layers, toggle on Parc nationaux du Canada to visualize the park boundary. You can also import your own .shp or .kml file using the Import and Export tab.
+
+    **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
 
 3.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Landcover map (30 m resolution)
 
@@ -76,6 +83,8 @@ Write the boundary as a shapefile to your disk.
 # st_write(mauricie_boundary_2D, "C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_boundary.shp")
 ```
 
+Or as a KML file.
+
 ```{r}
 # st_write(mauricie_boundary_2D, "C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_boundary.kml", driver = "KML")
 ```
@@ -87,7 +96,7 @@ To assess the species distribution within the National Park, we will use data fr
 Download NatureCounts data:
 
 ```{r}
-quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial")
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
 ```
 
 eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and make a data request. Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
@@ -688,3 +697,5 @@ To append the elevation, pixel, and NDVI values to the `mauricie_birds` dataset:
 ```{r}
 mauricie_birds$elevation <- elevation_values[, 2] # attaches the 2nd column of the elevation_values dataset to mauricie_birds
 ```
+
+Congratulations!
