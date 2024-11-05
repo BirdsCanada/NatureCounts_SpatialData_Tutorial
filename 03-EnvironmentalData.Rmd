@@ -93,6 +93,12 @@ Or as a KML file.
 
 To assess the species distribution within the National Park, we will use data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
 
+Read in the list of species represented in NatureCounts:
+
+```{r}
+species_names <- search_species()
+```
+
 Download NatureCounts data:
 
 ```{r}
@@ -127,6 +133,12 @@ Clip the NatureCounts data to the National Park boundary using `st_intersection(
 
 ```{r}
 mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
+```
+Append the species names to the clipped NatureCounts dataset based on `species_id` code. 
+
+```{r}
+mauricie_birds <- mauricie_birds %>%
+  left_join(species_names, by = "species_id")
 ```
 
 Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
