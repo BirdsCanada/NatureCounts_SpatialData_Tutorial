@@ -38,7 +38,7 @@ library(leaflet.extras)
 library(leaflet.providers)
 ```
 
-This tutorial uses the following spatial data:
+This tutorial uses the following spatial data.
 
 1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
@@ -52,6 +52,12 @@ This tutorial uses the following spatial data:
 
 3.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Landcover map (30 m resolution)
 
+Save these files in you R project working directory for easy accesses during this tutorial.
+
+```{r evel=FALSE}
+getwd()
+```
+
 # 3.1 Study Area - La Mauricie National Park
 
 [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
@@ -59,16 +65,19 @@ This tutorial uses the following spatial data:
 Read the National Park polygons into R.
 
 ```{r eval = FALSE}
-national_parks <- st_read("path/to/your/shp")
-```
+#if in your working directory
+national_parks<-st_read("vw_Places_Public_lieux_public_APCA.shp")
 
-```{r, message = FALSE, eval = TRUE, echo = FALSE}
-national_parks <- st_read("C:/Users/dimit/Birds Canada/Data/nationalparks/vw_Places_Public_lieux_public_APCA.shp")
+#else, specify your directory
+national_parks <- st_read("path/to/your/shp")
+
 ```
 
 Filter the national_parks dataset for La Mauricie National Park.
 
 ```{r}
+View(national_parks) #to find the correct object ID
+
 mauricie_boundary <- national_parks %>%
   filter(OBJECTID == "21")
 
@@ -78,20 +87,20 @@ mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 
 Write the boundary as a shapefile to your disk.
 
-```{r}
-# Write the 2D mauricie_boundary object as a shapefile to your disk
-# st_write(mauricie_boundary_2D, "C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_boundary.shp")
-```
+```{r, eval=FALSE, message=FALSE}
 
-Or as a KML file.
+st_write(mauricie_boundary, "mauricie_boundary.shp")
 
-```{r}
-# st_write(mauricie_boundary_2D, "C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_boundary.kml", driver = "KML")
+# you will want the KML file for section 3.8
+st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
 ```
 
 # 3.2 NatureCounts Data
 
 To assess the species distribution within the National Park, we will use data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
+
+
+Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
 
 Read in the list of species represented in NatureCounts:
 
@@ -105,10 +114,10 @@ Download NatureCounts data:
 quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
 ```
 
-eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and make a data request. Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
+eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
 
 ```{r, eval = FALSE}
-ebird_quebec <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "dimimarkou", info = "spatial_data_tutorial")
+quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
 To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
@@ -131,7 +140,7 @@ mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(quebec_atlas_s
 
 Clip the NatureCounts data to the National Park boundary using `st_intersection()`.
 
-```{r}
+```{r, warning=FALSE}
 mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
 ```
 Append the species names to the clipped NatureCounts dataset based on `species_id` code. 
@@ -153,17 +162,17 @@ mauricie_birds_summary <- mauricie_birds %>%
 mauricie_birds_summary
 ```
 
-If you wanted to summarize total count for each species at each site, respectively you could adjust the pipe like so using `pivot_wider()`.
+If you wanted to summarize total count for each species at each site (i.e., atlas block within the park boundary), respectively, you could adjust the pipe like so using `pivot_wider()`.
 
 ```{r}
 mauricie_species_summary <- mauricie_birds %>%
   st_drop_geometry() %>%  # drop the geometry column
-  group_by(species_id, SiteCode) %>%
+  group_by(species_id, Locality) %>%
   summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the total_count column
   pivot_wider(names_from = species_id, # populates the column names with each species_id code
               values_from = total_count, # populates each cell with total_count
               values_fill = list(total_count = 0)) %>% # missing values are zero-filled
-  group_by(SiteCode)
+  group_by(Locality)
 
 mauricie_species_summary
 ```
@@ -351,8 +360,11 @@ See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-p
 Read the landcover dataset using `terra::rast()`.
 
 ```{r}
-landcover <- rast("C:/Users/dimit/Birds Canada/Data/landcover-2015-classification.tif")
-landcover
+#if the data are in your working directory
+landcover <- rast("landcover-2015-classification.tif")
+
+#else, specify the location of your data
+landcover<-rast("path/to/your/landcover-2015-classification.tif")
 ```
 
 Transform the crs of the National Park boundary to match that of the landcover dataset.
@@ -410,7 +422,7 @@ To access Copernicus satellite imagery, navigate [here](https://browser.dataspac
 
 1)  Click the **Create an area of interest** tab and select the **Upload a file to create an area of interest** option. Upload the KML National Park boundary file we created in section 3.1.
 
-2)  In the **Search** tab, select SENTINEL-2 and the appropriate time range to retrieve the following image. You can also copy/paste the product name into the search bar to find the image. 
+2)  In the **Search** tab (left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
 
     **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
 
