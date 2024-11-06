@@ -1,0 +1,42 @@
+---
+title: "04-AnalysisTools"
+author: "Dimitrios Markou"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 4 Analysis Tools
+
+#### Author: Dimitrios Markou
+
+# 4.0 Learning Objectives
+
+By the end of **Chapter 4 - AnalysisTools**, users will know how to:
+
+# 4.1 Accessing Auxillary Tables from naturecounts
+
+nc_query_tables
+
+# 4.2 Zero-filling
+
+Zero-filling assigns counts of zero to species that are not detected during an observation period. Zeros can indicate two things - the true absence of a species or failure to detect a species.
+
+Zero and non-zero counts are crucial to describe changes in bird distribution and abundance over time. Zero-filling helps discern whether or not the spatial distribution of a species is accurate and not simply a function of observer location bias. Presence-only data is quite limited in what its able to tell us.
+
+There are two conditions that make species data eligible for zero-filling:
+
+-   **Condition 1** - There is consistent data for observation periods when a species could have been seen although it was not actually seen.
+
+-   **Condition 2** - We can assume that the species would have been reported if it had been detected.
+
+There are some important considerations with regards to zero-filling. For example, the presence of **write-in species** and **variable observer effort** can impact a species' ability to meet Conditions 1 & 2 and result in lower statistical power when analyzing data.
+
+Good candidates for zero-filling are species that are reported consistently at many sites within their ranges. What is considered "many sites" depends on the species. Write-in species are those recorded outside of an expected list of species that are added by an observer based on their own motivations and efforts - these are likely poor candidates for zero-filling.
+
+Statistical models like the **Occupancy Model** and **Generalized Linear Model** can be used to interpret zero counts.
+
+# 4.3 Occupancy modeling
