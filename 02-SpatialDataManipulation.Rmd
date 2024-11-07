@@ -267,4 +267,4 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
 
-**Congratulations**! You have completed **Chapter 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Chapter 2](02-ManipSpatialData_Part2.Rmd), you will explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You have completed **Module 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Module 3](03-ClimateData.Rmd), you will explore more spatial data visualization while linking climate data to NatureCounts observations.
