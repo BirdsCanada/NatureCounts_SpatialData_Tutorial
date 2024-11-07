@@ -1,7 +1,7 @@
 ---
-title: "01-ManipSpatialData"
+title: "02-SpatialDataManipulation"
 author: "Dimitrios Markou"
-date: "2024-07-15"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 1: Manipulating Spatial Data
+# Module 2: Spatial Data Manipulation: KBA's and Priority Places
 
 ##### Author: Dimitrios Markou
 
@@ -17,129 +17,17 @@ Mapping the spatial distribution of avian and environmental data is critical to 
 
 By integrating NatureCounts data with spatial and environmental layers, researchers can address key questions and prioritize future conservation strategies over broad spatial and temporal scales. The [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial) serves as a guide on how to visualize and analyse NatureCounts, spatial, and environmental data in R to help users meet their conservation and research goals.
 
-# 1.0 Learning Objectives
+# 2.0 Learning Objectives 
 
-By the end of **Chapter 1 - Manipulating Spatial Data**, users will know how to:
+By the end of **Module 2 - Spatial Data Manipulation**, users will know how to:
 
--   Visualize NatureCounts data using spatio-temporal maps
-
--   Distinguish between types of spatial data (vector vs raster)
-
--   Read and preprocess spatial vector data in R
+-   Read, preprocess, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
 -   Apply basic geoprocessing functions to spatial objects
 
--   Visualize NatureCounts data within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
-
-This R tutorial requires the following **packages**:
-
-```{r, message = FALSE}
-library(naturecounts)
-library(sf)
-library(terra)
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(ggspatial)
-library(mapview)
-library(leaflet)
-library(leaflet.extras)
-library(leaflet.providers)
-```
-
-# 1.1 Spatial Data
-
-Spatial data is any type of vector or raster data that represents a feature or phenomena across geographic space.
-
-| Vector data is used to represent features with points, lines and polygons. This may include individual bird observations, rivers, or conservation area boundaries.
-
-| Raster data is used to represent spatially continuous data with a grid, where each cell has one value. This may include types of environmental data like elevation or temperature.
-
-The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,* and *.prj* extensions.
-
-Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. Raster data manipulation will be in covered in subsequent chapters (see 02-ClimateData and 03-EnvironmentalData).
-
 The data used in this tutorial are downloaded from NatureCounts using R, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
-# 1.2 Spatio-temporal mapping
-
-To download NatureCounts data you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
-
-> The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
-
-*Example 1*: You would like to visualize the spatio-temporal distribution of Cedar Waxwing observations in June of each survey year using data from the Maritimes Breeding Bird Atlas (2006-2010).
-
-The [NatureCounts Introductory R Tutorial](#link) is where you should start if you're new to the `naturecounts` R package. It explains how to view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
-
-Let's fetch the NatureCounts data.
-
-First, we look to find the `collection` code for the Maritimes Breeding Bird Atlas.
-
-```{r}
-collections <- meta_collections()
-View(meta_collections())
-```
-
-Second, we look to find the numeric species id.
-
-```{r}
-search_species("cedar waxwing")
-```
-
-Now we can download the data. Don't forget to change the `username`.
-
-```{r}
-cedar_waxwing <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "testuser", info = "spatial_data_tutorial")
-```
-
-Use the `format_dates` function to create date and day-of-year (doy) columns.
-
-```{r}
-cedar_waxwing <- format_dates(cedar_waxwing)
-```
-
-Filter the data to only include observations from the month of June.
-
-```{r}
-cedar_waxwing_june <- cedar_waxwing %>%
-  filter(survey_month == 6)
-```
-
-Convert the NatureCounts data to a spatial object using the point count coordinates.
-
-```{r}
-cedar_waxwing_june_sf <- sf::st_as_sf(cedar_waxwing_june,
-                        coords = c("longitude", "latitude"), crs = 4326)
-```
-
-Finally, use `ggplot2` to visualize the spatio-temporal distribution of Cedar Waxwing observations across the Maritime provinces by color-coding the data points by **survey_year** and creating a multi-panel plot based on this discrete variable:
-
-```{r}
-ggplot(data = cedar_waxwing_june_sf) +
-  # Select a basemap
-  annotation_map_tile(type = "cartolight", zoom = NULL) +
-  # Plot the points, color-coded by survey_year
-  geom_sf(aes(color = as.factor(survey_year)), size = 1) +
-  # Facet by survey_year to create the multi-paneled map
-  facet_wrap(~ survey_year) +
-  # Customize the color scale
-  scale_color_brewer(palette = "Set1", name = "Survey Year") +
-  # Add a theme with a minimal design and change the font styles, to your preference
-  theme_minimal() +
-  theme(legend.position = "bottom") +
-  # To make the points in the legend larger without affecting map points
-  guides(color = guide_legend(override.aes = list(size = 3))) +
-  # Define the title and axis names
-  labs(title = "Cedar Waxwing June Observations by Survey Year",
-       x = "Longitude",
-       y = "Latitude")
-```
-
-The map above provides a simple visualization of NatureCounts data over a broad spatial and temporal scale. However, mapping data in specific areas of ecological importance might also be relevant to your work. The following sections (**1.3** - **1.7**) work in sequence to help the user visualize NatureCounts data using [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) maps.
-
-# 1.3 Reading in spatial data
-
-The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is no longer in use as of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
+# 2.1 Reading in spatial data: Key Biodiversity Areas
 
 *Example 2*: You want to assess the spatial distribution of Wood Ducks across the KBA's in Ontario using Ontario Breeding Bird Atlas data. Navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), search for all the KBA's in Ontario, and download the .shp and .csv file to your working directory.
 
@@ -189,7 +77,7 @@ Both dataframes now contain unique columns, after our selection. We apply the `f
 ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
 ```
 
-# 1.4 Visualizing spatial data in R
+# 2.2 Visualizing spatial data in R
 
 We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package.
 
@@ -215,7 +103,7 @@ In this example, were interested in all the KBA polygons of Ontario. However, if
   # dplyr::filter(Area > 100) 
 ```
 
-# 1.5 Reading in NatureCounts data
+# 2.3 Reading in NatureCounts data
 
 Let's search NatureCounts for the Ontario Breeding Bird Atlas (ONATLAS3PC) dataset to assess Wood Duck distribution across Ontario KBA's. The steps here are similar to those you used in the Cedar Waxwing example.
 
@@ -272,7 +160,7 @@ It can also be used to ensure that the CRS of our spatial objects match.
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 ```
 
-# 1.6 Geoprocessing functions
+# 2.4 Geoprocessing functions
 
 Geoprocessing functions allow us to manipulate or compute spatial objects based on interactions between their geometries. There are several useful functions integrated into the `sf` package including:
 
@@ -316,7 +204,7 @@ After geoprocessing our data in R, we can write out any sf objects to Shapefiles
 # st_write(wood_ducks_kba,"wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-# 1.7 Priority Places Example
+# 2.5 Priority Places Example
 
 *Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place. Data for this section may be downloaded from the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
@@ -379,4 +267,4 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
 
-**Congratulations**! You have completed **Chapter 1 - Manipulating Spatial Data (Part 1)**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Chapter 2](02-ManipSpatialData_Part2.Rmd), you will explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You have completed **Chapter 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Chapter 2](02-ManipSpatialData_Part2.Rmd), you will explore more spatial data visualization while linking climate data to NatureCounts observations.
