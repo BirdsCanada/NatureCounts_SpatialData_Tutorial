@@ -27,7 +27,23 @@ By the end of **Module 2 - Conservation Areas**, users will know how to:
 
 The data used in this tutorial are downloaded from NatureCounts using R, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
-# 2.1 Reading in spatial data: Key Biodiversity Areas
+This R tutorial requires the following **packages**:
+
+```{r, message = FALSE}
+library(naturecounts)
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
+library(mapview)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+```
+
+# 2.1 Reading in spatial data
 
 *Example 2*: You want to assess the spatial distribution of Wood Ducks across the KBA's in Ontario using Ontario Breeding Bird Atlas data. Navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), search for all the KBA's in Ontario, and download the .shp and .csv file to your working directory.
 
