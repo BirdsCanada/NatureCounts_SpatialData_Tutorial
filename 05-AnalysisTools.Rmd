@@ -33,7 +33,7 @@ There are two conditions that make species data eligible for zero-filling:
 
 -   **Condition 2** - We can assume that the species would have been reported if it had been detected.
 
-There are some important considerations with regards to zero-filling. For example, the presence of **write-in species** and **variable observer effort** can impact a species' ability to meet Conditions 1 & 2 and result in lower statistical power when analyzing data.
+There are some important considerations with regards to zero-filling. For example, the presence of **write-in species** and **variable observer effort** can impact a species' ability to meet Conditions 1 & 2 and result in lower statistical power when analyzing data. For `naturecounts` records, we can infer species absence for every unique SamplingEventIdentifier when a species was not detected and all species were reported for that event (AllSpeciesReported is "Yes").
 
 Good candidates for zero-filling are species that are reported consistently at many sites within their ranges. What is considered "many sites" depends on the species. Write-in species are those recorded outside of an expected list of species that are added by an observer based on their own motivations and efforts - these are likely poor candidates for zero-filling.
 
