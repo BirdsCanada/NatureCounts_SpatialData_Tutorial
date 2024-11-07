@@ -9,13 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Module 1: Spatial Data Exploration: Spatio-temporal mapping
+# Module 1: Spatial Data Exploration
 
 ##### Author: Dimitrios Markou
 
-Mapping the spatial distribution of avian and environmental data is critical to our understanding of ecological processes. Conservation actions are most effective when focused on areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk.
-
-By integrating NatureCounts data with spatial and environmental layers, researchers can address key questions and prioritize future conservation strategies over broad spatial and temporal scales. The [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial) serves as a guide on how to visualize and analyse NatureCounts, spatial, and environmental data in R to help users meet their conservation and research goals.
+Research analysis often starts with fundamental questions: *Where is the data and how can we best prepare it for analysis?* Understanding data types and how-to visualize them are key to how we interact with and interpret data and identify areas for conservation action. The [NatureCounts_SpatialData_Tutorial](#0) serves as a guide on how-to visualize and analyse NatureCounts, spatial, and environmental data in R to help users meet their conservation and research goals.
 
 # 1.0 Learning Objectives
 
@@ -41,7 +39,7 @@ library(leaflet.extras)
 library(leaflet.providers)
 ```
 
-# 1.1 Spatial Data
+# 1.1 Spatial Data Types
 
 Spatial data is any type of vector or raster data that represents a feature or phenomena across geographic space.
 
@@ -55,7 +53,7 @@ Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)
 
 The `sf` package provides [simple feature](https://r-spatial.github.io/sf/) access in R. This package works best with spatial data (point, line, polygon, multipolygon, etc) associated with tabular attributes (e.g shapefiles). You may be familiar with the `sp` package that has similar functionality in a different format, however, this package is no longer in use as of 2023 and does not support integration with `tidyverse` which is very popular among data scientists in R.
 
-# 1.2 Data exploration
+# 1.2 Spatial Data Exploration: Spatio-temporal mapping
 
 *Example 1*: You would like to visualize the spatio-temporal distribution of Cedar Waxwing observations in June of each survey year using data from the Maritimes Breeding Bird Atlas (2006-2010).
 
@@ -131,4 +129,4 @@ ggplot(data = cedar_waxwing_june_sf) +
 
 The map above provides a simple visualization of NatureCounts data over a broad spatial and temporal scale. However, mapping data in specific areas of ecological importance might also be relevant to your work. The following sections (**1.3** - **1.7**) work in sequence to help the user visualize NatureCounts data using [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires) maps.
 
-Congratulations! You have completed Module 1: Spatial Data Exploration. 
+**Congratulations!** You completed **Module 1: Spatial Data Exploration**. Here, you successfully visualized NatureCounts vector data over a wide spatial and temporal scale using a multi-panel plot. In [Module 2](02-ConservationAreas.Rmd), you can explore more spatial data manipulation and visualize NatureCounts data within [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
