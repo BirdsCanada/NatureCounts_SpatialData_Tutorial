@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Module 2: Spatial Data Manipulation: KBA's and Priority Places
+# Module 2: Conservation Areas: KBA's and Priority Places
 
 ##### Author: Dimitrios Markou
 
@@ -19,7 +19,7 @@ By integrating NatureCounts data with spatial and environmental layers, research
 
 # 2.0 Learning Objectives 
 
-By the end of **Module 2 - Spatial Data Manipulation**, users will know how to:
+By the end of **Module 2 - Conservation Areas**, users will know how to:
 
 -   Read, preprocess, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
@@ -267,4 +267,4 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("red", "green"), labels = c("Long Point Walsingham Forest", "Wood Duck Observations"), position = "bottomright")
 ```
 
-**Congratulations**! You have completed **Module 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you've successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Module 3](03-ClimateData.Rmd), you will explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You completed **Module 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Module 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
