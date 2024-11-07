@@ -1,5 +1,5 @@
 ---
-title: "02-SpatialDataManipulation"
+title: "02-ConservationAreas"
 author: "Dimitrios Markou"
 date: "`r Sys.Date()`"
 output: html_document
@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-Mapping the spatial distribution of avian and environmental data is critical to our understanding of ecological processes. Conservation actions are most effective when focused on areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk.
+The [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial) modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In **Module 1: Spatial Data Exploration**, you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map.
 
-By integrating NatureCounts data with spatial and environmental layers, researchers can address key questions and prioritize future conservation strategies over broad spatial and temporal scales. The [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial) serves as a guide on how to visualize and analyse NatureCounts, spatial, and environmental data in R to help users meet their conservation and research goals.
+Mapping the spatial distribution of avian and environmental data is critical to our understanding of ecological processes. Conservation actions are most effective when focused on areas of ecological importance. These areas typically host high levels of biodiversity, concentrations of rare species, or species at risk. In this way, analyzing NatureCounts data within specific boundaries might be relevant to your work. 
 
 # 2.0 Learning Objectives 
 
