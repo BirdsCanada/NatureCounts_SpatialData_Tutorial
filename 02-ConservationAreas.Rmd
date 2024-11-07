@@ -43,9 +43,13 @@ library(leaflet.extras)
 library(leaflet.providers)
 ```
 
-# 2.1 Reading in spatial data
+*Example 2* You want to assess the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across two conservation areas: KBAs across Ontario and the Long Point Walsingham Forest Priority Place.
 
-*Example 2*: You want to assess the spatial distribution of Wood Ducks across the KBA's in Ontario using Ontario Breeding Bird Atlas data. Navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), search for all the KBA's in Ontario, and download the .shp and .csv file to your working directory.
+KBAs: Navigate to the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), search for all the KBA's in Ontario, and download the .shp and .csv file to your working directory.
+
+Priority Place: Downloaded from the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
+
+# 2.1 Key Biodiversity Areas
 
 To view your working directory.
 
@@ -93,8 +97,6 @@ Both dataframes now contain unique columns, after our selection. We apply the `f
 ontario_kba <- full_join(ontario_kba, kba_attributes, by = "SiteCode")
 ```
 
-# 2.2 Visualizing spatial data in R
-
 We can visualize the **ontario_kba** data with an interactive map, using the `leaflet` package.
 
 ```{r}
@@ -118,8 +120,6 @@ In this example, were interested in all the KBA polygons of Ontario. However, if
 # kba_name <- ontario_kba %>% 
   # dplyr::filter(Area > 100) 
 ```
-
-# 2.3 Reading in NatureCounts data
 
 Let's search NatureCounts for the Ontario Breeding Bird Atlas (ONATLAS3PC) dataset to assess Wood Duck distribution across Ontario KBA's. The steps here are similar to those you used in the Cedar Waxwing example.
 
@@ -176,8 +176,6 @@ It can also be used to ensure that the CRS of our spatial objects match.
 atlas_on_sf <- st_transform(atlas_on_sf, crs = st_crs(ontario_kba))
 ```
 
-# 2.4 Geoprocessing functions
-
 Geoprocessing functions allow us to manipulate or compute spatial objects based on interactions between their geometries. There are several useful functions integrated into the `sf` package including:
 
 | `st_intersection(x, y)` - creates geometry of the shared portion of x and y
@@ -220,9 +218,7 @@ After geoprocessing our data in R, we can write out any sf objects to Shapefiles
 # st_write(wood_ducks_kba,"wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-# 2.5 Priority Places Example
-
-*Example 3*: You want to assess Wood Duck distribution across the Long Point Walsingham Forest Priority Place. Data for this section may be downloaded from the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
+# 2.2 Priority Places
 
 First, lets create a path to our downloaded Priority Place file.
 
