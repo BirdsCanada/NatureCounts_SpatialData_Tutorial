@@ -21,9 +21,11 @@ Mapping the spatial distribution of avian and environmental data is critical to 
 
 By the end of **Module 2 - Conservation Areas**, users will know how to:
 
--   Read, process, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
-
 -   Apply basic geoprocessing functions to spatial objects.
+
+<!-- -->
+
+-   Read, process, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
 The data used in this tutorial are downloaded from NatureCounts using R, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
 
