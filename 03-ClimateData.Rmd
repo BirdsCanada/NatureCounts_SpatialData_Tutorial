@@ -1,5 +1,5 @@
 ---
-title: "02-ManipSpatialData_Part2"
+title: "03-ClimateData"
 author: "Dimitrios Markou"
 date: "2024-07-23"
 output: html_document
@@ -63,7 +63,7 @@ library(lubridate)
 library(weathercan)
 ```
 
-# 2.1 Preparing NatureCounts Data
+# 2.1 Summarize NatureCounts Data
 
 Reminder that, to download data, you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
 
@@ -121,7 +121,7 @@ cranes_summary <- species_occurrence_summary %>%
 cranes_summary
 ```
 
-# 2.2 Preparing weathercan (vector) Data
+# 2.2 Weathercan (Vector) Data
 
 `weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
@@ -188,9 +188,7 @@ yearly_climate <- weather %>%
 yearly_climate
 ```
 
-# 2.3 Climate Data Analysis
-
-Now that you have prepared the NatureCounts and weathercan climate data in sections **2.1** and **2.2**, respectively you can combine the data together for analysis.
+Now that you have prepared the NatureCounts and weathercan climate data you can combine the data together for analysis.
 
 ```{r}
 cranes_climate_summary <- left_join(cranes_summary, yearly_climate, by="year")
@@ -223,7 +221,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
 
-# 2.4 Preparing WorldClim (raster) Data
+# 2.3 WorldClim (Raster) Data
 
 [WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. In this next section you will manipulate climate data rasters and associate them with NatureCounts data.
 
@@ -292,8 +290,6 @@ bioclim_data <- bioclim_data %>%
   filter(year(date) >= "1970")
 summary(bioclim_data)
 ```
-
-# 2.5 Climate Data Analysis
 
 Combine the bioclimatic values with the NatureCounts data.
 
