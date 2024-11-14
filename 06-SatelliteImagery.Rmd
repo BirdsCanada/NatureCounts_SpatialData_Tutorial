@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 6: Calculating NDWI and NDVI using SENTINEL2 imagery
 
-#### Author: Dimitrios Markou
+##### Author: Dimitrios Markou
 
 The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 5](05-LandcoverData.Rmd), you extracted unique pixel values from landcover data to link with NatureCounts data.
 
@@ -21,7 +21,7 @@ The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-
 
 In this tutorial, you will use satellite imagery to calculate spectral indices over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and link these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
 
-**After downloading the necessary packages in** [6.0 Learning Objectives] **be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
+**After downloading the necessary packages in [6.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
 
 # 6.0 Learning Objectives
 

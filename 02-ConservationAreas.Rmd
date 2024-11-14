@@ -47,7 +47,7 @@ library(leaflet.providers)
 
 # 2.1 Key Biodiversity Areas
 
-#### *Example 2a* - You want to assess the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the KBAs found within the province. 
+#### *Example 2a* - You want to assess the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the KBAs found within the province.
 
 To view your working directory.
 
