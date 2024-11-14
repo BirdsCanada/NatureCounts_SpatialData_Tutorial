@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Module 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects and visualized NatureCounts data within KBAs and Priority Places. 
+The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Module 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects and visualized NatureCounts data within KBAs and Priority Places.
 
 Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide us clear way to communicate your data.
 
@@ -30,9 +30,9 @@ By the end of **Module 3 - Climate Data**, users will know how to:
 This tutorial utilizes the following bird occurrence, spatial, and climate data sources:
 
 | Data | Description |
-|----|----|
+|------------------------------------|------------------------------------|
 | [eBird Canada (Prairies)](https://naturecounts.ca/nc/default/datasets.jsp?code=EBIRD-CA-PR) | NatureCounts, EBIRD-CA-PR (1800-2024) |
-| Alberta Breeding Bird Atlases | NatureCounts, ABATLAS1 ([1987-1992](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS1)) and ABATLAS2 ([2000-2005](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS2)) |
+| Alberta Breeding Bird Atlas | NatureCounts, ABATLAS1 ([1987-1992](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS1)) and ABATLAS2 ([2000-2005](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS2)) |
 | [Alberta Bird Records](https://naturecounts.ca/nc/default/datasets.jsp?code=ABBIRDRECS) | NatureCounts, ABIRDRECS (1941-2006) |
 | [Whooping Crane Nesting Area and Summer Range](https://kbacanada.org/site/?SiteCode=NT002) | Key Biodiversity Area boundary (**.shp**) and site attributes |
 | [Environment and Climate Change Canada](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html) | Historical (vector) weather data, accessed through the `weathercan` R package |
