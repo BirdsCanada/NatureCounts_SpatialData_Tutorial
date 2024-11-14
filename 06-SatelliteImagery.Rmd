@@ -1,0 +1,411 @@
+---
+title: "06-SatelliteImagery"
+author: "Dimitrios Markou"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 6: Calculating NDWI and NDVI using SENTINEL2 imagery
+
+#### Author: Dimitrios Markou
+
+The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 5](05-LandcoverData.Rmd), you extracted unique pixel values from landcover data to link with NatureCounts data.
+
+Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide us clear way to communicate your data.
+
+The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-synchronous orbit phased at 180° to each other. The satellites carry multispectral sensors with 13 spectral bands and have a revisit frequency of 5 days and orbital swath width of 290 km. Their high resolution products support a variety of services and applications including land management, agriculture, forestry, disaster control, humanitarian relief operations, risk mapping, and security concerns.
+
+In this tutorial, you will use satellite imagery to calculate spectral indices over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and link these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
+
+**After downloading the necessary packages, be sure to follow the [Preliminary Steps](PreliminarySteps) section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
+
+# 6.0 Learning Objectives
+
+By the end of **Chapter 6 - SatelliteImagery**, users will know how to:
+
+-   Download satellite imagery data
+-   Plot true color composites of satellite imagery
+-   Create digital water masks
+-   Calculate NDWI and NDVI indices
+-   Link NatureCounts data to spectral index values for analysis
+
+This R tutorial requires the following packages:
+
+```{r, eval = TRUE, warning = FALSE, message = FALSE}
+library(naturecounts)
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
+library(mapview)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+```
+
+This tutorial uses Copernicus Satellite Imagery data (see section 6.1)
+
+# 6.1 Copernicus Data Download
+
+The Copernicus Data Space Ecosystem Browser is the central hub for accessing and exploring Earth observation and environmental data from Copernicus satellites. You can [register](https://documentation.dataspace.copernicus.eu/Registration.html) for an account, read more [About the Browser](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search) (including [Product Search](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search)), and navigate to the [Browser](https://browser.dataspace.copernicus.eu/?zoom=5&lat=50.16282&lng=20.78613&visualizationUrl=U2FsdGVkX18pLKFF9fc91CA1u22Ai6SDDnfmD7NKnUTo9VEy0zAaaijJiGeg0RjaXy7sLHZpigJffz1REZVnF3BP1%2BaRJ8UQRjPdH4g5mSZmR4tNPleYMpU5qikJ2VAP&datasetId=S2_L2A_CDAS&demSource3D=%22MAPZEN%22&cloudCoverage=30&dateMode=SINGLE) to continue with this tutorial.
+
+1)  Click the **Create an area of interest** tab and select the **Upload a file to create an area of interest** option. Upload the KML National Park boundary file we created in Chapter 4, section 4.1.
+
+2)  In the **Search** tab (left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
+
+    **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
+
+    **Size**: 1090MB
+
+    **Sensing time**: 2020-06-19T15:49:11.024000Z
+
+    **Platform short name**: SENTINEL-2
+
+    **Instrument short name**: MSI
+
+    OR any other image relevant to your research. Note that cloud cover will affect our ability to calculate spectral indices so be mindful of this when selecting your image and adjust your study area or time range accordingly.
+
+The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://link.springer.com/article/10.1007/s11676-020-01155-1)) is a common proxy for primary productivity collected using remote sensing. It is a measure of vegetation health that describes the greenness and the density of vegetation captured in a satellite image. Healthy vegetation will absorb most visible light and reflect most near-infrared light, depending on the amount of chlorophyll found in its biomass.
+
+The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
+
+Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
+
+# 6.2 Spectral Indices
+
+Read each band stored in the downloaded satellite imagery folder in your directory.
+
+```{r}
+bands <- list.files(path = "C:/Users/dimit/Birds Canada/Data/SENTINEL2/S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE/GRANULE/L2A_T18TXS_A026077_20200619T155414/IMG_DATA/R10m", 
+                    pattern = "\\.jp2$", full.names = TRUE)
+
+# Read all the bands into a raster stack
+sentinel_imagery <- rast(bands)
+
+# Assign meaningful names to the bands
+names(sentinel_imagery) <- c("AOT", "blue", "green", "red", "nir", "TCI_r", "TCI_g", "TCI_b", "WVP")
+
+# Check the assigned names
+print(names(sentinel_imagery))
+
+# Check resolution, number of layers, and extent
+res(sentinel_imagery)
+nlyr(sentinel_imagery)
+ext(sentinel_imagery)
+```
+
+Plot a true color composite of `sentinel_imagery` with a linear stretch.
+
+```{r, eval = TRUE, warning = FALSE}
+# Match the CRS of the raster stack and National Park boundary
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(sentinel_imagery))
+
+# Plot the RGB composite
+terra::plotRGB(sentinel_imagery, r = 4, g = 3, b = 2, stretch = "lin", main = "RGB Composite with Boundary")
+
+# Add the boundary shapefile to the plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+```
+
+Crop `sentinel_imagery` to the extent of `mauricie_boundary` then plot the cropped image in true color.
+
+```{r}
+mauricie_sl <- crop(sentinel_imagery, vect(mauricie_boundary))
+
+# Plot the RGB composite
+terra::plotRGB(mauricie_sl, r = 4, g = 3, b = 2, stretch = "lin", axes = FALSE)
+
+# Add the boundary shapefile to the plot
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+```
+
+To avoid the effect of water when analyzing spectral indices we can apply a water mask by creating and applying the following function to calculate NDWI:
+
+$$NDWI = \frac{GREEN - NIR}{GREEN + NIR}$$
+
+```{r}
+calc_ndwi <- function(green, nir) {
+  ndwi <- c((green - nir)/(green + nir))
+  return(ndwi)
+}
+
+# Calculate NDWI
+mauricie_sl_ndwi <- calc_ndwi(mauricie_sl$green, mauricie_sl$nir)
+
+# Create water mask
+water_mask <- mauricie_sl_ndwi >= 0
+
+```
+
+Plot NDWI and the water mask.
+
+```{r}
+# Set up the plot area for 1 row and 2 columns
+par(mfrow = c(1, 2))
+
+# Plot NDWI
+plot(mauricie_sl_ndwi, main = "NDWI")
+
+# Add National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+
+# Plot water mask 
+plot(water_mask, main = "Water mask")
+
+# Add National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+
+# Reset plotting layout to default
+par(mfrow = c(1, 1))
+```
+
+Use the function `focal()` to apply a convolution filter returning the **mode** of each pixel of `water_mask` in a 3 x 3 windows of equal weights (argument `w = 3`). Name the output raster `water_mask_mode`. The *mode* of a vector `x` is the value that appears the most often in `x`.
+
+```{r}
+get_mode <- function(x, na.rm = TRUE) {
+  
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  
+  ux <- unique(x)
+  
+  ux[which.max(tabulate(match(x, ux)))]
+  
+}
+```
+
+Calculate `water_mask_mode`.
+
+```{r}
+water_mask_mode <- focal(water_mask, w = 3, fun = get_mode)
+```
+
+Combine the `water_mask` and `water_mask_mode`.
+
+```{r}
+water_mask_combined <- c(water_mask, water_mask_mode)
+```
+
+Assign meaningful names to each raster mask and plot them.
+
+```{r, warning = False}
+names(water_mask_combined) <- c("water mask", "water mask mode")
+
+plot(water_mask_combined)
+```
+
+Apply the water mask to `mauricie_sl`.
+
+```{r}
+mauricie_sl_water_mask <- mask(mauricie_sl, water_mask_mode, maskvalues = 1)
+```
+
+Apply another mask to assign NA values to those pixels outside of the National Park boundary.
+
+```{r}
+mauricie_sl_mask <- mask(mauricie_sl_water_mask, vect(mauricie_boundary))
+```
+
+Plot a true color composite of `mauricie_sl_mask` and the National Park boundary.
+
+```{r}
+# Plot RGB with both water and boundary masks applied
+terra::plotRGB(mauricie_sl_mask, r = 4, g = 3, b = 2, stretch = "lin", axes = FALSE)
+
+# Add the National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+```
+
+To calculate NDVI, we will create and apply the following function on the masked satellite image:
+
+$$NDVI = \frac{NIR - RED}{NIR + RED}$$
+
+```{r}
+calc_ndvi <- function(nir, red) {
+  ndvi <- c((nir - red)/(nir  + red))
+  return(ndvi)
+}
+
+# Calculate NDVI 
+mauricie_sl_ndvi <- calc_ndvi(mauricie_sl_mask$nir, mauricie_sl_mask$red)
+```
+
+Plot `mauricie_sl_ndvi` and the National Park boundary.
+
+```{r}
+# Plot NDVI
+plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
+
+# Add the National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+```
+
+Summarize the NatureCounts data for mapping and covert it to SpatVector format.
+
+```{r}
+# Group by SiteCode and summarize total_count
+mauricie_site_summary <- mauricie_birds %>%
+  group_by(SiteCode) %>%
+  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
+```
+
+```{r}
+mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
+```
+
+To map the NatureCounts and NDVI data:
+
+```{r}
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_sl_ndvi)) # Match the CRS
+
+# Plot NDVI raster for La Mauricie National Park
+plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
+
+# Overlay the National Park boundary in red
+plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE)
+
+# Overlay the multipoints from the site summary in blue
+plot(st_geometry(mauricie_site_summary), 
+     add = TRUE, 
+     pch = 19,      # Solid circle
+     col = "blue",  # Point color
+     cex = 0.5)     # Point size
+
+```
+
+Extract NDVI values for each bird observation site and append it to `mauricie_birds`.
+
+```{r}
+mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_sl_ndvi)) # Match the CRS
+
+ndvi_values <- terra::extract(mauricie_sl_ndvi, mauricie_birds_vect) # Extracts the NDVI values for each point
+
+ndvi_values <- cbind(record_id = mauricie_birds$record_id, ndvi = ndvi_values[, 2]) # Creates the record_id and ndvi columns 
+```
+
+Congratulations! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over an area of interest. In [Chapter 7](07-RasterSummaryStats.Rmd), you can explore simple functions that will help you calculate raster summary statistics.
+
+
+# Preliminary Steps
+
+[La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
+
+Read the National Park polygons into R.
+
+```{r eval = FALSE}
+#if in your working directory
+national_parks<-st_read("vw_Places_Public_lieux_public_APCA.shp")
+
+#else, specify your directory
+national_parks <- st_read("path/to/your/shp")
+
+```
+
+Filter the national_parks dataset for La Mauricie National Park.
+
+```{r}
+View(national_parks) #to find the correct object ID
+
+mauricie_boundary <- national_parks %>%
+  filter(OBJECTID == "21")
+
+# Drop the Z-dimension (3D component) to make it 2D
+mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
+```
+
+Write the boundary as a shapefile to your disk.
+
+```{r, eval=FALSE, message=FALSE}
+
+st_write(mauricie_boundary, "mauricie_boundary.shp")
+
+# you will want the KML file for section 3.8
+st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
+```
+
+To assess the species distribution within the National Park, we will use data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
+
+Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
+
+Read in the list of species represented in NatureCounts:
+
+```{r}
+species_names <- search_species()
+```
+
+Download NatureCounts data:
+
+```{r}
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
+```
+
+eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
+
+```{r, eval = FALSE}
+quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+```
+
+To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
+
+```{r}
+quebec_atlas <- quebec_atlas %>%
+  format_dates() %>%  # create the date and doy columns 
+  mutate(ObservationCount = as.numeric(ObservationCount)) %>%  # convert to numeric format
+  filter(!is.na(longitude) & !is.na(latitude))  # remove rows with missing coordinates
+```
+
+To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
+
+```{r}
+quebec_atlas_sf <- sf::st_as_sf(quebec_atlas,
+                        coords = c("longitude", "latitude"), crs = 4326) # converts the quebec_atlas data to an sf object
+
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(quebec_atlas_sf)) # match the CRS
+```
+
+Clip the NatureCounts data to the National Park boundary using `st_intersection()`.
+
+```{r, warning=FALSE}
+mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
+```
+
+Append the species names to the clipped NatureCounts dataset based on `species_id` code.
+
+```{r}
+mauricie_birds <- mauricie_birds %>%
+  left_join(species_names, by = "species_id")
+```
+
+Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
+
+```{r}
+mauricie_birds_summary <- mauricie_birds %>%
+  mutate(year = lubridate::year(date)) %>% # extracts the survey year using lubridate
+  group_by(year) %>%
+  summarise(annual_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the annual_count
+  filter(!is.na(year))  # remove rows with missing year
+
+mauricie_birds_summary
+```
+
+If you wanted to summarize total count for each species at each site (i.e., atlas block within the park boundary), respectively, you could adjust the pipe like so using `pivot_wider()`.
+
+```{r}
+mauricie_species_summary <- mauricie_birds %>%
+  st_drop_geometry() %>%  # drop the geometry column
+  group_by(species_id, Locality) %>%
+  summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the total_count column
+  pivot_wider(names_from = species_id, # populates the column names with each species_id code
+              values_from = total_count, # populates each cell with total_count
+              values_fill = list(total_count = 0)) %>% # missing values are zero-filled
+  group_by(Locality)
+
+mauricie_species_summary
+```
