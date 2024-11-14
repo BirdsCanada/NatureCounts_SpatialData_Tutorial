@@ -11,13 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 5: Landcover Data
 
+##### Author: Dimitrios Markou
+
 The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 4](04-EnvironmentalData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data.
 
 Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear way to communicate your data.
 
 In this tutorial, you will extract unique pixel values from landcover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
-After downloading the necessary packages, be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.
+**After downloading the necessary packages in [5.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
 
 # 5.0 Learning Objectives
 
