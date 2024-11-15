@@ -254,7 +254,7 @@ plot(st_geometry(mauricie_site_summary),
 Extract pixel values for each bird observation site and append it to `mauricie_birds`.
 
 ```{r}
-mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_sl_ndvi)) # Match the CRS
+mauricie_birds <- st_transform(mauricie_birds, crs(landcover_crop)) # Match the CRS
 
 pixel_values <- terra::extract(landcover_crop, mauricie_birds_vect) # Extracts the NDVI values for each point
 
