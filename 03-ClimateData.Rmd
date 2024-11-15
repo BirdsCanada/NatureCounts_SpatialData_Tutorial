@@ -62,7 +62,7 @@ library(leaflet)
 library(weathercan)
 ```
 
-# 3.1 Preparing NatureCounts Data
+# 3.1 Data Setup
 
 ```{r}
 collections <- meta_collections() 
