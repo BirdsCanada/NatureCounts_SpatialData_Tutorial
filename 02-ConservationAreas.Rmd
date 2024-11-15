@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Module 2: Conservation Areas: KBA's and Priority Places
+# Chapter 2: Conservation Areas: KBA's and Priority Places
 
 ##### Author: Dimitrios Markou
 
@@ -273,4 +273,4 @@ After geoprocessing our data in R, we can write out any sf objects to Shapefiles
 # st_write(wood_ducks_longpoint,"wood_ducks_longpoint.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-**Congratulations**! You completed **Module 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Module 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You completed **Chapter 2 - Spatial Data Manipulation: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data using spatio-temporal, KBA, and Priority Place maps. In [Module 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
