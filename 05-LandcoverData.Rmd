@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 4](04-EnvironmentalData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data.
+The NatureCounts_SpatialData_Tutorial aims to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 4](04-EnvironmentalData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data.
 
 Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear way to communicate your data.
 

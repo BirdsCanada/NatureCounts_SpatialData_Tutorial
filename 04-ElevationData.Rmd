@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps.
+The NatureCounts_SpatialData_Tutorial aims to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps.
 
 Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear way to communicate your data.
 
@@ -37,11 +37,6 @@ library(sf)
 library(terra)
 library(tidyverse)
 library(dplyr)
-library(ggplot2)
-library(ggspatial)
-library(leaflet)
-library(leaflet.extras)
-library(leaflet.providers)
 ```
 
 This tutorial uses the following spatial data.
