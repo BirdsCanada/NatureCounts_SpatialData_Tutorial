@@ -9,11 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Module 3: Climate Data
+# Chapter 3: Climate Data
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Module 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects and visualized NatureCounts data within KBAs and Priority Places.
+The NatureCounts_SpatialData_Tutorial aims to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects and visualized NatureCounts data within KBAs and Priority Places.
 
 Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide us clear way to communicate your data.
 
@@ -21,7 +21,7 @@ In this tutorial, you will use NatureCounts and climate data to explore possible
 
 # 3.0 Learning Objectives
 
-By the end of **Module 3 - Climate Data**, users will know how to:
+By the end of **Chapter 3 - Climate Data**, users will know how to:
 
 -   Download and preprocess vector and raster climate data in R
 -   Combine NatureCounts observations with climate data
@@ -345,4 +345,4 @@ leaflet(bioclim_data) %>%
   addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
 ```
 
-**Congratulations**! You've completed **Module 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Module 4](04-EnvironmentalData.Rmd) you can explore how-to link NatureCounts observations with other environmental variables like elevation, landcover, and spectral indices.
+**Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Chapter 4](04-EnvironmentalData.Rmd) you can explore how-to link NatureCounts observations with other environmental variables like elevation, landcover, and spectral indices.
