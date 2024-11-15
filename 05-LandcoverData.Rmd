@@ -75,7 +75,7 @@ Crop the national dataset to reduce the extent of the raster to the extent of th
 landcover_crop <- crop(landcover, vect(mauricie_boundary))
 ```
 
-Mask the national dataset to apply NA values to all cells outsides of the extent of the National Park.
+Or mask the national dataset to apply NA values to all cells outsides of the extent of the National Park.
 
 ```{r}
 landcover_mask <- mask(landcover, vect(mauricie_boundary))
