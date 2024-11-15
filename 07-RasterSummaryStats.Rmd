@@ -1,0 +1,175 @@
+---
+title: "07-RasterSummaryStats"
+author: "Dimitrios Markou"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 7: Raster Summary Statistics
+
+##### Author: Dimitrios Markou
+
+The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 6](06-SatelliteImagery.Rmd) you downloaded satellite imagery, calculated NDWI and NDVI, and linked spectral index values to NatureCounts data.
+
+In this chapter, you will explore how-to calculate summary statistics for raster objects.
+
+After downloading the necessary packages in [7.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.
+
+# 7.0 Learning Objectives
+
+By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
+
+-   Calculate summary statistics using base and custom functions
+
+-   Visualize raster summary data
+
+# 7.1 Calculate Raster Summary Statistics
+
+To calculate the summary statistics for the values of individual SpatRaster layers you can use the `global()` function like so:
+
+```{r}
+global(mauricie_mask, fun = "mean", na.rm = TRUE)
+```
+
+It is also possible to make and implement a function to calculate multiple summary statistics simultaneously. For example, `my_summary_stats` calculates the max, min, mean and sd of an input numeric vector `x` and returns the summary statistics in a vector (give this a few minutes):
+
+```{r}
+my_summary_stats <- function(x) {
+  out <- c(mean = mean(x, na.rm = TRUE), 
+              sd = sd(x, na.rm = TRUE), 
+              min = min(x, na.rm = TRUE), 
+              max = max(x, na.rm = TRUE))
+  return(out)
+}
+global(mauricie_mask, fun = my_summary_stats)
+```
+
+You can also create a histogram of the raster DTM data.
+
+```{r, warning = FALSE}
+terra::hist(mauricie_mask, axes = TRUE, 
+            main = "Elevation values within La Mauricie National Park",
+            xlab = "Elevation (m)",
+            col = "Green")
+```
+
+# Preliminary Steps
+
+[La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
+
+Read the National Park polygons into R.
+
+```{r eval = FALSE}
+#if in your working directory
+national_parks<-st_read("vw_Places_Public_lieux_public_APCA.shp")
+
+#else, specify your directory
+national_parks <- st_read("path/to/your/shp")
+
+```
+
+Filter the national_parks dataset for La Mauricie National Park.
+
+```{r}
+View(national_parks) #to find the correct object ID
+
+mauricie_boundary <- national_parks %>%
+  filter(OBJECTID == "21")
+
+# Drop the Z-dimension (3D component) to make it 2D
+mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
+```
+
+Write the boundary as a shapefile to your disk.
+
+```{r, eval=FALSE, message=FALSE}
+
+st_write(mauricie_boundary, "mauricie_boundary.shp")
+
+# you will want the KML file for section 3.8
+st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
+```
+
+To assess the species distribution within the National Park, we will use data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
+
+Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
+
+Read in the list of species represented in NatureCounts:
+
+```{r}
+species_names <- search_species()
+```
+
+Download NatureCounts data:
+
+```{r}
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
+```
+
+eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
+
+```{r, eval = FALSE}
+quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+```
+
+To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
+
+```{r}
+quebec_atlas <- quebec_atlas %>%
+  format_dates() %>%  # create the date and doy columns 
+  mutate(ObservationCount = as.numeric(ObservationCount)) %>%  # convert to numeric format
+  filter(!is.na(longitude) & !is.na(latitude))  # remove rows with missing coordinates
+```
+
+To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
+
+```{r}
+quebec_atlas_sf <- sf::st_as_sf(quebec_atlas,
+                        coords = c("longitude", "latitude"), crs = 4326) # converts the quebec_atlas data to an sf object
+
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(quebec_atlas_sf)) # match the CRS
+```
+
+Clip the NatureCounts data to the National Park boundary using `st_intersection()`.
+
+```{r, warning=FALSE}
+mauricie_birds <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
+```
+
+Append the species names to the clipped NatureCounts dataset based on `species_id` code.
+
+```{r}
+mauricie_birds <- mauricie_birds %>%
+  left_join(species_names, by = "species_id")
+```
+
+Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
+
+```{r}
+mauricie_birds_summary <- mauricie_birds %>%
+  mutate(year = lubridate::year(date)) %>% # extracts the survey year using lubridate
+  group_by(year) %>%
+  summarise(annual_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the annual_count
+  filter(!is.na(year))  # remove rows with missing year
+
+mauricie_birds_summary
+```
+
+If you wanted to summarize total count for each species at each site (i.e., atlas block within the park boundary), respectively, you could adjust the pipe like so using `pivot_wider()`.
+
+```{r}
+mauricie_species_summary <- mauricie_birds %>%
+  st_drop_geometry() %>%  # drop the geometry column
+  group_by(species_id, Locality) %>%
+  summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the total_count column
+  pivot_wider(names_from = species_id, # populates the column names with each species_id code
+              values_from = total_count, # populates each cell with total_count
+              values_fill = list(total_count = 0)) %>% # missing values are zero-filled
+  group_by(Locality)
+
+mauricie_species_summary
+```
