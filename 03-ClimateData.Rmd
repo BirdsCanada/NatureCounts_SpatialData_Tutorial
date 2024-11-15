@@ -341,3 +341,4 @@ leaflet(bioclim_data) %>%
 ```
 
 **Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Chapter 4](04-ElevationData.Rmd) you can explore how-to link NatureCounts observations with elevation data.
+
