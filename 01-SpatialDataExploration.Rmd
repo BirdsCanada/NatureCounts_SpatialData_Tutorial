@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-Exploring your data in a visual way is an important first step to any analysis. This chapter will give you a foundation understanding of how to work with your NatureCounts data spatially in R. This Chapter assumes that you have a basic understand of how to access your data from NatureCounts. The [NatureCounts Introductory R Tutorial](#link) is where you should start if you're new to the `naturecounts` R package. It explains how to access, view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
+Exploring your data in a visual way is an important first step to any analysis. This chapter will give you a foundation understanding of how to work with your NatureCounts data spatially in R. This Chapter assumes that you have a basic understand of how to access your data from NatureCounts. The [NatureCounts Introductory R Tutorial](https://github.com/BirdsCanada/NatureCounts_IntroTutorial.git) is where you should start if you're new to the `naturecounts` R package. It explains how to access, view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
 # 1.0 Learning Objectives
 
