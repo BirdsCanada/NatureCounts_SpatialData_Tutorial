@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 # Chapter 2: Spatial Filtering: KBA's and Priority Places
 
 ##### Author: Dimitrios Markou
@@ -276,3 +277,4 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 ```
 
 **Congratulations**! You completed **Chapter 2 - Spatial Filtering: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
+
