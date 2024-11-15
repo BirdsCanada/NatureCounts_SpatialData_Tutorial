@@ -40,7 +40,7 @@ This R tutorial requires the following **packages**:
 ```{r, message = FALSE}
 library(naturecounts)
 library(sf)
-#library(terra)
+#library(terra)  ###I think these packages are not used. 
 library(tidyverse)
 #library(ggspatial)
 library(leaflet)
