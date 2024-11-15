@@ -42,7 +42,7 @@ library(naturecounts)
 library(sf)
 #library(terra)  ###I think these packages are not used. 
 library(tidyverse)
-#library(ggspatial)
+library(ggspatial)
 library(leaflet)
 library(leaflet.extras)
 #library(leaflet.providers)
