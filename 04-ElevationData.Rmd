@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The NatureCounts_SpatialData_Tutorial aims to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps.
 
-Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear way to communicate your data.
+Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear ways to communicate your data.
 
 In this tutorial, you will process Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to link with NatureCounts data.
 
@@ -47,11 +47,11 @@ This tutorial uses the following spatial data.
 
     **Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select the **Téléchargement** option to explore the Lidar tiles on an interactive map (**Explorer \> Accéder**).
 
-    **Step 2**: Using the search bar, search for Parc national de la Mauricie. Under Layers, toggle on Parc nationaux du Canada to visualize the park boundary. You can also import your own **.shp** or **.kml** file using the **Import and Export** tab.
+    **Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary. You can also import your own **.shp** or **.kml** file using the **Import and Export** tab.
 
     **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
 
-Save these files in you R project working directory for easy accesses during this tutorial.
+Save these files in you R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
 getwd()
