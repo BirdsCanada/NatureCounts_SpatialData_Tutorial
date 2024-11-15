@@ -9,21 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Module 3: Climate Data
+# Chapter 3: Climate Data
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Module 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects and visualized NatureCounts data within KBAs and Priority Places.
-
-Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide us clear way to communicate your data.
-
-In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
+In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covaraites. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
 # 3.0 Learning Objectives
 
-By the end of **Module 3 - Climate Data**, users will know how to:
+By the end of **Chapter 3 - Climate Data**, users will know how to:
 
--   Download and preprocess vector and raster climate data in R
+-   Download and preprocess vector and raster climate data
 -   Combine NatureCounts observations with climate data
 -   Visualize NatureCounts and climate data using plots and spatio-temporal maps
 
@@ -38,36 +34,35 @@ This tutorial utilizes the following bird occurrence, spatial, and climate data 
 | [Environment and Climate Change Canada](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html) | Historical (vector) weather data, accessed through the `weathercan` R package |
 | [WorldClim](https://www.worldclim.org/data/bioclim.html) | Historical (raster) climate data. Includes nineteen bioclimatic variables representing the 1970-2000 average |
 
-This R tutorial requires the following **packages**:
+This tutorial requires the following **packages**:
 
 ```{r package library, warning = FALSE, message = FALSE}
-library(dplyr)
-library(ggplot2)
-library(sf)
-library(mapview)
+library(tidyverse)
 library(naturecounts)
-library(leaflet)
-library(leaflet.extras)
-library(leaflet.providers)
-library(ggspatial)
-library(RColorBrewer)
-library(raster)
-library(tmap)
-library(terra)
+library(sf)
 library(lubridate)
+library(raster)
+library(terra)
+library(leaflet)
+
+
+##DIMITRI CHECK -> I DONT THINK THESE ARE USED
+#library(mapview)
+#library(leaflet.extras)
+#library(leaflet.providers)
+#library(ggspatial)
+#library(RColorBrewer)
+#library(tmap)
+
 
 #since weathercan is not available in the recent version of R, we install the package a little differently
 #install.packages("weathercan", 
-                 #repos = c("https://ropensci.r-universe.dev", 
-                           #"https://cloud.r-project.org"))
+#                 repos = c("https://ropensci.r-universe.dev", 
+#                           "https://cloud.r-project.org"))
 library(weathercan)
 ```
 
-# 3.1 Summarize NatureCounts Data
-
-Reminder that, to download data, you need to [sign up](https://naturecounts.ca/nc/default/register.jsp) for a **free** account.
-
-> The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
+# 3.1 Preparing NatureCounts Data
 
 ```{r}
 collections <- meta_collections() 
@@ -80,6 +75,8 @@ View(search_species("whooping crane"))
 ```
 
 To download the NatureCounts data, you can specify the collection and species code relevant to your research. Replace `testuser` with your user name.
+
+> The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
 
 ```{r}
 whooping_crane_data <- nc_data_dl(collections = c("ABATLAS1", "ABATLAS2", "ABBIRDRECS"), species = 4030, username = "testuser", info = "spatial_data_tutorial")
@@ -113,7 +110,7 @@ Lastly, you can summarize the NatureCounts data once more to get the annual tota
 ```{r}
 cranes_summary <- species_occurrence_summary %>%
   st_drop_geometry() %>%
-  mutate(year = lubridate::year(date)) %>%
+  mutate(year = year(date)) %>%
   group_by(year) %>%
   summarize(annual_count = sum(total_count, na.rm = TRUE)) %>%
   filter(!is.na(year)) %>%
@@ -130,17 +127,6 @@ First, let's take a look at the built in **stations** dataset:
 ```{r}
 stations <- weathercan::stations()
 head(stations)
-```
-
-Weather data can also be filtered based on province, interval, station operation period, and elevation to exclude extreme measurements in the weather data download:
-
-```{r}
-prov_stations <- stations %>%
-  filter(prov %in% c("AB"),
-         interval == "day",
-         start >= 1960,
-         end <= 2023,
-         elev < 1000)
 ```
 
 You are ready to download weather data! For the purpose of this tutorial, let's perform a smaller weather data download by specifying specific station IDs. The weather stations closest to Wood Buffalo National Park are BIRCH MOUNTAIN LO (station_id = 2481) and BUCKTON LO (station_id = 2486). These stations were identified using the the ECCC [search option](https://climate.weather.gc.ca/historical_data/search_historic_data_stations_e.html?searchType=stnProx&timeframe=1&txtRadius=25&selCity=&optProxType=park&selPark=57%7C39%7C112%7C0%7CWood+Buffalo+National+Park&txtCentralLatDeg=&txtCentralLatMin=&txtCentralLatSec=&txtCentralLongDeg=&txtCentralLongMin=&txtCentralLongSec=&txtLatDecDeg=&txtLongDecDeg=&optLimit=yearRange&StartYear=1840&EndYear=2024&Year=2024&Month=10&Day=1&selRowPerPage=25) which helps you search for historical weather data based on proximity to a city, coordinate, or National Park.
@@ -160,8 +146,21 @@ weather <- weather_dl(station_ids = wood_buff_stations$station_id,
                          interval = "day", quiet = TRUE)
 ```
 
-NOTE - Larger data downloads can be performed based on filtered stations data-sets as well as start, end, and interval specifications. Large historical weather downloads can take a while!
+NOTE - Larger data downloads can be performed based on filtered stations datasets as well as start, end, and interval specifications. Large historical weather downloads can take a while!
 
+Here is an example where we filtered based on province, interval, station operation period, and elevation to exclude extreme measurements in the weather data download:
+
+> To execute this code chunk, remove the \#
+```{r}
+#prov_stations <- stations %>%
+#  filter(prov %in% c("AB"),
+#         interval == "day",
+#         start >= 1960,
+#         end <= 2023,
+#         elev < 1000)
+```
+
+> To execute this code chunk, remove the \#
 ```{r, eval = FALSE}
 # weather <- weather_dl(station_ids = prov_stations$station_id,
                          # start = "2000-01-01",
@@ -179,8 +178,8 @@ Finally, to summarize the weather data by calculating the annual mean summer tem
 
 ```{r}
 yearly_climate <- weather %>%
-  filter(lubridate::month(date) %in% 5:8) %>%  # Filter for summer months May (5) through August (8)
-  group_by(year = lubridate::year(date)) %>%   # Group by year
+  filter(month(date) %in% 5:8) %>%  # Filter for summer months May (5) through August (8)
+  group_by(year = year(date)) %>%   # Group by year
   summarize(
     yearly_avg_temp = mean(mean_temp, na.rm = TRUE),
     yearly_avg_precip = mean(total_precip, na.rm = TRUE)
@@ -207,8 +206,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_temp, y = annual_count)) +
        title = "Whooping Crane Count vs. Annual Avg Summer Temp") +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
-
-Or do the same for annual summer precipitation:
+And do the same for annual summer precipitation:
 
 ```{r}
 ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
@@ -223,7 +221,9 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 # 3.3 WorldClim (Raster) Data
 
-[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. In this next section you will manipulate climate data rasters and associate them with NatureCounts data.
+[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 
+
+[bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. 
 
 Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
 
@@ -291,21 +291,14 @@ bioclim_data <- bioclim_data %>%
 summary(bioclim_data)
 ```
 
-Combine the bioclimatic values with the NatureCounts data.
-
-```{r}
-bioclim_data <- cbind(cranes_sf, bioclim_values, longitude = species_occurrence_summary$longitude, latitude = species_occurrence_summary$latitude)
-bioclim_data
-```
-
 Visualize the distribution of **bio1** compared to **total_count**:
 
 ```{r}
-# Scatter plot of bird observations against a bioclimatic variable (bio1)
-ggplot(data = bioclim_data, aes(x = bio15, y = total_count)) +
+# Scatter plot of bird observations against a bioclimatic variable (bio1 = Annual Mean Temperature)
+ggplot(data = bioclim_data, aes(x = bio1, y = total_count)) +
   geom_point(alpha = 0.6) +
   labs(title = "Bird Observations vs. Bioclimatic Variable (bio1)",
-       x = "Bioclimatic Variable",
+       x = "Annual Mean Temperature",
        y = "ObservationCount") +
   theme_minimal()
 ```
@@ -315,6 +308,8 @@ Map the NatureCounts data by grouping it by **SiteCode**, sizing the points by *
 ```{r}
 bioclim_data <- st_transform(bioclim_data, crs = 4326)
 ```
+
+Now let's make an interactive maps of total counts per site. 
 
 ```{r}
 # Group by SiteCode and summarize total_count
@@ -345,4 +340,4 @@ leaflet(bioclim_data) %>%
   addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
 ```
 
-**Congratulations**! You've completed **Module 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Module 4](04-EnvironmentalData.Rmd) you can explore how-to link NatureCounts observations with other environmental variables like elevation, landcover, and spectral indices.
+**Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Chapter 4](04-ElevationData.Rmd) you can explore how-to link NatureCounts observations with elevation data.
