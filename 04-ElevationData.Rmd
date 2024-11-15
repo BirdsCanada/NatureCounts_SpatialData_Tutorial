@@ -117,9 +117,15 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
+To crop a raster we can apply the `crop()` function from the `terra` package which uses the SpatVector format. Here, we crop the extent of the raster while converting the National Park Boundary to a SpatVector using `vect()`.
+
+```{r}
+mauricie_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
+```
+
 **Masking** assigns NA values to cells of a raster not covered by a vector.
 
-To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector using `vect()`.
+To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which also uses the SpatVector format.
 
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
@@ -241,8 +247,6 @@ elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elev
 ```
 
 Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping, masking, and reclassification procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
-
-3)  calculated summary statistics 4) calculated NDWI and NDVI using satellite imagery
 
 # Preliminary Steps
 
