@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 5: Land Cover Data
 
-##### Author: Dimitrios Markou
+##### Author: Dimitrios Markou, Danielle Ethier
 
 | In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
@@ -160,7 +160,7 @@ Now that the NatureCounts data are summarized, lets prepare the land cover data.
 
 # 5.2 Landcover Data
 
-To read in the landcover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6)using and save it to your directory before applying `terra::rast()`.
+To read in the landcover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
 #if the data are in your working directory
