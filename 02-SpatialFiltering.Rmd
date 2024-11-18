@@ -38,6 +38,7 @@ This R tutorial requires the following **packages**:
 library(naturecounts)
 library(sf)
 library(tidyverse)
+library(mapview)
 library(leaflet)
 library(leaflet.extras)
 ```
