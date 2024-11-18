@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covariates. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
+| In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covariates. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
 # 3.0 Learning Objectives
 
@@ -87,7 +87,7 @@ whooping_crane_data <- whooping_crane_data %>%
   mutate(ObservationCount = as.numeric(ObservationCount)) # convert to numeric
 ```
 
-You can then summarise species occurrence by SiteCode and date while keeping the coordinate information for each site using the `group_by` and `summarise` functions:
+You can then summarize species occurrence by SiteCode and date while keeping the coordinate information for each site using the `group_by` and `summarise` functions:
 
 ```{r}
 species_occurrence_summary <- whooping_crane_data %>%
@@ -215,9 +215,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 # 3.3 WorldClim (Raster) Data
 
-[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19
-
-[bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
+[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
 
 Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
 
@@ -257,7 +255,7 @@ plot(worldclim_stack[["bio1"]], main = "Annual Mean Temperature (bio1)")
 summary(worldclim_stack)
 ```
 
-Convert the **species_occurences_summary**, which summarises species occurrence by SiteCode, into a spatial object using the `st_as_sf` function:
+Convert the **species_occurences_summary**, which summarizes species occurrence by SiteCode, into a spatial object using the `st_as_sf` function:
 
 ```{r}
 cranes_sf <- sf::st_as_sf(species_occurrence_summary,
