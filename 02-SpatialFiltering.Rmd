@@ -9,26 +9,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 # Chapter 2: Spatial Filtering: KBA's and Priority Places
 
-##### Author: Dimitrios Markou
+##### Authors: Dimitrios Markou, Danielle Ethier
 
-In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research application. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
+| In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research application. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
 
 # 2.0 Learning Objectives
 
 By the end of **Chapter 2 - Spatial Filtering**, users will know how to:
 
--   Import and map polygon boundary files based on attributes 
+-   Import and map polygon boundary files based on attributes
 -   Reproject NatureCounts data to the coordinate reference system of your spatial layer
 -   Spatially filter and map NatureCounts data for an area of interest
-
-<!-- -->
-
 -   Read, process, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
-The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory.  
+The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory.
 
 To view your working directory.
 
@@ -41,19 +37,17 @@ This R tutorial requires the following **packages**:
 ```{r, message = FALSE}
 library(naturecounts)
 library(sf)
-#library(terra)  ###I think these packages are not used. 
 library(tidyverse)
-library(ggspatial)
+library(ggspatial) # for spatial data visualization with ggplot2
 library(leaflet)
 library(leaflet.extras)
-#library(leaflet.providers)
 ```
 
 # 2.1 Key Biodiversity Areas
 
 #### *Example 2a* - You are interested in assessing the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the KBAs found within the province of Ontario.
 
-Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example. 
+Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example.
 
 We can read in our KBA polygons using the `sf` package once it is in your working directory.The downloaded files was renamed for this example so you will need to change the code to match your file name.
 
@@ -130,7 +124,7 @@ View(meta_collections())
 search_species("wood duck")
 ```
 
-Now we can download the NatureCounts data. Remember to change `testuser` to your personal username. 
+Now we can download the NatureCounts data. Remember to change `testuser` to your personal username.
 
 ```{r}
 atlas_on <- nc_data_dl(collections = "ONATLAS3PC", species = 360, username = "testuser", info = "spatial_data_tutorial")
@@ -208,7 +202,7 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 
 #### *Example 2b* - You want to assess the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the Long Point Walsingham Forest Priority Place.
 
-Navigate to [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). ##Dimitri: Please provide here some step by step instructions how to download. It isn't clear on the website and people might get confused which file to select##
+Navigate to [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). Scroll down to the **Data and Resources** section and select the Priority Places file labeled `English`, `dataset`, and `FGDB/GDB`.
 
 First, lets create a path to our downloaded Priority Place file.
 
@@ -277,4 +271,3 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 ```
 
 **Congratulations**! You completed **Chapter 2 - Spatial Filtering: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
-
