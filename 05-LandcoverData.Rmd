@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
+| In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
 # 5.0 Learning Objectives
 
@@ -21,7 +21,7 @@ By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
 -   Load and process land cover data (raster)
 -   Extract unique pixel values from a raster data set
--   Link NatureCounts data to land cover data for analysis
+-   Combine NatureCounts data with land cover data for analysis
 
 This R tutorial requires the following packages:
 
@@ -31,12 +31,8 @@ library(sf)
 library(terra)
 library(tidyverse)
 library(lubridate)
-
-library(ggspatial)
-library(mapview)
 library(leaflet)
 library(leaflet.extras)
-library(leaflet.providers)
 ```
 
 This tutorial uses the following spatial data.
