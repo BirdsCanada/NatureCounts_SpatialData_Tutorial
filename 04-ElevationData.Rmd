@@ -265,6 +265,49 @@ plot(mauricie_mask, main = "masked DTM")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
+Summarize the NatureCounts data for mapping and covert it to SpatVector format.
+
+```{r}
+# Group by SiteCode and summarize total_count
+mauricie_site_summary <- mauricie_birds %>%
+  group_by(SiteCode) %>%
+  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
+```
+
+```{r}
+mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
+```
+
+To map the NatureCounts and DTM data:
+
+```{r}
+# Match the CRS
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_mask))
+
+# Plot the mauricie_mask raster
+plot(mauricie_mask, main = "Mauricie Mask with Site Summary Points")
+
+# Overlay the National Park boundary in red
+plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE, lwd = 2)
+
+# Overlay mauricie_site_summary multipoints
+plot(st_geometry(mauricie_site_summary), 
+     add = TRUE, 
+     pch = 19,       # Solid circle
+     col = "blue",   # Point color
+     cex = 0.5)      # Point size
+```
+
+Extract elevation values for each bird observation site and append it to `mauricie_birds`.
+
+```{r}
+mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_mask)) # Match the CRS
+
+elevation_values <- terra::extract(mauricie_mask, mauricie_birds_vect) # Extracts the elevation values for each point
+
+elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elevation_values[, 2]) # Creates the record_id and elevation columns 
+```
+
 # 4.3 Reclassification
 
 When communicating our data, it might be useful to reclassify a range of raster values into classes. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
@@ -314,51 +357,6 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 # Reset the plotting layout to the default
 par(mfrow = c(1, 1))
 
-```
-
-Summarize the NatureCounts data for mapping and covert it to SpatVector format.
-
-```{r}
-# Group by SiteCode and summarize total_count
-mauricie_site_summary <- mauricie_birds %>%
-  group_by(SiteCode) %>%
-  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
-```
-
-```{r}
-mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
-```
-
-To map the NatureCounts and DTM data:
-
-```{r}
-# Match the CRS
-mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_mask))
-
-# 
-
-# Plot the mauricie_mask raster
-plot(mauricie_mask, main = "Mauricie Mask with Site Summary Points")
-
-# Overlay the National Park boundary in red
-plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE)
-
-# Overlay mauricie_site_summary multipoints
-plot(st_geometry(mauricie_site_summary), 
-     add = TRUE, 
-     pch = 19,       # Solid circle
-     col = "blue",   # Point color
-     cex = 0.5)      # Point size
-```
-
-Extract elevation values for each bird observation site and append it to `mauricie_birds`.
-
-```{r}
-mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_mask)) # Match the CRS
-
-elevation_values <- terra::extract(mauricie_mask, mauricie_birds_vect) # Extracts the elevation values for each point
-
-elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elevation_values[, 2]) # Creates the record_id and elevation columns 
 ```
 
 Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping, masking, and reclassification procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
