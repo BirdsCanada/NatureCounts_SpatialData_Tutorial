@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 3: Climate Data
 
-##### Author: Dimitrios Markou
+##### Author: Dimitrios Markou, Danielle Ethier
 
-In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covaraites. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
+| In [Chapter 2](02-ConservationAreas.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covariates. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
 # 3.0 Learning Objectives
 
@@ -45,20 +45,11 @@ library(raster)
 library(terra)
 library(leaflet)
 
-
-##DIMITRI CHECK -> I DONT THINK THESE ARE USED
-#library(mapview)
-#library(leaflet.extras)
-#library(leaflet.providers)
-#library(ggspatial)
-#library(RColorBrewer)
-#library(tmap)
-
-
 #since weathercan is not available in the recent version of R, we install the package a little differently
 #install.packages("weathercan", 
 #                 repos = c("https://ropensci.r-universe.dev", 
 #                           "https://cloud.r-project.org"))
+
 library(weathercan)
 ```
 
@@ -96,7 +87,7 @@ whooping_crane_data <- whooping_crane_data %>%
   mutate(ObservationCount = as.numeric(ObservationCount)) # convert to numeric
 ```
 
-You can then summarise species occurrence by SiteCode and date while keeping the coordinate information for each site using the `group_by` and `summarise` functions:
+You can then summarize species occurrence by SiteCode and date while keeping the coordinate information for each site using the `group_by` and `summarise` functions:
 
 ```{r}
 species_occurrence_summary <- whooping_crane_data %>%
@@ -151,6 +142,7 @@ NOTE - Larger data downloads can be performed based on filtered stations dataset
 Here is an example where we filtered based on province, interval, station operation period, and elevation to exclude extreme measurements in the weather data download:
 
 > To execute this code chunk, remove the \#
+
 ```{r}
 #prov_stations <- stations %>%
 #  filter(prov %in% c("AB"),
@@ -161,6 +153,7 @@ Here is an example where we filtered based on province, interval, station operat
 ```
 
 > To execute this code chunk, remove the \#
+
 ```{r, eval = FALSE}
 # weather <- weather_dl(station_ids = prov_stations$station_id,
                          # start = "2000-01-01",
@@ -206,6 +199,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_temp, y = annual_count)) +
        title = "Whooping Crane Count vs. Annual Avg Summer Temp") +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
+
 And do the same for annual summer precipitation:
 
 ```{r}
@@ -221,9 +215,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 # 3.3 WorldClim (Raster) Data
 
-[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 
-
-[bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors. 
+[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
 
 Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
 
@@ -263,7 +255,7 @@ plot(worldclim_stack[["bio1"]], main = "Annual Mean Temperature (bio1)")
 summary(worldclim_stack)
 ```
 
-Convert the **species_occurences_summary**, which summarises species occurrence by SiteCode, into a spatial object using the `st_as_sf` function:
+Convert the **species_occurences_summary**, which summarizes species occurrence by SiteCode, into a spatial object using the `st_as_sf` function:
 
 ```{r}
 cranes_sf <- sf::st_as_sf(species_occurrence_summary,
@@ -309,7 +301,7 @@ Map the NatureCounts data by grouping it by **SiteCode**, sizing the points by *
 bioclim_data <- st_transform(bioclim_data, crs = 4326)
 ```
 
-Now let's make an interactive maps of total counts per site. 
+Now let's make an interactive maps of total counts per site.
 
 ```{r}
 # Group by SiteCode and summarize total_count
@@ -341,4 +333,3 @@ leaflet(bioclim_data) %>%
 ```
 
 **Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Chapter 4](04-ElevationData.Rmd) you can explore how-to link NatureCounts observations with elevation data.
-

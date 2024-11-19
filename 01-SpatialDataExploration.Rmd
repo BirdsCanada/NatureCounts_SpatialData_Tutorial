@@ -11,10 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 1: Spatial Data Exploration
 
-##### Author: Dimitrios Markou
+##### Authors: Dimitrios Markou, Danielle Ethier
 
-Exploring your data in a visual way is an important first step to any analysis. This chapter will give you a foundation understanding of how to work with your NatureCounts data spatially in R. This Chapter assumes that you have a basic understand of how to access your data from NatureCounts. The [NatureCounts Introductory R Tutorial](#link) is where you should start if you're new to the `naturecounts` R package. It explains how to access, view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
-
+| Exploring your data in a visual way is an important first step to any analysis. This chapter will give you a foundational understanding of how to work with your NatureCounts data spatially in R. This Chapter assumes that you have a basic understanding of how to access your data from NatureCounts. The [NatureCounts Introductory R Tutorial](https://github.com/BirdsCanada/NatureCounts_IntroTutorial.git) is where you should start if you're new to the `naturecounts` R package. It explains how to access, view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
 # 1.0 Learning Objectives
 
@@ -45,7 +44,7 @@ Spatial data is any type of vector or raster data that represents a feature or p
 
 The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,* and *.prj* extensions.
 
-Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. Raster data manipulation will be in covered in subsequent chapters (see [Incorporating Climate Data](provide link) and [Incorporating Environmental Data](provide link)).
+Raster data files are typically stored with TIFF or GeoTIFF files with a *(.tif)* or *(.tiff)* extension. Raster data manipulation will be in covered in subsequent chapters (see [Chapter 3: Climate Data](03-ClimateData.Rmd), [Chapter 4: Elevation Data](), [Chapter 5: Landcover Data](05-LandcoverData.Rmd), [Chapter 6: Satellite Imagery](06-SatelliteImagery.Rmd), and [Chapter 7: RasterSummaryStats](07-RasterSummaryStats)).
 
 Vector and raster data may also be associated with **attribute data** or **temporal data**. Attribute data provides additional information on the characteristics of spatial features while temporal data assigns a specific date or time range.
 
@@ -83,7 +82,7 @@ Second, we look to find the numeric species id.
 search_species("cedar waxwing")
 ```
 
-Now we can download the data. 
+Now we can download the data.
 
 > The data download will not work unless you replace `"testuser"` with your actual user name. You will be prompted to enter your password.
 
@@ -91,7 +90,7 @@ Now we can download the data.
 cedar_waxwing <- nc_data_dl(collections = "MBBA2PC", species = 16330, username = "testuser", info = "spatial_data_tutorial")
 ```
 
-Use the [format_dates](provide link) function to create date and day-of-year (doy) columns.
+Use the [format_dates](https://rdrr.io/github/BirdStudiesCanada/naturecounts/man/format_dates.html) function to create date and day-of-year (doy) columns.
 
 ```{r}
 cedar_waxwing <- format_dates(cedar_waxwing)
@@ -136,4 +135,4 @@ ggplot(data = cedar_waxwing_june_sf) +
 
 The map above provides a simple visualization of NatureCounts data over a broad spatial and temporal scale.
 
-**Congratulations!** You completed **Chapter 1: Spatial Data Exploration**. Here, you successfully visualized NatureCounts vector data over a wide spatial and temporal scale using a multi-panel plot. In [Chapter 2](02-ConservationAreas.Rmd), you can explore spatial data manipulation, apply geoprocessing functions, and visualize NatureCounts data within [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).
+**Congratulations!** You completed **Chapter 1: Spatial Data Exploration**. Here, you successfully visualized NatureCounts vector data over a wide spatial and temporal scale using a multi-panel plot. In [Chapter 2](02-SpatialFiltering.Rmd), you can explore spatial data manipulation, apply geoprocessing functions, and visualize NatureCounts data within [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0).

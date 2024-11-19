@@ -11,13 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 4 Digital Elevation Data
 
-##### Author: Dimitrios Markou
+##### Author: Dimitrios Markou, Danielle Ethier
 
-The NatureCounts_SpatialData_Tutorial aims to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps.
+| In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear ways to communicate your data.
-
-In this tutorial, you will process Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to link with NatureCounts data.
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
 
 **After downloading the necessary packages in [4.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
 
@@ -27,7 +25,7 @@ By the end of **Chapter 4 - ElevationData**, users will know how to:
 
 -   Process Digital Terrain Model (DTM)
 -   Crop, mask, and reclassify raster data
--   Link NatureCounts data to elevation data for analysis
+-   Combine NatureCounts data with elevation data for analysis
 
 This R tutorial requires the following packages:
 
@@ -51,6 +49,8 @@ This tutorial uses the following spatial data.
 
     **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
 
+3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+
 Save these files in you R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
@@ -66,8 +66,6 @@ Digital elevation datasets store topographic information like elevation or slope
 **Digital Surface Model** - represents the heights of the Earth's surface and [includes]{.underline} all natural and artificial features or ground objects.
 
 **Digital Terrain Model** - represents the bare-Earth surface topography and includes all terrain vector features. It does not include natural or artificial ground objects. In other words, it is a DEM that is augmented by the presence of streams, breaklines, and ridges.
-
-Light Detection and Ranging (LiDAR) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
 
 Set the path to your TIF file directory.
 
@@ -252,7 +250,7 @@ Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this c
 
 [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
 
-Read the National Park polygons into R.
+Read the National Park polygons into R. Navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
 
 ```{r eval = FALSE}
 #if in your working directory
