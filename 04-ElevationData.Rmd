@@ -11,11 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 4 Digital Elevation Data
 
-##### Author: Dimitrios Markou
+##### Author: Dimitrios Markou, Danielle Ethier
 
+<<<<<<< HEAD
 In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps. In this tutorial, you will process Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to link with your NatureCounts data.
 
 **After downloading the necessary packages be sure to follow the Preliminary Steps section before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
+=======
+| In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
+
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
+
+**After downloading the necessary packages in [4.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
+>>>>>>> 039f585ac586cf8f1e7f9077bf1a331788257c81
 
 # 4.0 Learning Objectives
 
@@ -23,7 +31,7 @@ By the end of **Chapter 4 - Elevation Data**, users will know how to:
 
 -   Process Digital Terrain Model (DTM)
 -   Crop, mask, and reclassify raster data
--   Link NatureCounts data to elevation data for analysis
+-   Combine NatureCounts data with elevation data for analysis
 
 This R tutorial requires the following packages:
 
@@ -32,11 +40,15 @@ library(naturecounts)
 library(sf)
 #library(terra)
 library(tidyverse)
+<<<<<<< HEAD
 #library(ggspatial)
 library(mapview)
 library(leaflet)
 #library(leaflet.extras)
 #library(leaflet.providers)
+=======
+library(dplyr)
+>>>>>>> 039f585ac586cf8f1e7f9077bf1a331788257c81
 ```
 
 This tutorial uses the following spatial data.
@@ -51,11 +63,13 @@ This tutorial uses the following spatial data.
 
     **Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select the **Téléchargement** option to explore the Lidar tiles on an interactive map (**Explorer \> Accéder**).
 
-    **Step 2**: Using the search bar, search for Parc national de la Mauricie. Under Layers, toggle on Parc nationaux du Canada to visualize the park boundary. You can also import your own **.shp** or **.kml** file using the **Import and Export** tab.
+    **Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary. You can also import your own **.shp** or **.kml** file using the **Import and Export** tab.
 
     **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
 
-Save these files in you R project working directory for easy accesses during this tutorial.
+3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+
+Save these files in you R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
 getwd()
@@ -70,8 +84,6 @@ Digital elevation datasets store topographic information like elevation or slope
 **Digital Surface Model** - represents the heights of the Earth's surface and [includes]{.underline} all natural and artificial features or ground objects.
 
 **Digital Terrain Model** - represents the bare-Earth surface topography and includes all terrain vector features. It does not include natural or artificial ground objects. In other words, it is a DEM that is augmented by the presence of streams, breaklines, and ridges.
-
-Light Detection and Ranging (LiDAR) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
 
 Set the path to your TIF file directory.
 
@@ -122,9 +134,15 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
+To crop a raster we can apply the `crop()` function from the `terra` package which uses the SpatVector format. Here, we crop the extent of the raster while converting the National Park Boundary to a SpatVector using `vect()`.
+
+```{r}
+mauricie_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
+```
+
 **Masking** assigns NA values to cells of a raster not covered by a vector.
 
-To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which uses the SpatVector format. Here, we create the mask while converting the National Park Boundary to a SpatVector using `vect()`.
+To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which also uses the SpatVector format.
 
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
@@ -247,13 +265,11 @@ elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elev
 
 Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping, masking, and reclassification procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
 
-3)  calculated summary statistics 4) calculated NDWI and NDVI using satellite imagery
-
 # Preliminary Steps
 
 [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
 
-Read the National Park polygons into R.
+Read the National Park polygons into R. Navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
 
 ```{r eval = FALSE}
 #if in your working directory
