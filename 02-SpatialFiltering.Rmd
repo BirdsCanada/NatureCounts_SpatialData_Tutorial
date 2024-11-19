@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-| In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research application. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
+| In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research applications. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
 
 # 2.0 Learning Objectives
 
