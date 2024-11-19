@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 5: Land Cover Data
 
-##### Author: Dimitrios Markou
+##### Author: Dimitrios Markou, Danielle Ethier
 
-In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
+| In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to link with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data to link with NatureCounts data. **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
 # 5.0 Learning Objectives
 
@@ -21,7 +21,7 @@ By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
 -   Load and process land cover data (raster)
 -   Extract unique pixel values from a raster data set
--   Link NatureCounts data to land cover data for analysis
+-   Combine NatureCounts data with land cover data for analysis
 
 This R tutorial requires the following packages:
 
@@ -31,12 +31,8 @@ library(sf)
 library(terra)
 library(tidyverse)
 library(lubridate)
-
-library(ggspatial)
-library(mapview)
 library(leaflet)
 library(leaflet.extras)
-library(leaflet.providers)
 ```
 
 This tutorial uses the following spatial data.
@@ -45,12 +41,13 @@ This tutorial uses the following spatial data.
 
 2.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Landcover map (30 m resolution)
 
+3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+
 # 5.1 Data Setup
 
 [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
 
-Read in the National Park polygon.
-###Dimitri - where is this spatail data layer coming from???
+Read the National Park polygons into R. Navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
 
 ```{r eval = FALSE}
 #if in your working directory
@@ -159,12 +156,11 @@ mauricie_species_summary <- mauricie_birds %>%
 mauricie_species_summary
 ```
 
-Now that the NatureCounts data are summarized, lets prepare the land cover data. 
+Now that the NatureCounts data are summarized, lets prepare the land cover data.
 
 # 5.2 Landcover Data
 
-Read the landcover dataset using `terra::rast()`.
-###Dimitri - where is this spatail data layer coming from???
+To read in the landcover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
 #if the data are in your working directory
@@ -184,6 +180,12 @@ Crop the national dataset to reduce the extent of the raster to the extent of th
 
 ```{r}
 landcover_crop <- crop(landcover, vect(mauricie_boundary))
+```
+
+Or mask the national dataset to apply NA values to all cells outsides of the extent of the National Park.
+
+```{r}
+landcover_mask <- mask(landcover, vect(mauricie_boundary))
 ```
 
 To assign the land cover class label and pixel count to each pixel value we can use the `unique()` function, assign landcover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)), and apply the `freq()` function.
@@ -250,10 +252,9 @@ plot(st_geometry(mauricie_site_summary),
 Extract pixel values for each bird observation site and append it to `mauricie_birds`.
 
 ```{r}
-mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_sl_ndvi)) # Match the CRS
+mauricie_birds <- st_transform(mauricie_birds, crs(landcover_crop)) # Match the CRS
 
 pixel_values <- terra::extract(landcover_crop, mauricie_birds_vect) # Extracts the NDVI values for each point
 
 pixel_values <- cbind(record_id = mauricie_birds$record_id, pixel_ID = pixel_values[, 2]) # Creates the record_id and pixel_ID columns 
 ```
-
