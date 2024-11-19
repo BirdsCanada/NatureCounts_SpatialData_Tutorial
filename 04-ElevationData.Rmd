@@ -13,17 +13,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-The NatureCounts_SpatialData_Tutorial modules aim to help users integrate NatureCounts data with spatial and environmental layers in R and meet their conservation and research goals. In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps.
+In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, linked them with NatureCounts data, and created maps. In this tutorial, you will process Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to link with your NatureCounts data.
 
-Spatial data mapping can help you explore possible associations between species occurrences, climate, and other environmental variables of interest. Integrating diverse NatureCounts datasets can, therefore, help inform species distribution models, select predictor variables, and provide clear way to communicate your data.
-
-In this tutorial, you will process Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to link with NatureCounts data.
-
-**After downloading the necessary packages in [4.0 Learning Objectives] be sure to follow the [Preliminary Steps] section found at the end of this document before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
+**After downloading the necessary packages be sure to follow the Preliminary Steps section before proceeding with the tutorial. It helps you preprocess the National Park boundary and NatureCounts data which are required for this lesson.**
 
 # 4.0 Learning Objectives
 
-By the end of **Chapter 4 - ElevationData**, users will know how to:
+By the end of **Chapter 4 - Elevation Data**, users will know how to:
 
 -   Process Digital Terrain Model (DTM)
 -   Crop, mask, and reclassify raster data
@@ -34,15 +30,13 @@ This R tutorial requires the following packages:
 ```{r, eval = TRUE, warning = FALSE, message = FALSE}
 library(naturecounts)
 library(sf)
-library(terra)
+#library(terra)
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(ggspatial)
+#library(ggspatial)
 library(mapview)
 library(leaflet)
-library(leaflet.extras)
-library(leaflet.providers)
+#library(leaflet.extras)
+#library(leaflet.providers)
 ```
 
 This tutorial uses the following spatial data.
@@ -50,6 +44,10 @@ This tutorial uses the following spatial data.
 1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
 2.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
+
+##Dimitri
+##Preliminary Steps Are AT THE BOTTOM?
+##I still can't figure out how to get these data. Can we provide english here. There is an option to tanlsate the site and that might just be easier than going between languages. 
 
     **Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select the **Téléchargement** option to explore the Lidar tiles on an interactive map (**Explorer \> Accéder**).
 
@@ -78,6 +76,7 @@ Light Detection and Ranging (LiDAR) is an active remote sensing technology. It i
 Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
+getwd()
 dir_path <- "path/to/your/directory"
 ```
 
