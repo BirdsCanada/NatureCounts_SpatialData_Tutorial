@@ -168,10 +168,10 @@ mauricie_species_summary <- mauricie_birds %>%
 mauricie_species_summary
 ```
 
-To write the mauricie_birds dataset to your disk, use the
+To write the mauricie_birds dataset to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output.
 
 ```{r}
-
+write.csv(mauricie_birds, "data/mauricie/mauricie_birds.csv", row.names = FALSE)
 ```
 
 # 4.2 DEM, DSM & DTM
