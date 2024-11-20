@@ -79,13 +79,14 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-Write the boundary as a shapefile to your disk.
+OPTIONAL: To write the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. However, we have also uploaded this file to the repository data folder for your convenience.
 
+> To execute this code chunk, remove the \#
+ 
 ```{r, eval=FALSE, message=FALSE}
-st_write(mauricie_boundary, "mauricie_boundary.shp")
+# st_write(mauricie_boundary, "mauricie_boundary.shp")
 
-# you will want the KML file for section 3.8
-st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
+# st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
 ```
 
 To assess the species distribution within the National Park, download data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
@@ -168,10 +169,12 @@ mauricie_species_summary <- mauricie_birds %>%
 mauricie_species_summary
 ```
 
-To write the mauricie_birds dataset to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output.
+OPTIONAL: To write the mauricie_birds dataset to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. However, we have also uploaded this file to the repository data folder for your convenience.
+
+> To execute this code chunk, remove the \#
 
 ```{r}
-write.csv(mauricie_birds, "data/mauricie/mauricie_birds.csv", row.names = FALSE)
+# write.csv(mauricie_birds, "data/mauricie/mauricie_birds.csv", row.names = FALSE)
 ```
 
 # 4.2 DEM, DSM & DTM
@@ -187,7 +190,7 @@ Digital elevation datasets store topographic information like elevation or slope
 Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
-dir_path <- "path/to/your/directory"
+dir_path <- "C:/Users/dimit/Birds Canada/Data/mauricie"
 ```
 
 Create a mosaic of the adjacent DTM rasters.
@@ -244,6 +247,16 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 
 ```{r, warning = FALSE}
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
+```
+
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete Chapter 7: Raster Summary Statistics**. However, we have also uploaded this file to the repository data folder for your convenience.  
+
+> To execute this code chunk, remove the \#
+
+```{r}
+# output_path <- "path/to/your/folder/mauricie_mask.tif"  
+
+# writeRaster(mauricie_mask, output_path, overwrite = TRUE)
 ```
 
 Visualize the regional and masked DTM's with a two-panel plot.
