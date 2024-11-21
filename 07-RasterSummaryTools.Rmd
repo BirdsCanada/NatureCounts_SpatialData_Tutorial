@@ -1,0 +1,183 @@
+---
+title: "07-RasterSummaryTools"
+author: "Dimitrios Markou"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 7: Raster Summary Tools
+
+##### Author: Dimitrios Markou
+
+> In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will calculate raster summary statistics and explore ways to visualize them.
+
+**To proceed with this tutorial, you must complete sections 4.0 - 4.3 of [Chapter 4: Elevation Data](04-ElevationData.Rmd)*unless you're using your own data*. They help you create and save a masked raster file which is required for this lesson. To make this faster, we have provided the outputs from section 4.1 in the [data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) from the [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial.git) repository.**
+
+# 7.0 Learning Objectives
+
+By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
+
+-   Read raster data objects
+
+-   Reclassify raster data
+
+-   Calculate summary statistics using base and custom functions
+
+-   Visualize raster data summaries
+
+This R tutorial requires the following packages:
+
+```{r, eval = TRUE, warning = FALSE, message = FALSE}
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+```
+
+Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** found in the `data` folder of the project repo, if necessary.
+
+```{r}
+mauricie_boundary <- sf::st_read("data/mauricie/mauricie_boundary.shp")
+```
+# 7.1 Raster Data Objects
+
+Raster data is stored as a SpatRaster object and can have one or multiple layers. 
+
+To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`:
+
+```{r}
+elevation_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_mask.tif")
+elevation_rast
+```
+
+The function `names()` can be used to rename the layer(s) of a SpatRaster.
+
+```{r}
+names(elevation_rast) <- "elevation"
+elevation_rast
+```
+In [Chapter 5: Land Cover Data](05-LandcoverData.Rmd), you created a mask of La Mauricie National Park using the [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) dataset. Read this file from your directory and call it `landcover_rast`:
+
+```{r}
+landcover_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/landcover_crop.tif")
+landcover_rast
+```
+You'll notice that the resolution, extent, and CRS of the individual raster layers do not match. 
+
+Use the `project()` function from `terra` to transform the coordinate reference system of `elevation_rast` to match that of `landcover_rast` (Canada Atlas Lambert, EPSG: 3979). By default, the "bilinear" method will be used for numeric layers like elevation. **This could take about 10 min - stretch break!**.
+
+```{r, eval = true, message = FALSE}
+# Reproject mauricie_mask to EPSG:3979 (Canada Atlas Lambert)
+elevation_rast_proj <- terra::project(elevation_rast, "EPSG:3979", method = "bilinear")
+```
+
+To match the extents of both layers, crop the `landcover_rast` to the extent of the `elevation_rast_proj`.
+
+```{r}
+landcover_rast_crop <- crop(landcover_rast, ext(elevation_rast_proj))
+```
+
+Resample `landcover_rast_crop` to match the resolution of `elevation_rast_proj` using the **"near"** method. This is the default method used for categorical layers like landcover. Run [help("project")]{.underline} in your **Console** for more details.
+
+```{r}
+landcover_rast_resample <- resample(landcover_rast_crop, elevation_rast_proj, method = "near")
+```
+
+To test plot the layers:
+
+```{r, eval = TRUE, warning = FALSE}
+# Match the CRS
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_mask_resampled))
+
+# Plot landcover
+plot(landcover_mask_resampled, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
+
+# Overlay the Mauricie boundary on the first plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+```
+
+# 7.2 Reclassification
+
+When communicating our data, it might be useful to reclassify a range of raster values into classes. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
+
+First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so:
+
+```{r}
+dtm_rcl_matrix <- matrix(c(0, 200, 1,
+                           200, 400, 2,
+                           400, 1000, 3), byrow = TRUE, ncol = 3)
+```
+
+Then, apply the `classify()` function using the reclassification matrix:
+
+```{r}
+dtm_mosaic_reclass <- classify(dtm_mosaic, dtm_rcl_matrix)
+```
+
+Finally, give meaningful labels to each of the classes:
+
+```{r, eval = TRUE}
+elevation_levels <- data.frame(ID = c(1L, 2L, 3L),
+                               category = c("Low elevation",
+                                            "Mid elevation",
+                                            "High elevation"))
+levels(dtm_mosaic_reclass) <- elevation_levels
+```
+
+Visualize the regional DTM and National Park boundary using the reclassification scheme:
+
+```{r, eval = TRUE, warning = FALSE}
+# Set up a 1x2 plotting layout
+par(mfrow = c(1, 2))  # Set up a 1-row, 2-column plotting layout
+
+# Plot the original DTM mosaic
+plot(dtm_mosaic, main = "Regional DTM")
+
+# Overlay the Mauricie boundary on the first plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+
+# Plot the reclassified DTM mosaic
+plot(dtm_mosaic_reclass, main = "Reclassified DTM")
+
+# Overlay the Mauricie boundary on the second plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+
+# Reset the plotting layout to the default
+par(mfrow = c(1, 1))
+```
+
+# 7.3 Calculate Raster Summary Statistics
+
+To calculate summary statistics for individual SpatRaster layers you can use the `global()` function which implements `mean()`, `min()`, `max()`, and `sd()`.
+
+For example, to calculate the average value of the cells of **mauricie_mask** you specify the `fun` argument.
+
+```{r}
+global(mauricie_mask, fun = "mean", na.rm = TRUE)
+```
+
+It is also possible to make and implement a function to calculate multiple summary statistics simultaneously. For example, `my_summary_stats` calculates the max, min, mean and sd of an input numeric vector `x` and returns the summary statistics in a vector (give this a few minutes):
+
+```{r}
+my_summary_stats <- function(x) {
+  out <- c(mean = mean(x, na.rm = TRUE), 
+              sd = sd(x, na.rm = TRUE), 
+              min = min(x, na.rm = TRUE), 
+              max = max(x, na.rm = TRUE))
+  return(out)
+}
+global(mauricie_mask, fun = my_summary_stats)
+```
+
+You can also create a histogram of the raster DTM data.
+
+```{r, warning = FALSE}
+terra::hist(mauricie_mask, axes = TRUE, 
+            main = "Elevation values within La Mauricie National Park",
+            xlab = "Elevation (m)",
+            col = "Green")
+```
