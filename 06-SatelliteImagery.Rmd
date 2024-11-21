@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-| In [Chapter 5](05-LandcoverData.Rmd), you processed land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In this tutorial, you will use satellite imagery from the Copernicus Sentinel-2 mission to calculate spectral index values (NDVI, NDWI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
+> In [Chapter 5](05-LandcoverData.Rmd), you processed land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In this tutorial, you will use satellite imagery from the Copernicus Sentinel-2 mission to calculate spectral index values (NDVI, NDWI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
 
 The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-synchronous orbit phased at 180° to each other. The satellites carry multispectral sensors with 13 spectral bands and have a revisit frequency of 5 days and orbital swath width of 290 km. Their high resolution products support a variety of services and applications including land management, agriculture, forestry, disaster control, humanitarian relief operations, risk mapping, and security concerns.
 
