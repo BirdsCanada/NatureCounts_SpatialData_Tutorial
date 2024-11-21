@@ -231,7 +231,7 @@ plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-# 4.2 Cropping and masking
+# 4.3 Cropping and masking
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -249,7 +249,7 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete Chapter 7: Raster Summary Statistics**. However, we have also uploaded this file to the repository data folder for your convenience.  
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete Chapter 7: Raster Summary Statistics**. You must complete the above sections and save this raster to proceed with Chapter 7.
 
 > To execute this code chunk, remove the \#
 
@@ -321,7 +321,7 @@ elevation_values <- terra::extract(mauricie_mask, mauricie_birds_vect) # Extract
 elevation_values <- cbind(record_id = mauricie_birds$record_id, elevation = elevation_values[, 2]) # Creates the record_id and elevation columns 
 ```
 
-# 4.3 Reclassification
+# 4.4 Reclassification
 
 When communicating our data, it might be useful to reclassify a range of raster values into classes. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
 
