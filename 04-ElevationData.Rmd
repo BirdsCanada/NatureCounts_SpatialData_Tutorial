@@ -78,7 +78,6 @@ mauricie_boundary <- national_parks %>%
 # Drop the Z-dimension (3D component) to make it 2D
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
-
 OPTIONAL: To write the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. However, we have also uploaded this file to the repository data folder for your convenience.
 
 > To execute this code chunk, remove the \#
@@ -190,7 +189,11 @@ Digital elevation datasets store topographic information like elevation or slope
 Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
+<<<<<<< HEAD
 dir_path <- "C:/Users/dimit/Birds Canada/Data/mauricie"
+=======
+dir_path <- "path/to/your/directory"
+>>>>>>> f6807e476700d9d742530b614af0371ad6076e0c
 ```
 
 Create a mosaic of the adjacent DTM rasters.
