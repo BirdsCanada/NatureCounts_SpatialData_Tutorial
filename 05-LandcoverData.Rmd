@@ -81,35 +81,29 @@ OPTIONAL: To write the cropped raster to your disk, you can use the `writeRaster
 # writeRaster(landcover_crop, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
 
-Or mask the national dataset to apply NA values to all cells outsides of the extent of the National Park.
-
-```{r}
-landcover_mask <- mask(landcover, vect(mauricie_boundary))
-```
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
-
-> To execute this code chunk, remove the \#
-
-```{r}
-# output_path <- "path/to/your/landcover_mask.tif" 
-
-# writeRaster(landcover_mask, output_path, overwrite = TRUE)
-```
-
 To assign the land cover class label and pixel count to each pixel value we can use the `unique()` function, assign land cover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)), and apply the `freq()` function.
 
 ```{r}
 # Extract the unique pixel values from the cropped landcover raster
-unique_vales <- unique(landcover_crop)
+unique_values <- unique(landcover_crop)
 
 # Assign land cover class labels according to the pixel values (in the correct order)
-unique_vales$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
+unique_values$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
 
 # Add pixel count for each class
 pixel_freq <- freq(landcover_crop)
-unique_vales$pixelcount <- pixel_freq$count
+unique_values$pixelcount <- pixel_freq$count
 
-unique_vales
+unique_values
+```
+Apply  the `levels()` and `data.frame()` functions to add the pixel values, landcover classes, and pixel count to the raster data.
+
+```{r}
+levels(landcover_crop) <- data.frame(
+  pixelvalue = unique_values$Canada2015,
+  landcover = unique_values$landcover,    
+  pixelcount = unique_values$pixelcount        
+)
 ```
 
 Plot the land cover raster and National Park boundary.
@@ -124,7 +118,21 @@ plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Ma
 # Overlay the Mauricie boundary on the first plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
+Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
+```{r}
+landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
+```
+
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
+
+> To execute this code chunk, remove the \#
+
+```{r}
+# output_path <- "path/to/your/landcover_mask.tif" 
+
+# writeRaster(landcover_mask, output_path, overwrite = TRUE)
+```
 Summarize the NatureCounts data for mapping and covert it to SpatVector format.
 
 ```{r}
