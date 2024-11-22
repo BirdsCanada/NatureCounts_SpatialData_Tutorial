@@ -129,10 +129,11 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_path <- "path/to/your/landcover_mask.tif" 
+output_path <- "C:/Users/dimit/Birds Canada/Data/mauricie/landcover_mask.tif"
 
-# writeRaster(landcover_mask, output_path, overwrite = TRUE)
+writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
+
 Summarize the NatureCounts data for mapping and covert it to SpatVector format.
 
 ```{r}
