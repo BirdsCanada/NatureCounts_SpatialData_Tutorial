@@ -103,7 +103,7 @@ To assign the land cover class label and pixel count to each pixel value we can 
 unique_vales <- unique(landcover_crop)
 
 # Assign land cover class labels according to the pixel values (in the correct order)
-unique_vales$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")
+unique_vales$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
 
 # Add pixel count for each class
 pixel_freq <- freq(landcover_crop)
