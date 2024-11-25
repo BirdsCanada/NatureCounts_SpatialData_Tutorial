@@ -81,7 +81,7 @@ Read each band stored in the downloaded satellite imagery folder in your directo
 bands <- list.files(path = "C:/Users/dimit/Birds Canada/Data/SENTINEL2/S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE/GRANULE/L2A_T18TXS_A026077_20200619T155414/IMG_DATA/R10m", 
                     pattern = "\\.jp2$", full.names = TRUE) ##This should not be a path on your computer
 
-# Read all the bands into a raster stack
+# Read all the bands into a raster stack #Bands? Which file are we downloading. I downloaded the NDVI and NDWI but this seems wrong based on the instructions here. 
 sentinel_imagery <- rast(bands)
 
 # Assign meaningful names to the bands
