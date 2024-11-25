@@ -54,7 +54,7 @@ The Copernicus Data Space Ecosystem Browser is the central hub for accessing and
 
 2)  In the **Search** tab (top, left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
 
-##I can't get this to work. 
+##I can't get this to work. Perhaps if we don't expect users to get the same data, they could just search by month and find a clear day? 
     **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
 
     **Size**: 1090MB
@@ -71,7 +71,7 @@ The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://l
 
 The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
 
-Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
+Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health. #How are these downloaded?? There is a download image button on the righhand column. Is this what we want the user to use? 
 
 # 6.2 Spectral Indices
 
