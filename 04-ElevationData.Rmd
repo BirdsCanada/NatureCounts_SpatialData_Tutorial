@@ -32,7 +32,6 @@ library(naturecounts)
 library(sf)
 library(terra)
 library(tidyverse)
-library(dplyr)
 ```
 
 This tutorial uses the following spatial data.
