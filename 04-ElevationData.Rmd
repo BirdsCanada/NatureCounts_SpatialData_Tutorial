@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate land data over wide spatial and temporal scales.
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. 
 
 # 4.0 Learning Objectives
 
@@ -79,7 +79,7 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To write the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. However, we have also uploaded this file to the repository `data` folder for your convenience.
+OPTIONAL: To write the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. We have also uploaded this file to the repository `data` folder for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -107,8 +107,10 @@ quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", in
 
 eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
 
+> To execute this code chunk, remove the \#
+
 ```{r, eval = FALSE}
-quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+#quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
 To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
@@ -142,14 +144,13 @@ mauricie_birds <- mauricie_birds %>%
   left_join(species_names, by = "species_id")
 ```
 
-Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use `mutate()` and `lubridate()` to extract the survey **year** from the **date** column. The `group_by()` function can then be used to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
+Tidyverse functions can help us summarize our data in a variety of ways. For example, if we wanted to determine the annual bird count for each year across all sites, we could use the `group_by()` function to group the observations by year, and `summarise()` can help calculate and create the **annual_count** column. Here, we ensure that the **ObservationCount** is in the correct format by applying `as.numeric()`.
 
 ```{r}
 mauricie_birds_summary <- mauricie_birds %>%
-  mutate(year = lubridate::year(date)) %>% # extracts the survey year using lubridate
-  group_by(year) %>%
+  group_by(survey_year) %>%
   summarise(annual_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the annual_count
-  filter(!is.na(year))  # remove rows with missing year
+  filter(!is.na(survey_year))  # remove rows with missing year
 
 mauricie_birds_summary
 ```
