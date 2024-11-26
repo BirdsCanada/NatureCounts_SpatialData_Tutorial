@@ -32,23 +32,59 @@ library(naturecounts)
 library(sf)
 library(terra)
 library(tidyverse)
-library(dplyr)
 ```
 
 This tutorial uses the following spatial data.
 
 1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
-2.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
+2.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
 
-    **Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select the **Téléchargement** option to explore the Lidar tiles on an interactive map (**Explorer \> Accéder**).
+3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
-    **Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary. You can also import your own **.shp** or **.kml** file using the **Import and Export** tab.
+**Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select the **Téléchargement** option to explore the Lidar tiles on an interactive map (**Explorer \> Accéder**).
 
-    **Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata1.PNG")
+```
 
-3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+**Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary.
 
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata0.PNG")
+```
+
+Alternatively, you can import your own **.shp** or **.kml** file using the **Import and Export** tab.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata2.PNG")
+```
+
+Specify the coordinate reference system (WGS84), click **Import**, and select your **.shp** or **.kml** file to display on the map.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata3.PNG")
+```
+
+**Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
+
+First, navigate to the **Map** tab and toggle on the visibility for the boundary and Lidar MNT layers by clicking on the eye symbol, if necessary. Hovering over this icon will display either the **Show Layer** or **Hide layer** option.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata4.PNG")
+```
+
+Your interactive map should now look something like this:
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata5.PNG")
+```
+
+One by one, click and download the terrain data for each of the 6 Lidar tiles that intersect with the park boundary. Click your target tile, expand the **Téléchargement** window and click **Accéder** next to the MNT (1 m spatial resolution) data to download. Repeat for each tile.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata6.PNG")
+```
 Save these files in you R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
