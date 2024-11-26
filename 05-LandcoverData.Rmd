@@ -52,11 +52,11 @@ This tutorial uses the following spatial data.
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
-#if the data are in your working directory
+# if the data are in your working directory
 landcover <- rast("landcover-2015-classification.tif")
 
-#else, specify the location of your data
-landcover<-rast("path/to/your/landcover-2015-classification.tif")
+# else, specify the location of your data
+landcover <- rast("path/to/your/landcover-2015-classification.tif")
 ```
 
 Transform the crs of the National Park boundary to match that of the land cover dataset.
