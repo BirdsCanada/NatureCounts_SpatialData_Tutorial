@@ -49,6 +49,11 @@ This tutorial uses the following spatial data.
 
 # 5.1 Land Cover Data
 
+Read in the National Park boundary you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r}
+mauricie_boundary <- st_read("data/mauricie/mauricie_boundary.shp")
+```
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
@@ -60,7 +65,6 @@ landcover <- rast("path/to/your/landcover-2015-classification.tif")
 ```
 
 Transform the crs of the National Park boundary to match that of the land cover dataset.
-##Where does this boundary file come from? This is not stand alone. 
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
@@ -96,6 +100,7 @@ unique_values$pixelcount <- pixel_freq$count
 
 unique_values
 ```
+
 Apply  the `levels()` and `data.frame()` functions to add the pixel values, landcover classes, and pixel count to the raster data.
 
 ```{r}
@@ -134,8 +139,14 @@ output_path <- "path/to/your/landcover_mask.tif"
 writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
 
+Read in the NatureCounts data you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r}
+mauricie_birds <- read.csv("data/mauricie/mauricie_birds.csv")
+```
+
 Summarize the NatureCounts data for mapping and covert it to SpatVector format.
-#where did this file come from? This is not stad alone. 
+
 ```{r}
 # Group by SiteCode and summarize total_count
 mauricie_site_summary <- mauricie_birds %>%
