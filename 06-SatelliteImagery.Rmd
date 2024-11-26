@@ -50,11 +50,10 @@ This tutorial uses the following spatial data.
 
 The Copernicus Data Space Ecosystem Browser is the central hub for accessing and exploring Earth observation and environmental data from Copernicus satellites. You can [register](https://documentation.dataspace.copernicus.eu/Registration.html) for an account, read more [About the Browser](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search) (including [Product Search](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search)), and navigate to the [Browser](https://browser.dataspace.copernicus.eu/?zoom=5&lat=50.16282&lng=20.78613&visualizationUrl=U2FsdGVkX18pLKFF9fc91CA1u22Ai6SDDnfmD7NKnUTo9VEy0zAaaijJiGeg0RjaXy7sLHZpigJffz1REZVnF3BP1%2BaRJ8UQRjPdH4g5mSZmR4tNPleYMpU5qikJ2VAP&datasetId=S2_L2A_CDAS&demSource3D=%22MAPZEN%22&cloudCoverage=30&dateMode=SINGLE) to continue with this tutorial.
 
-1)  Click the **Create an area of interest** ##This is a pentagon on the upper righthand side of my screen## tab and select the **Upload a file to create an area of interest** ##The is an upward arrow on the pop out submenu## option. Upload the KML National Park boundary file we created in Chapter 4, section 4.1. ##or grab it from the folder (which will need to be moved).
+1)  Hover over the **Create an area of interest** tab, symbolized by the pentagon shape in the upper righthand corner. Then, select the **Upload a file to create an area of interest** option, represented by the upward arrow on the pop out submenu. Upload the KML National Park boundary file we created in Chapter 4, section 4.1 or grab it from the repository (data/mauricie). 
 
-2)  In the **Search** tab (top, left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
+2)  In the **Search** tab (top, left side of window), under **Search Criteria**, copy and paste the name of the SENTINEL-2 image described below. Alternatively,  you can select any other image relevant to your research. Note that cloud cover will affect our ability to calculate spectral indices so be mindful of this when selecting your image and adjust your study area or time range accordingly.
 
-##I can't get this to work. Perhaps if we don't expect users to get the same data, they could just search by month and find a clear day? 
     **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
 
     **Size**: 1090MB
@@ -65,13 +64,27 @@ The Copernicus Data Space Ecosystem Browser is the central hub for accessing and
 
     **Instrument short name**: MSI
 
-    OR any other image relevant to your research. Note that cloud cover will affect our ability to calculate spectral indices so be mindful of this when selecting your image and adjust your study area or time range accordingly.
+3)  Click the info icon in the bottom right corner of your search result and the **Product info** window will pop up. Once here, verify that you have selected the satellite image you want and then download it by clicking the **Download** option in the lower righthand corner.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata7.PNG")
+```
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata8.PNG")
+```
+
+Note: The **Visualize** tab will help you visualize your satellite image using true color and false color composites and NDVI, among other layers. These are based on a combination of bands stored in our image download. This tutorial will guide you through custom satellite image visualizations and spectral index calculation with corrections.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata9.PNG")
+```
 
 The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://link.springer.com/article/10.1007/s11676-020-01155-1)) is a common proxy for primary productivity collected using remote sensing. It is a measure of vegetation health that describes the greenness and the density of vegetation captured in a satellite image. Healthy vegetation will absorb most visible light and reflect most near-infrared light, depending on the amount of chlorophyll found in its biomass.
 
 The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
 
-Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health. #How are these downloaded?? There is a download image button on the righhand column. Is this what we want the user to use? 
+Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health. 
 
 # 6.2 Spectral Indices
 
