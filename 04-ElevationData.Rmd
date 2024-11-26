@@ -85,6 +85,7 @@ One by one, click and download the terrain data for each of the 6 Lidar tiles th
 ```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata6.PNG")
 ```
+
 Save these files in you R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
