@@ -232,7 +232,7 @@ terra::plotRGB(mauricie_sl_mask, r = 4, g = 3, b = 2, stretch = "lin", axes = FA
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-To calculate NDVI, we will create and apply the following function on the masked satellite image:##can you not download NDVI directly? 
+To calculate NDVI, we will create and apply the following function on the masked satellite image:
 
 $$NDVI = \frac{NIR - RED}{NIR + RED}$$
 
