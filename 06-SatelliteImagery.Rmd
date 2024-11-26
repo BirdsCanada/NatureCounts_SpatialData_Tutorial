@@ -36,25 +36,25 @@ library(naturecounts)
 library(sf)
 library(terra)
 library(tidyverse)
-library(dplyr)
 ```
 
 This tutorial uses the following spatial data.
 
-1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
+1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles ##indicate they can download the data or grab it from the folder (which will need to be moved)
 
 2.  [Copernicus](https://www.copernicus.eu/en) Satellite Data - SENTINEL2 imagery
 
-3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations ##indicate they can download the data or grab it from the folder (which will need to be moved)
 
 # 6.1 Copernicus Data Download
 
 The Copernicus Data Space Ecosystem Browser is the central hub for accessing and exploring Earth observation and environmental data from Copernicus satellites. You can [register](https://documentation.dataspace.copernicus.eu/Registration.html) for an account, read more [About the Browser](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search) (including [Product Search](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search)), and navigate to the [Browser](https://browser.dataspace.copernicus.eu/?zoom=5&lat=50.16282&lng=20.78613&visualizationUrl=U2FsdGVkX18pLKFF9fc91CA1u22Ai6SDDnfmD7NKnUTo9VEy0zAaaijJiGeg0RjaXy7sLHZpigJffz1REZVnF3BP1%2BaRJ8UQRjPdH4g5mSZmR4tNPleYMpU5qikJ2VAP&datasetId=S2_L2A_CDAS&demSource3D=%22MAPZEN%22&cloudCoverage=30&dateMode=SINGLE) to continue with this tutorial.
 
-1)  Click the **Create an area of interest** tab and select the **Upload a file to create an area of interest** option. Upload the KML National Park boundary file we created in Chapter 4, section 4.1.
+1)  Click the **Create an area of interest** ##This is a pentagon on the upper righthand side of my screen## tab and select the **Upload a file to create an area of interest** ##The is an upward arrow on the pop out submenu## option. Upload the KML National Park boundary file we created in Chapter 4, section 4.1. ##or grab it from the folder (which will need to be moved).
 
-2)  In the **Search** tab (left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
+2)  In the **Search** tab (top, left side of window), select SENTINEL-2 and the time range that overlaps your data to retrieve the following image:
 
+##I can't get this to work. Perhaps if we don't expect users to get the same data, they could just search by month and find a clear day? 
     **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
 
     **Size**: 1090MB
@@ -71,7 +71,7 @@ The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://l
 
 The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
 
-Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
+Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health. #How are these downloaded?? There is a download image button on the righhand column. Is this what we want the user to use? 
 
 # 6.2 Spectral Indices
 
@@ -79,9 +79,9 @@ Read each band stored in the downloaded satellite imagery folder in your directo
 
 ```{r}
 bands <- list.files(path = "C:/Users/dimit/Birds Canada/Data/SENTINEL2/S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE/GRANULE/L2A_T18TXS_A026077_20200619T155414/IMG_DATA/R10m", 
-                    pattern = "\\.jp2$", full.names = TRUE)
+                    pattern = "\\.jp2$", full.names = TRUE) ##This should not be a path on your computer
 
-# Read all the bands into a raster stack
+# Read all the bands into a raster stack #Bands? Which file are we downloading. I downloaded the NDVI and NDWI but this seems wrong based on the instructions here. 
 sentinel_imagery <- rast(bands)
 
 # Assign meaningful names to the bands
@@ -100,7 +100,7 @@ Plot a true color composite of `sentinel_imagery` with a linear stretch.
 
 ```{r, eval = TRUE, warning = FALSE}
 # Match the CRS of the raster stack and National Park boundary
-mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(sentinel_imagery))
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(sentinel_imagery)) ##How is the user accessing the mauricie boundary?
 
 # Plot the RGB composite
 terra::plotRGB(sentinel_imagery, r = 4, g = 3, b = 2, stretch = "lin", main = "RGB Composite with Boundary")
@@ -219,7 +219,7 @@ terra::plotRGB(mauricie_sl_mask, r = 4, g = 3, b = 2, stretch = "lin", axes = FA
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-To calculate NDVI, we will create and apply the following function on the masked satellite image:
+To calculate NDVI, we will create and apply the following function on the masked satellite image:##can you not download NDVI directly? 
 
 $$NDVI = \frac{NIR - RED}{NIR + RED}$$
 
@@ -243,7 +243,7 @@ plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-Summarize the NatureCounts data for mapping and covert it to SpatVector format.
+Summarize the NatureCounts data for mapping and covert it to SpatVector format. ##Where is the user getting these data?
 
 ```{r}
 # Group by SiteCode and summarize total_count

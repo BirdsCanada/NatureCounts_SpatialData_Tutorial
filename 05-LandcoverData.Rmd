@@ -60,7 +60,7 @@ landcover <- rast("path/to/your/landcover-2015-classification.tif")
 ```
 
 Transform the crs of the National Park boundary to match that of the land cover dataset.
-
+##Where does this boundary file come from? This is not stand alone. 
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
@@ -76,7 +76,7 @@ OPTIONAL: To write the cropped raster to your disk, you can use the `writeRaster
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_path <- "C:/Users/dimit/Birds Canada/Data/mauricie/landcover_crop.tif" 
+# output_path <- "C:/Users/dimit/Birds Canada/Data/mauricie/landcover_crop.tif" ##This should not have your user names in the file path
 
 # writeRaster(landcover_crop, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
@@ -124,7 +124,7 @@ Mask the national dataset and apply NA values to all cells outside the extent of
 landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data. ##This is redundant to above
 
 > To execute this code chunk, remove the \#
 
@@ -135,7 +135,7 @@ writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
 
 Summarize the NatureCounts data for mapping and covert it to SpatVector format.
-
+#where did this file come from? This is not stad alone. 
 ```{r}
 # Group by SiteCode and summarize total_count
 mauricie_site_summary <- mauricie_birds %>%
