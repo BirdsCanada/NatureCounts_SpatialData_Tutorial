@@ -41,11 +41,13 @@ library(leaflet.extras)
 
 This tutorial uses the following spatial data.
 
-1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
+1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles\*
 
-2.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Land Cover map (30 m resolution)
+2.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations\*
 
-3.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
+    \*These data are available for download via Section 4.1: Data Setup in [Chapter 4](04-ElevationData.Rmd), the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing))
+
+3.  [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) - Land Cover map (30 m resolution)
 
 # 5.1 Land Cover Data
 
@@ -54,6 +56,7 @@ Read in the National Park boundary you downloaded in [Chapter 4: Elevation Data]
 ```{r}
 mauricie_boundary <- st_read("data/mauricie/mauricie_boundary.shp")
 ```
+
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
@@ -65,6 +68,7 @@ landcover <- rast("path/to/your/landcover-2015-classification.tif")
 ```
 
 Transform the crs of the National Park boundary to match that of the land cover dataset.
+
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
@@ -73,16 +77,6 @@ Crop the national dataset to reduce the extent of the raster to the extent of th
 
 ```{r}
 landcover_crop <- crop(landcover, vect(mauricie_boundary))
-```
-
-OPTIONAL: To write the cropped raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
-
-> To execute this code chunk, remove the \#
-
-```{r}
-# output_path <- "C:/Users/dimit/Birds Canada/Data/mauricie/landcover_crop.tif" ##This should not have your user names in the file path
-
-# writeRaster(landcover_crop, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
 
 To assign the land cover class label and pixel count to each pixel value we can use the `unique()` function, assign land cover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)), and apply the `freq()` function.
@@ -101,7 +95,7 @@ unique_values$pixelcount <- pixel_freq$count
 unique_values
 ```
 
-Apply  the `levels()` and `data.frame()` functions to add the pixel values, landcover classes, and pixel count to the raster data.
+Apply the `levels()` and `data.frame()` functions to add the pixel values, landcover classes, and pixel count to the raster data.
 
 ```{r}
 levels(landcover_crop) <- data.frame(
@@ -123,20 +117,21 @@ plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Ma
 # Overlay the Mauricie boundary on the first plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
+
 Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
 ```{r}
 landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data. ##This is redundant to above
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
 
 > To execute this code chunk, remove the \#
 
 ```{r}
-output_path <- "path/to/your/landcover_mask.tif" 
+# output_path <- "path/to/your/landcover_mask.tif" 
 
-writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
+# writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
 ```
 
 Read in the NatureCounts data you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
