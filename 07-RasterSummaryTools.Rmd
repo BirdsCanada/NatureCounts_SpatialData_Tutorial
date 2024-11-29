@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
 
--   Read raster data objects
+-   Read and combine raster data objects
 
 -   Reclassify raster data
 
@@ -62,8 +62,8 @@ elevation_rast
 In [Chapter 5: Land Cover Data](05-LandcoverData.Rmd), you created a landcover mask of La Mauricie National Park using the [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) dataset. Read this file from your directory and call it `landcover_rast`:
 
 ```{r}
-landcover_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/landcover_mask.tif")
-landcover_rast
+# landcover_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/landcover_mask.tif")
+# landcover_rast
 ```
 You'll notice that the resolution, extent, and CRS of the individual raster layers do not match which prevents us from computing these layers together. 
 
@@ -72,36 +72,43 @@ Use the `project()` function from `terra` to transform the coordinate reference 
 ```{r, eval = true, message = FALSE}
 elevation_rast_proj <- terra::project(elevation_rast, "EPSG:3979", method = "bilinear")
 ```
-
 To match the extents of both layers, crop the `landcover_rast` to the extent of the `elevation_rast_proj`.
 
 ```{r}
-landcover_rast_crop <- crop(landcover_rast, ext(elevation_rast_proj))
+landcover_rast <- crop(landcover_mask, ext(elevation_rast_proj))
 ```
 
 Resample `landcover_rast_crop` to match the resolution of `elevation_rast_proj` using the **"near"** method. This is the default method used for categorical layers like landcover. Run [help("resample")]{.underline} in your **Console** for more details.
 
 ```{r}
-landcover_rast_resample <- resample(landcover_rast_crop, elevation_rast_proj, method = "near")
+landcover_rast_resample <- resample(landcover_rast, elevation_rast_proj, method = "near")
 ```
+Let's verify that our conversions were successful. The `all()` function and equality operators will produce a TRUE or FALSE result. 
 
+```{r}
+all(
+  crs(landcover_rast_resample) == crs(elevation_rast_proj), # check crs
+  ext(landcover_rast_resample) == ext(elevation_rast_proj), # check extent
+  res(landcover_rast_resample) == res(elevation_rast_proj) # check resolution
+)
+```
 To test plot the layers:
 
 ```{r, eval = TRUE, warning = FALSE}
 # Match the CRS
-mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_rast_resample))
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_rast))
 
 # Set up a 1x2 plotting layout
 par(mfrow = c(1, 2))
 
 # Plot elevation
-plot(elevation_rast_proj, axes = TRUE, plg = list(title = "Elevation"), main = "")
+plot(elevation_rast_proj, axes = TRUE, plg = list(title = ""), main = "Elevation (m)")
 
 # Overlay the Mauricie boundary on the first plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
 # Plot landcover
-plot(landcover_rast_resample, axes = TRUE, plg = list(title = "Landcover"), main = "")
+plot(landcover_rast_resample, axes = TRUE, plg = list(title = ""), main = "Land Cover Class")
 
 # Overlay the Mauricie boundary on the second plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
