@@ -61,10 +61,15 @@ To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https
 
 ```{r}
 # if the data are in your working directory
-landcover <- rast("landcover-2015-classification.tif")
+# landcover <- rast("landcover-2015-classification.tif")
 
 # else, specify the location of your data
-landcover <- rast("path/to/your/landcover-2015-classification.tif")
+landcover <- rast("C:/Users/dimit/Birds Canada/Data/landcover-2015-classification.tif")
+```
+
+```{r}
+unique_values <- unique(landcover)
+unique_values
 ```
 
 Transform the crs of the National Park boundary to match that of the land cover dataset.
@@ -83,45 +88,103 @@ To assign the land cover class label and pixel count to each pixel value we can 
 
 ```{r}
 # Extract the unique pixel values from the cropped landcover raster
-unique_values <- unique(landcover_crop)
+unique_values_crop <- unique(landcover_crop)
 
 # Assign land cover class labels according to the pixel values (in the correct order)
-unique_values$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
+unique_values_crop$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
 
 # Add pixel count for each class
 pixel_freq <- freq(landcover_crop)
-unique_values$pixelcount <- pixel_freq$count
+unique_values_crop$pixelcount <- pixel_freq$count
 
-unique_values
+unique_values_crop
 ```
 
-Apply the `levels()` and `data.frame()` functions to add the pixel values, landcover classes, and pixel count to the raster data.
+Apply the `levels()` and `data.frame()` functions to add the pixel values, land cover classes, and pixel count to the raster data.
 
 ```{r}
 levels(landcover_crop) <- data.frame(
-  pixelvalue = unique_values$Canada2015,
-  landcover = unique_values$landcover,    
-  pixelcount = unique_values$pixelcount        
+  pixelvalue = unique_values_crop$Canada2015,
+  landcover = unique_values_crop$landcover,    
+  pixelcount = unique_values_crop$pixelcount        
 )
 ```
 
-Plot the land cover raster and National Park boundary.
+Plot the cropped land cover raster and National Park boundary.
 
 ```{r, eval = TRUE, warning = FALSE}
 # Match the CRS
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_crop))
 
-# Plot landcover
+# Plot landcover using terra::plot
 plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
 
-# Overlay the Mauricie boundary on the first plot
-plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+# Overlay the Mauricie boundary using sf::st_geometry
+plot(st_geometry(mauricie_boundary), add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
 Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
 ```{r}
 landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
+```
+
+Assign the land cover class label and pixel count to each pixel value using the `unique()` and `freq()` functions, as before. For the land cover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)).
+
+Extract the unique pixel values from the masked land cover raster.
+
+```{r}
+unique_values_mask <- unique(landcover_mask)
+```
+
+Inspect the extracted pixel values. You should notice that cropland is not represented in the masked raster.
+
+Filter the pixel values from the cropped raster to exclude cropland (category 15) and save it as a dataframe.
+
+```{r}
+pixelvalues_filt <- unique_values_crop %>%
+  filter(Canada2015 != 15) %>%
+  select(-landcover, -pixelcount) %>%
+  as.data.frame()
+```
+
+Assemble the data frame to include the pixel values, land cover, and pixel count for the masked raster.
+
+```{r}
+# Assign filtered pixel values to each land cover class
+unique_values_mask$Canada2015 <- pixelvalues_filt$Canada2015
+
+# Add pixel count for each class
+pixel_freq <- freq(landcover_mask)
+unique_values_mask$pixelcount <- pixel_freq$count
+
+# Reorder the columns to place the pixelvalues first
+unique_values_mask <- unique_values_mask %>%
+  select(Canada2015, everything())
+
+unique_values_mask
+```
+Apply the `levels()` and `data.frame()` functions to add the pixel values, land cover classes, and pixel count to the raster data.
+
+```{r}
+levels(landcover_mask) <- data.frame(
+  pixelvalue = pixelvalues_filt$Canada2015, # appends the filtered pixel categories
+  landcover = unique_values_mask$landcover,    
+  pixelcount = unique_values_mask$pixelcount        
+)
+```
+
+Plot the masked land cover raster and National Park boundary.
+
+```{r, eval = TRUE, warning = FALSE}
+# Match the CRS
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_crop))
+
+# Plot landcover using terra::plot
+plot(landcover_mask, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
+
+# Overlay the Mauricie boundary using sf::st_geometry
+plot(st_geometry(mauricie_boundary), add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
 OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
@@ -137,7 +200,7 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 Read in the NatureCounts data you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r}
-mauricie_birds <- read.csv("data/mauricie/mauricie_birds.csv")
+mauricie_birds <- read.csv("data/mauricie/mauricie_birds.csv") 
 ```
 
 Summarize the NatureCounts data for mapping and covert it to SpatVector format.
@@ -146,7 +209,7 @@ Summarize the NatureCounts data for mapping and covert it to SpatVector format.
 # Group by SiteCode and summarize total_count
 mauricie_site_summary <- mauricie_birds %>%
   group_by(SiteCode) %>%
-  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
+  summarize(total_count = sum(ObservationCount, na.rm = TRUE)) 
 ```
 
 ```{r}
