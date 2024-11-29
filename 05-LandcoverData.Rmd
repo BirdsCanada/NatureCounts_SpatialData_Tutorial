@@ -67,11 +67,6 @@ To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https
 landcover <- rast("C:/Users/dimit/Birds Canada/Data/landcover-2015-classification.tif")
 ```
 
-```{r}
-unique_values <- unique(landcover)
-unique_values
-```
-
 Transform the crs of the National Park boundary to match that of the land cover dataset.
 
 ```{r}
@@ -192,9 +187,9 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_path <- "path/to/your/landcover_mask.tif" 
+# output_path <- "path/to/your/landcover_mask.tif"
 
-# writeRaster(landcover_mask, output_path, datatype = "INT1U", overwrite = TRUE)
+# writeRaster(landcover_mask, output_path, datatype = "INT1U" overwrite = TRUE)
 ```
 
 Read in the NatureCounts data you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
