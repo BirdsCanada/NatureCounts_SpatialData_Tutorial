@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
-**To proceed with this tutorial, download the necessary packages in [5.0 Learning Objectives] and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) we have created in the [NatureCounts_SpatialData_Tutorial](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial.git) repository. Make sure to grab the *.shp* file as well as ALL accompanying files.**
+**To proceed with this tutorial, download the necessary packages in [5.0 Learning Objectives] and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing). Make sure to grab the *.shp* file as well as ALL accompanying files.**
 
 # 5.0 Learning Objectives
 
@@ -159,6 +159,7 @@ unique_values_mask <- unique_values_mask %>%
 
 unique_values_mask
 ```
+
 Apply the `levels()` and `data.frame()` functions to add the pixel values, land cover classes, and pixel count to the raster data.
 
 ```{r}
