@@ -86,7 +86,7 @@ One by one, click and download the terrain data for each of the 6 Lidar tiles th
 knitr::include_graphics("images/spatdata6.PNG")
 ```
 
-Save these files in you R project working directory for easy access during this tutorial.
+Save these files in your R project working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
 getwd()
@@ -116,14 +116,14 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To write the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. We have also uploaded this file to the repository `data` folder for your convenience.
+OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
 ```{r, eval=FALSE, message=FALSE}
-# st_write(mauricie_boundary, "mauricie_boundary.shp")
+# st_write(mauricie_boundary, "path/to/your/mauricie_boundary.shp")
 
-# st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
+# st_write(mauricie_boundary, "path/to/your/mauricie_boundary.kml", driver="KML")
 ```
 
 To assess the species distribution within the National Park, download data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year project that covers the distribution and abundance of all species breeding in the province.
@@ -147,7 +147,7 @@ eBird has the greatest number of provincial bird records, however, this collecti
 > To execute this code chunk, remove the \#
 
 ```{r, eval = FALSE}
-#quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
 To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
@@ -207,7 +207,7 @@ mauricie_species_summary <- mauricie_birds %>%
 mauricie_species_summary
 ```
 
-OPTIONAL: To write the mauricie_birds dataset to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete Chapter 5: Land Cover Data and Chapter 6: Satellite Imagery**. However, we have also uploaded this file to the repository `data` folder for your convenience.
+OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
