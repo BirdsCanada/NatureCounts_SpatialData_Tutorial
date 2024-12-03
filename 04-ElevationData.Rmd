@@ -209,10 +209,22 @@ mauricie_species_summary
 
 OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
+First, drop the geometry column and convert the NatureCounts data back to a regular dataframe.
+
+```{r}
+mauricie_birds_df <- mauricie_birds %>%
+  st_drop_geometry() %>%  # Drops the geometry column
+  bind_cols(
+    st_coordinates(mauricie_birds) %>%  # Extract coordinates
+      as.data.frame()  # Convert the coordinates to a data.frame
+  ) %>%
+  rename(longitude = X, latitude = Y)
+```
+
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(mauricie_birds, "data/mauricie/mauricie_birds.csv", row.names = FALSE)
+# write.csv(mauricie_birds_df, "data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
 # 4.2 DEM, DSM & DTM
