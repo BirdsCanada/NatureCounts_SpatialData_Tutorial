@@ -35,6 +35,7 @@ library(sf)
 library(terra)
 library(tidyverse)
 library(lubridate)
+library(readr)
 library(leaflet)
 library(leaflet.extras)
 ```
@@ -51,12 +52,11 @@ This tutorial uses the following spatial data.
 
 # 5.1 Land Cover Data
 
-Read in the National Park boundary you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r}
-mauricie_boundary <- st_read("data/mauricie/mauricie_boundary.shp")
+mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
-
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
@@ -64,9 +64,10 @@ To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https
 # landcover <- rast("landcover-2015-classification.tif")
 
 # else, specify the location of your data
-landcover <- rast("C:/Users/dimit/Birds Canada/Data/landcover-2015-classification.tif")
-```
+# landcover <- rast("path/to/your/landcover-2015-classification.tif")
 
+print(landcover)
+```
 Transform the crs of the National Park boundary to match that of the land cover dataset.
 
 ```{r}
@@ -77,168 +78,192 @@ Crop the national dataset to reduce the extent of the raster to the extent of th
 
 ```{r}
 landcover_crop <- crop(landcover, vect(mauricie_boundary))
+print(landcover_crop)
 ```
-
-To assign the land cover class label and pixel count to each pixel value we can use the `unique()` function, assign land cover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)), and apply the `freq()` function.
-
-```{r}
-# Extract the unique pixel values from the cropped landcover raster
-unique_values_crop <- unique(landcover_crop)
-
-# Assign land cover class labels according to the pixel values (in the correct order)
-unique_values_crop$landcover <- c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "cropland", "barren", "urban", "water")
-
-# Add pixel count for each class
-pixel_freq <- freq(landcover_crop)
-unique_values_crop$pixelcount <- pixel_freq$count
-
-unique_values_crop
-```
-
-Apply the `levels()` and `data.frame()` functions to add the pixel values, land cover classes, and pixel count to the raster data.
-
-```{r}
-levels(landcover_crop) <- data.frame(
-  pixelvalue = unique_values_crop$Canada2015,
-  landcover = unique_values_crop$landcover,    
-  pixelcount = unique_values_crop$pixelcount        
-)
-```
-
-Plot the cropped land cover raster and National Park boundary.
-
-```{r, eval = TRUE, warning = FALSE}
-# Match the CRS
-mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_crop))
-
-# Plot landcover using terra::plot
-plot(landcover_crop, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
-
-# Overlay the Mauricie boundary using sf::st_geometry
-plot(st_geometry(mauricie_boundary), add = TRUE, border = "red", col = NA, lwd = 2)
-```
-
 Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
 ```{r}
 landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
+print(landcover_mask)
 ```
-
-Assign the land cover class label and pixel count to each pixel value using the `unique()` and `freq()` functions, as before. For the land cover class labels (see [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)).
-
-Extract the unique pixel values from the masked land cover raster.
 
 ```{r}
-unique_values_mask <- unique(landcover_mask)
+# Set up the plot area for 1 row and 2 columns
+par(mfrow = c(1, 2))
+
+# Plot the cropped land cover raster
+plot(landcover_crop, main = "crop")
+
+# Add National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+
+# Plot the masked land cover raster 
+plot(landcover_mask, main = "mask")
+
+# Add National Park boundary
+plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+
+# Reset plotting layout to default
+par(mfrow = c(1, 1))
 ```
+OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. This raster will be useful to complete Chapter 7: Raster Summary Tools. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
 
-Inspect the extracted pixel values. You should notice that cropland is not represented in the masked raster.
-
-Filter the pixel values from the cropped raster to exclude cropland (category 15) and save it as a dataframe.
+To execute this code chunk, remove the #
 
 ```{r}
-pixelvalues_filt <- unique_values_crop %>%
-  filter(Canada2015 != 15) %>%
-  select(-landcover, -pixelcount) %>%
-  as.data.frame()
+# output_path <- "path/to/your/landcover_mask.tif" 
+
+# writeRaster(landcover_mask, output_path, overwrite = TRUE)
 ```
 
-Assemble the data frame to include the pixel values, land cover, and pixel count for the masked raster.
+Examine the contents of the cropped land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region.
 
 ```{r}
-# Assign filtered pixel values to each land cover class
-unique_values_mask$Canada2015 <- pixelvalues_filt$Canada2015
-
-# Add pixel count for each class
-pixel_freq <- freq(landcover_mask)
-unique_values_mask$pixelcount <- pixel_freq$count
-
-# Reorder the columns to place the pixelvalues first
-unique_values_mask <- unique_values_mask %>%
-  select(Canada2015, everything())
-
-unique_values_mask
+freq(landcover_mask)
 ```
-
-Apply the `levels()` and `data.frame()` functions to add the pixel values, land cover classes, and pixel count to the raster data.
+Examine the categories of the cropped land cover raster. The `cats()` function displays the color table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
 
 ```{r}
-levels(landcover_mask) <- data.frame(
-  pixelvalue = pixelvalues_filt$Canada2015, # appends the filtered pixel categories
-  landcover = unique_values_mask$landcover,    
-  pixelcount = unique_values_mask$pixelcount        
-)
+landcover_rgb <- as.data.frame(cats(landcover_mask))
+landcover_rgb
 ```
 
-Plot the masked land cover raster and National Park boundary.
-
-```{r, eval = TRUE, warning = FALSE}
-# Match the CRS
-mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_crop))
-
-# Plot landcover using terra::plot
-plot(landcover_mask, axes = TRUE, plg = list(title = "Landcover"), main = "La Mauricie National Park - Landcover 2015")
-
-# Overlay the Mauricie boundary using sf::st_geometry
-plot(st_geometry(mauricie_boundary), add = TRUE, border = "red", col = NA, lwd = 2)
-```
-
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
-
-> To execute this code chunk, remove the \#
+Filter the dataframe to only include those classes represented in the cropped land cover raster. To assign the appropriate labels to each land cover class, refer to the [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)) and use the `mutate()` function after filtering for the relevant classes and tidying-up the attribute names.
 
 ```{r}
-# output_path <- "path/to/your/landcover_mask.tif"
-
-# writeRaster(landcover_mask, output_path, datatype = "INT1U" overwrite = TRUE)
+landcover_rgb <- landcover_rgb %>%
+  rename_with(tolower) %>% # lowercase is more R friendly!
+  rename(landcover_class = class) %>%
+  filter(landcover_class %in% c(1, 5, 6, 8, 10, 14, 16, 17, 18)) %>% # filter based on the classes represented in the "landcover_crop"
+  mutate(landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")) # assign land cover class labels
 ```
 
-Read in the NatureCounts data you downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+Let's combine the rgb values with the raster data. 
+
+First, convert the cropped landcover raster to a dataframe.
 
 ```{r}
-mauricie_birds <- read.csv("data/mauricie/mauricie_birds.csv") 
+landcover_mask_df <- as.data.frame(landcover_mask, xy = TRUE, cells = TRUE)
 ```
 
-Summarize the NatureCounts data for mapping and covert it to SpatVector format.
+Next, merge the two dataframes by performing a `left_join()`. The grouping variable is case sensitive. 
+
+```{r}
+landcover_mask_df <- landcover_mask_df %>%
+  rename(landcover_class = Class) %>%
+  left_join(landcover_rgb %>% mutate(landcover_class = as.factor(landcover_class)), by = "landcover_class")
+```
+
+Map the cropped land cover raster using `ggplot()`.
+
+```{r}
+ggplot() +
+  geom_raster(data = landcover_mask_df, aes(x = x, y = y, fill = landcover)) +
+  scale_fill_manual(
+    values = setNames(
+      rgb(landcover_rgb$red, landcover_rgb$green, landcover_rgb$blue, maxColorValue = 255),
+      landcover_rgb$landcover
+    ),
+    name = "Landcover"
+  ) +
+  labs(
+    title = "La Mauricie National Park - Landcover 2015",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme_bw() +
+  coord_fixed() +
+  geom_sf(data = mauricie_boundary, fill = NA, color = "purple", size = 0.9)
+```
+
+Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r, warning = FALSE, message = FALSE}
+mauricie_birds <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+```
+
+To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the st_as_sf() and st_transform() functions, respectively.
+
+```{r}
+mauricie_birds_sf <- sf::st_as_sf(mauricie_birds,
+                        coords = c("longitude", "latitude"), crs = 4326)
+
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
+```
+
+Summarize the NatureCounts data for mapping and convert it to SpatVector format.
 
 ```{r}
 # Group by SiteCode and summarize total_count
-mauricie_site_summary <- mauricie_birds %>%
+mauricie_site_summary <- mauricie_birds_sf %>%
   group_by(SiteCode) %>%
   summarize(total_count = sum(ObservationCount, na.rm = TRUE)) 
-```
-
-```{r}
-mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
 ```
 
 Now we can map the NatureCounts and land cover data.
 
 ```{r}
-mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(landcover_crop)) # Match the CRS
+# Match the CRS
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover)) 
 
-# Plot landcover raster for La Mauricie National Park
-plot(landcover_crop, main = "Landcover across La Mauricie National Park")
-
-# Overlay the National Park boundary in red
-plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE)
-
-# Overlay the multipoints from the site summary in blue
-plot(st_geometry(mauricie_site_summary), 
-     add = TRUE, 
-     pch = 19,      # Solid circle
-     col = "yellow",  # Point color
-     cex = 0.5)     # Point size
+# Plot
+ggplot() +
+  # Add the raster layer
+  geom_raster(data = landcover_mask_df, aes(x = x, y = y, fill = landcover)) +
+  
+  # Add the National Park boundary in red
+  geom_sf(data = mauricie_boundary, fill = NA, color = "purple", size = 0.9) +
+  
+  # Add the multipoints from the site summary, sized by total_count
+  geom_sf(data = mauricie_site_summary, aes(size = total_count), color = "yellow", shape = 21) +
+  
+  # Custom color scale for landcover
+  scale_fill_manual(
+    values = setNames(
+      rgb(landcover_rgb$red, landcover_rgb$green, landcover_rgb$blue, maxColorValue = 255),
+      landcover_rgb$landcover
+    ),
+    name = "Landcover"
+  ) +
+  
+  # Adjust the size scale for points
+  scale_size_continuous(name = "Total Count", range = c(1, 6)) +  # Adjust the range for better visibility
+  
+  # Add labels and theme
+  labs(
+    title = "La Mauricie National Park - Landcover 2015",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme_bw() +
+  
+  # Use coord_sf for compatibility with sf layers
+  coord_sf()
 ```
+Extract the land cover class ID for each observation site and append it to `mauricie_birds`.
 
-Extract pixel values for each bird observation site and append it to `mauricie_birds`.
+First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
 ```{r}
-mauricie_birds <- st_transform(mauricie_birds, crs(landcover_crop)) # Match the CRS
+# Match the CRS
+mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(landcover_mask))
 
-pixel_values <- terra::extract(landcover_crop, mauricie_birds_vect) # Extracts the NDVI values for each point
+# Extract the landcover class ID for each site
+landcover_sites_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bind = TRUE)
+```
 
-pixel_values <- cbind(record_id = mauricie_birds$record_id, pixel_ID = pixel_values[, 2]) # Creates the record_id and pixel_ID columns 
+Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error. 
+
+```{r}
+landcover_sites_df <- terra::as.data.frame(landcover_sites_sf) %>% 
+ select(record_id, landcover_class = Class) 
+```
+
+```{r}
+# Combine with NatureCounts dataset
+mauricie_birds <- mauricie_birds %>%
+  left_join(landcover_sites_df, by = "record_id") %>% # Join by land cover class
+  left_join(landcover_rgb, by = "landcover_class")
 ```
 
 **Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In [Chapter 6](06-SatelliteImagery.Rmd), you can explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
