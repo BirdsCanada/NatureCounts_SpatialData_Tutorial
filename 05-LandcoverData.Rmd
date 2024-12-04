@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-> In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop, mask, and reclassification procedures, and extracted elevation values to combine with NatureCounts data. In this tutorial, you will extract unique pixel values from land cover data over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
+> In [Chapter 4](04-ElevationData.Rmd), you processed Digital Terrain Models, applied crop and mask procedures, and extracted elevation values to combine with NatureCounts data. In this tutorial, you will extract land cover data over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
 
 **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
@@ -57,6 +57,7 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 ```{r}
 mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
+
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English). Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
@@ -68,7 +69,8 @@ To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https
 
 print(landcover)
 ```
-Transform the crs of the National Park boundary to match that of the land cover dataset.
+
+Transform the CRS of the National Park boundary to match that of the land cover dataset.
 
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
@@ -80,6 +82,7 @@ Crop the national dataset to reduce the extent of the raster to the extent of th
 landcover_crop <- crop(landcover, vect(mauricie_boundary))
 print(landcover_crop)
 ```
+
 Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
 ```{r}
@@ -95,20 +98,21 @@ par(mfrow = c(1, 2))
 plot(landcover_crop, main = "crop")
 
 # Add National Park boundary
-plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+plot(st_geometry(mauricie_boundary), col = NA, border ="purple", lwd = 2, add = TRUE)
 
 # Plot the masked land cover raster 
 plot(landcover_mask, main = "mask")
 
 # Add National Park boundary
-plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
+plot(st_geometry(mauricie_boundary), col = NA, border ="purple", lwd = 2, add = TRUE)
 
 # Reset plotting layout to default
 par(mfrow = c(1, 1))
 ```
+
 OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. This raster will be useful to complete Chapter 7: Raster Summary Tools. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
 
-To execute this code chunk, remove the #
+To execute this code chunk, remove the \#
 
 ```{r}
 # output_path <- "path/to/your/landcover_mask.tif" 
@@ -121,7 +125,8 @@ Examine the contents of the cropped land cover raster. The `freq()` function des
 ```{r}
 freq(landcover_mask)
 ```
-Examine the categories of the cropped land cover raster. The `cats()` function displays the color table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
+
+Examine the categories of the cropped land cover raster. The `cats()` function displays the color (RGB) table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
 
 ```{r}
 landcover_rgb <- as.data.frame(cats(landcover_mask))
@@ -138,7 +143,7 @@ landcover_rgb <- landcover_rgb %>%
   mutate(landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")) # assign land cover class labels
 ```
 
-Let's combine the rgb values with the raster data. 
+Let's combine the RGB values with the raster data.
 
 First, convert the cropped landcover raster to a dataframe.
 
@@ -146,7 +151,7 @@ First, convert the cropped landcover raster to a dataframe.
 landcover_mask_df <- as.data.frame(landcover_mask, xy = TRUE, cells = TRUE)
 ```
 
-Next, merge the two dataframes by performing a `left_join()`. The grouping variable is case sensitive. 
+Next, merge the two dataframes by performing a `left_join()`. Ensure that the grouping variable for both dataframe matches.
 
 ```{r}
 landcover_mask_df <- landcover_mask_df %>%
@@ -173,7 +178,7 @@ ggplot() +
   ) +
   theme_bw() +
   coord_fixed() +
-  geom_sf(data = mauricie_boundary, fill = NA, color = "purple", size = 0.9)
+  geom_sf(data = mauricie_boundary, fill = NA, color = "purple", size = 1.5)
 ```
 
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
@@ -182,16 +187,16 @@ Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation
 mauricie_birds <- read_csv("data/mauricie/mauricie_birds_df.csv") 
 ```
 
-To convert the NatureCounts data to a spatial object and transform its crs to match the National Park boundary we can use the st_as_sf() and st_transform() functions, respectively.
+To convert the NatureCounts data to a spatial object and transform its CRS to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
 
 ```{r}
-mauricie_birds_sf <- sf::st_as_sf(mauricie_birds,
-                        coords = c("longitude", "latitude"), crs = 4326)
+mauricie_birds_sf <- sf::st_as_sf(mauricie_birds, 
+                        coords = c("longitude", "latitude"), crs = 4326)              # convert to sf object
 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
 ```
 
-Summarize the NatureCounts data for mapping and convert it to SpatVector format.
+Summarize the NatureCounts data by site for mapping.
 
 ```{r}
 # Group by SiteCode and summarize total_count
@@ -240,6 +245,7 @@ ggplot() +
   # Use coord_sf for compatibility with sf layers
   coord_sf()
 ```
+
 Extract the land cover class ID for each observation site and append it to `mauricie_birds`.
 
 First, make sure the CRS of both spatial data match and then use `terra::extract()`.
@@ -252,15 +258,16 @@ mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(landcover_mask
 landcover_sites_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bind = TRUE)
 ```
 
-Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error. 
+Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
 
 ```{r}
 landcover_sites_df <- terra::as.data.frame(landcover_sites_sf) %>% 
  select(record_id, landcover_class = Class) 
 ```
 
+Combine the land cover dataframe with the NatureCounts dataframe.
+
 ```{r}
-# Combine with NatureCounts dataset
 mauricie_birds <- mauricie_birds %>%
   left_join(landcover_sites_df, by = "record_id") %>% # Join by land cover class
   left_join(landcover_rgb, by = "landcover_class")
