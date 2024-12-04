@@ -93,10 +93,10 @@ Annual cumulative NDVI has a strong positive relationship with species richness 
 Read each band stored in the downloaded satellite imagery folder in your directory.
 
 ```{r}
-bands <- list.files(path = "C:/Users/dimit/Birds Canada/Data/SENTINEL2/S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE/GRANULE/L2A_T18TXS_A026077_20200619T155414/IMG_DATA/R10m", 
-                    pattern = "\\.jp2$", full.names = TRUE) ##This should not be a path on your computer
+bands <- list.files(path = "path/to/your/directory", 
+                    pattern = "\\.jp2$", full.names = TRUE)
 
-# Read all the bands into a raster stack #Bands? Which file are we downloading. I downloaded the NDVI and NDWI but this seems wrong based on the instructions here. 
+# Read all the bands into a raster stack 
 sentinel_imagery <- rast(bands)
 
 # Assign meaningful names to the bands
@@ -109,6 +109,12 @@ print(names(sentinel_imagery))
 res(sentinel_imagery)
 nlyr(sentinel_imagery)
 ext(sentinel_imagery)
+```
+
+Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r}
+mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
 
 Plot a true color composite of `sentinel_imagery` with a linear stretch.
@@ -130,7 +136,7 @@ Crop `sentinel_imagery` to the extent of `mauricie_boundary` then plot the cropp
 mauricie_sl <- crop(sentinel_imagery, vect(mauricie_boundary))
 
 # Plot the RGB composite
-terra::plotRGB(mauricie_sl, r = 4, g = 3, b = 2, stretch = "lin", axes = FALSE)
+terra::plotRGB(mauricie_sl, r = 4, g = 3, b = 2, stretch = "lin", lwd = 2, axes = FALSE)
 
 # Add the boundary shapefile to the plot
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
@@ -258,17 +264,28 @@ plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-Summarize the NatureCounts data for mapping and covert it to SpatVector format. ##Where is the user getting these data?
+Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r, warning = FALSE, message = FALSE}
+mauricie_birds <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+```
+
+To convert the NatureCounts data to a spatial object and transform its CRS to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
+
+```{r}
+mauricie_birds_sf <- sf::st_as_sf(mauricie_birds, 
+                        coords = c("longitude", "latitude"), crs = 4326)              # convert to sf object
+
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
+```
+
+Summarize the NatureCounts data for mapping.
 
 ```{r}
 # Group by SiteCode and summarize total_count
-mauricie_site_summary <- mauricie_birds %>%
+mauricie_site_summary <- mauricie_birds_sf %>%
   group_by(SiteCode) %>%
   summarize(total_count = sum(ObservationCount, na.rm = TRUE))
-```
-
-```{r}
-mauricie_birds_vect <- vect(mauricie_birds) # Converts to SpatVector format
 ```
 
 To map the NatureCounts and NDVI data:
@@ -293,12 +310,26 @@ plot(st_geometry(mauricie_site_summary),
 
 Extract NDVI values for each bird observation site and append it to `mauricie_birds`.
 
+First, make sure the CRS of both spatial data match and then use `terra::extract()`.
+
 ```{r}
-mauricie_birds <- st_transform(mauricie_birds, crs(mauricie_sl_ndvi)) # Match the CRS
+mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(mauricie_sl_ndvi)) # Match the CRS
 
-ndvi_values <- terra::extract(mauricie_sl_ndvi, mauricie_birds_vect) # Extracts the NDVI values for each point
+ndvi_values <- terra::extract(mauricie_sl_ndvi, vect(mauricie_birds_sf)) # Extracts the NDVI values for each point
+```
 
-ndvi_values <- cbind(record_id = mauricie_birds$record_id, ndvi = ndvi_values[, 2]) # Creates the record_id and ndvi columns 
+Convert the sf object holding the extracted NDVI values to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
+
+```{r}
+ndvi_values_df <- terra::as.data.frame(ndvi_values) %>% 
+ select(record_id, ndvi) 
+```
+
+Combine the NDVI dataframe with the NatureCounts dataframe.
+
+```{r}
+mauricie_birds <- mauricie_birds %>%
+  left_join(ndvi_values_df, by = "record_id") # Join by land cover class
 ```
 
 **Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over an area of interest. In [Chapter 7](07-RasterSummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
