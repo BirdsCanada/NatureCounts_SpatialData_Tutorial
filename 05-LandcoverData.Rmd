@@ -269,8 +269,8 @@ Combine the land cover dataframe with the NatureCounts dataframe.
 
 ```{r}
 mauricie_birds <- mauricie_birds %>%
-  left_join(landcover_sites_df, by = "record_id") %>% # Join by land cover class
-  left_join(landcover_rgb, by = "landcover_class")
+  left_join(landcover_sites_df, by = "record_id") %>% # Join by record_id
+  left_join(landcover_rgb, by = "landcover_class") # Join by land cover class
 ```
 
 **Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In [Chapter 6](06-SatelliteImagery.Rmd), you can explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
