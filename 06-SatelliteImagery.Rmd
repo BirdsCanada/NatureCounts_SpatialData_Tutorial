@@ -329,7 +329,7 @@ Combine the NDVI dataframe with the NatureCounts dataframe.
 
 ```{r}
 mauricie_birds <- mauricie_birds %>%
-  left_join(ndvi_values_df, by = "record_id") # Join by land cover class
+  left_join(ndvi_values_df, by = "record_id") # Join by observation record ID
 ```
 
 **Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over an area of interest. In [Chapter 7](07-RasterSummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
