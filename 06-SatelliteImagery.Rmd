@@ -90,7 +90,7 @@ Annual cumulative NDVI has a strong positive relationship with species richness 
 
 # 6.2 Spectral Indices
 
-Read each band stored in the downloaded satellite imagery folder in your directory.
+Read each band stored in the downloaded satellite imagery folder labeled S2A_MSIL2A. Copy the file path to S2A_MSIL2A... \> GRANULE \> L2A... \> IMG_DATA \> R10m which contains the images representing each band.
 
 ```{r}
 bands <- list.files(path = "path/to/your/directory", 
