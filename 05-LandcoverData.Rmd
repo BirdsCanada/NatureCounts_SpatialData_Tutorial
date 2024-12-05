@@ -120,20 +120,20 @@ To execute this code chunk, remove the \#
 # writeRaster(landcover_mask, output_path, overwrite = TRUE)
 ```
 
-Examine the contents of the cropped land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region.
+Examine the contents of the masked land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region.
 
 ```{r}
 freq(landcover_mask)
 ```
 
-Examine the categories of the cropped land cover raster. The `cats()` function displays the color (RGB) table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
+Examine the categories of the masked land cover raster. The `cats()` function displays the color (RGB) table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
 
 ```{r}
 landcover_rgb <- as.data.frame(cats(landcover_mask))
 landcover_rgb
 ```
 
-Filter the dataframe to only include those classes represented in the cropped land cover raster. To assign the appropriate labels to each land cover class, refer to the [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)) and use the `mutate()` function after filtering for the relevant classes and tidying-up the attribute names.
+Filter the RGB dataframe to only include those classes represented in the masked land cover raster. To assign the appropriate labels to each land cover class, refer to the [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc) and use the `mutate()` function after filtering for the relevant classes and tidying-up the attribute names.
 
 ```{r}
 landcover_rgb <- landcover_rgb %>%
