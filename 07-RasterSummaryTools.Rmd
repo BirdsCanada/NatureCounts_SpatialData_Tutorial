@@ -41,9 +41,8 @@ library(dplyr)
 Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** found in the `data` folder of the project repo, if necessary.
 
 ```{r}
-mauricie_boundary <- sf::st_read("data/mauricie/mauricie_boundary.shp")
+mauricie_boundary <- sf::st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
-
 # 7.1 Raster Data Objects
 
 Raster data is stored as a SpatRaster object and can have one or multiple layers.
@@ -51,25 +50,30 @@ Raster data is stored as a SpatRaster object and can have one or multiple layers
 To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`:
 
 ```{r}
-elevation_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/mauricie_mask.tif")
+elevation_rast <- rast("path/to/your/mauricie_mask.tif")
 elevation_rast
 ```
-
 The function `names()` can be used to rename the layer(s) of a SpatRaster.
 
 ```{r}
 names(elevation_rast) <- "elevation"
 elevation_rast
 ```
-
 In [Chapter 5: Land Cover Data](05-LandcoverData.Rmd), you created a landcover mask of La Mauricie National Park using the [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) dataset. Read this file from your directory and call it `landcover_rast`:
 
 ```{r}
-# landcover_rast <- rast("C:/Users/dimit/Birds Canada/Data/mauricie/landcover_mask.tif")
-# landcover_rast
+landcover_rast <- rast("path/to/your/landcover_mask.tif")
+landcover_rast
 ```
+Rename the land cover class layer.
 
-You'll notice that the resolution, extent, and CRS of the individual raster layers do not match which prevents us from computing these layers together.
+```{r}
+names(landcover_rast) <- "landcover_class"
+landcover_rast
+```
+You'll notice that the resolution, extent, and CRS of the elevation and land cover raster layers do not match which prevents us from computing these layers together.
+
+# 7.2 Raster Data Transformations
 
 Use the `project()` function from `terra` to transform the coordinate reference system of `elevation_rast` to match that of `landcover_rast` (Canada Atlas Lambert, EPSG: 3979). By default, the "bilinear" method will be used for numeric layers like elevation. Run [help("project")]{.underline} in your **Console** for more details. **This could take about 15 min - stretch break!**.
 
@@ -80,10 +84,10 @@ elevation_rast_proj <- terra::project(elevation_rast, "EPSG:3979", method = "bil
 To match the extents of both layers, crop the `landcover_rast` to the extent of the `elevation_rast_proj`.
 
 ```{r}
-landcover_rast <- crop(landcover_mask, ext(elevation_rast_proj))
+landcover_rast <- crop(landcover_rast, ext(elevation_rast_proj))
 ```
 
-Resample `landcover_rast_crop` to match the resolution of `elevation_rast_proj` using the **"near"** method. This is the default method used for categorical layers like landcover. Run [help("resample")]{.underline} in your **Console** for more details.
+Resample `landcover_rast` to match the resolution of `elevation_rast_proj` using the **"near"** method. This is the default method used for categorical layers like land cover. Run [help("resample")]{.underline} in your **Console** for more details.
 
 ```{r}
 landcover_rast_resample <- resample(landcover_rast, elevation_rast_proj, method = "near")
@@ -120,10 +124,9 @@ plot(landcover_rast_resample, axes = TRUE, plg = list(title = ""), main = "Land 
 # Overlay the Mauricie boundary on the second plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
+# 7.3 Raster Reclassification
 
-# 7.2 Reclassification
-
-When communicating our data, it might be useful to reclassify a range of raster values into classes. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
+When communicating our data, it might be useful to reclassify a range of raster values into smaller set of classes. In this process, a range of values are binned to a new (categorical) value. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
 
 First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so:
 
@@ -136,16 +139,16 @@ dtm_rcl_matrix <- matrix(c(0, 200, 1,
 Then, apply the `classify()` function using the reclassification matrix:
 
 ```{r}
-elevation_rast_reclass <- classify(elevation_rast, dtm_rcl_matrix)
+elevation_rast_reclass <- classify(elevation_rast_proj, dtm_rcl_matrix)
 ```
 
 Finally, give meaningful labels to each of the classes:
 
 ```{r, eval = TRUE}
 elevation_levels <- data.frame(ID = c(1L, 2L, 3L),
-                               category = c("Low elevation",
-                                            "Mid elevation",
-                                            "High elevation"))
+                            category = c("Low",
+                                         "Mid",
+                                         "High"))
 levels(elevation_rast_reclass) <- elevation_levels
 ```
 
@@ -171,7 +174,22 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 par(mfrow = c(1, 1))
 ```
 
-# 7.3 Calculate Raster Summary Statistics
+# 7.4 Combine Raster Data 
+
+Multiple single-layer SpatRaster with the same CRS, extent, and resolution, can be combined into a single multi-layer SpatRaster with `c()` function.
+
+```{r}
+mauricie_rast <- c(elevation_rast_proj, landcover_rast_resample)
+mauricie_rast
+```
+You can subset layers of a SpatRaster with the $ or [[]] operators. 
+
+```{r}
+mauricie_rast$elevation
+
+mauricie_rast[["landcover_class"]]
+```
+# 7.5 Calculate Raster Summary Statistics
 
 To calculate summary statistics for individual SpatRaster layers you can use the `global()` function which implements `mean()`, `min()`, `max()`, and `sd()`.
 
