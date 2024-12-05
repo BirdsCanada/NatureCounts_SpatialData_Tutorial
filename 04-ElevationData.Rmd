@@ -98,7 +98,7 @@ To read the National Park polygons into R, navigate to [Places administered by P
 
 ```{r eval = FALSE}
 # if in your working directory
-national_parks<-st_read("vw_Places_Public_lieux_public_APCA.shp")
+national_parks <- st_read("vw_Places_Public_lieux_public_APCA.shp")
 
 # else, specify your directory
 national_parks <- st_read("path/to/your/shp")
@@ -177,7 +177,7 @@ mauricie_birds_sf <- sf::st_intersection(quebec_atlas_sf, mauricie_boundary)
 Append the species names to the clipped NatureCounts dataset based on `species_id` code.
 
 ```{r}
-mauricie_birds <- mauricie_birds_sf %>%
+mauricie_birds_sf <- mauricie_birds_sf %>%
   left_join(species_names, by = "species_id")
 ```
 
@@ -197,9 +197,9 @@ If you wanted to summarize total count for each species at each site (i.e., atla
 ```{r}
 mauricie_species_summary <- mauricie_birds_sf %>%
   st_drop_geometry() %>%  # drop the geometry column
-  group_by(species_id, Locality) %>%
+  group_by(english_name, Locality) %>%
   summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>% # calculates the total_count column
-  pivot_wider(names_from = species_id, # populates the column names with each species_id code
+  pivot_wider(names_from = english_name, # populates the column names with each species common name
               values_from = total_count, # populates each cell with total_count
               values_fill = list(total_count = 0)) %>% # missing values are zero-filled
   group_by(Locality)
@@ -207,19 +207,19 @@ mauricie_species_summary <- mauricie_birds_sf %>%
 mauricie_species_summary
 ```
 
-OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
-
-First, drop the geometry column and convert the NatureCounts data back to a regular dataframe.
+Drop the geometry column and convert the filtered NatureCounts data back to a regular dataframe.
 
 ```{r}
 mauricie_birds_df <- mauricie_birds_sf %>%
   st_drop_geometry() %>%  # Drops the geometry column
   bind_cols(
-    st_coordinates(mauricie_birds) %>%  # Extract coordinates
+    st_coordinates(mauricie_birds_sf) %>%  # Extract coordinates
       as.data.frame()  # Convert the coordinates to a data.frame
   ) %>%
   rename(longitude = X, latitude = Y)
 ```
+
+OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -328,11 +328,11 @@ plot(mauricie_mask, main = "masked DTM")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-Summarize the NatureCounts data for mapping and covert it to SpatVector format.
+Summarize the NatureCounts data for mapping.
 
 ```{r}
 # Group by SiteCode and summarize total_count
-mauricie_site_summary <- mauricie_birds %>%
+mauricie_site_summary <- mauricie_birds_sf %>%
   group_by(SiteCode) %>%
   summarize(total_count = sum(ObservationCount, na.rm = TRUE))
 ```
