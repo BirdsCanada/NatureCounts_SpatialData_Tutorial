@@ -93,7 +93,7 @@ Annual cumulative NDVI has a strong positive relationship with species richness 
 Read each band stored in the downloaded satellite imagery folder labeled S2A_MSIL2A. Copy the file path to S2A_MSIL2A... \> GRANULE \> L2A... \> IMG_DATA \> R10m which contains the images representing each band.
 
 ```{r}
-bands <- list.files(path = "path/to/your/directory", 
+bands <- list.files(path = "path/to/your/folder/R10m", 
                     pattern = "\\.jp2$", full.names = TRUE)
 
 # Read all the bands into a raster stack 
@@ -116,7 +116,6 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 ```{r}
 mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
-
 Plot a true color composite of `sentinel_imagery` with a linear stretch.
 
 ```{r, eval = TRUE, warning = FALSE}
@@ -264,16 +263,22 @@ plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
+Rename the NDVi raster layer. 
+
+```{r}
+names(mauricie_sl_ndvi) <- "ndvi"
+mauricie_sl_ndvi
+```
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
 ```
 
 To convert the NatureCounts data to a spatial object and transform its CRS to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
 
 ```{r}
-mauricie_birds_sf <- sf::st_as_sf(mauricie_birds, 
+mauricie_birds_sf <- sf::st_as_sf(mauricie_birds_df, 
                         coords = c("longitude", "latitude"), crs = 4326)              # convert to sf object
 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
@@ -315,20 +320,28 @@ First, make sure the CRS of both spatial data match and then use `terra::extract
 ```{r}
 mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(mauricie_sl_ndvi)) # Match the CRS
 
-ndvi_values <- terra::extract(mauricie_sl_ndvi, vect(mauricie_birds_sf)) # Extracts the NDVI values for each point
+ndvi_values_sf <- terra::extract(mauricie_sl_ndvi, vect(mauricie_birds_sf), bind = TRUE) # Extracts the NDVI values for each point
 ```
 
 Convert the sf object holding the extracted NDVI values to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
 
 ```{r}
-ndvi_values_df <- terra::as.data.frame(ndvi_values) %>% 
+ndvi_values_df <- terra::as.data.frame(ndvi_values_sf) %>% 
  select(record_id, ndvi) 
+```
+
+OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+
+> To execute this code chunk, remove the \#
+
+```{r}
+# write.csv(ndvi_values_df, "data/mauricie/ndvi_values_df.csv", row.names = FALSE)
 ```
 
 Combine the NDVI dataframe with the NatureCounts dataframe.
 
 ```{r}
-mauricie_birds <- mauricie_birds %>%
+mauricie_birds_df <- mauricie_birds_df %>%
   left_join(ndvi_values_df, by = "record_id") # Join by observation record ID
 ```
 
