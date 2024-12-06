@@ -110,7 +110,7 @@ plot(st_geometry(mauricie_boundary), col = NA, border ="purple", lwd = 2, add = 
 par(mfrow = c(1, 1))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. This raster will be useful to complete Chapter 7: Raster Summary Tools. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
+OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. **This raster will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
 
 To execute this code chunk, remove the \#
 
@@ -184,13 +184,13 @@ ggplot() +
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
 ```
 
 To convert the NatureCounts data to a spatial object and transform its CRS to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
 
 ```{r}
-mauricie_birds_sf <- sf::st_as_sf(mauricie_birds, 
+mauricie_birds_sf <- sf::st_as_sf(mauricie_birds_df, 
                         coords = c("longitude", "latitude"), crs = 4326)              # convert to sf object
 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
@@ -254,22 +254,30 @@ First, make sure the CRS of both spatial data match and then use `terra::extract
 # Match the CRS
 mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(landcover_mask))
 
-# Extract the landcover class ID for each site
-landcover_sites_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bind = TRUE)
+# Extract the landcover class ID for each observation
+landcover_class_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bind = TRUE)
 ```
 
 Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
 
 ```{r}
-landcover_sites_df <- terra::as.data.frame(landcover_sites_sf) %>% 
+landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>% 
  select(record_id, landcover_class = Class) 
+```
+
+OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+
+> To execute this code chunk, remove the \#
+
+```{r}
+# write.csv(landcover_class_df, "data/mauricie/landcover_class_df.csv", row.names = FALSE)
 ```
 
 Combine the land cover dataframe with the NatureCounts dataframe.
 
 ```{r}
-mauricie_birds <- mauricie_birds %>%
-  left_join(landcover_sites_df, by = "record_id") %>% # Join by record_id
+mauricie_birds_df <- mauricie_birds_df %>%
+  left_join(landcover_class_df, by = "record_id") %>% # Join by record_id
   left_join(landcover_rgb, by = "landcover_class") # Join by land cover class
 ```
 
