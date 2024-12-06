@@ -376,6 +376,14 @@ elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
   select(record_id, elevation = Band_1)
 ```
 
+OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+
+> To execute this code chunk, remove the \#
+
+```{r}
+# write.csv(elevation_values_df, "data/mauricie/elevation_values_df.csv", row.names = FALSE)
+```
+
 Combine the elevation dataframe with the NatureCounts dataframe.
 
 ```{r}
