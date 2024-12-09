@@ -17,12 +17,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 2.0 Learning Objectives
 
-By the end of **Chapter 2 - Spatial Filtering**, users will know how to:
+By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
 -   Import and map polygon boundary files based on attributes
 -   Reproject NatureCounts data to the coordinate reference system of your spatial layer
 -   Spatially filter and map NatureCounts data for an area of interest
--   Read, process, and visualize spatial vector data in R within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
+-   Read, process, and visualize spatial vector data within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
 The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory.
 
@@ -49,7 +49,7 @@ library(leaflet.extras)
 
 Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example.
 
-We can read in our KBA polygons using the `sf` package once it is in your working directory.The downloaded files was renamed for this example so you will need to change the code to match your file name.
+We can read in our KBA polygons using the `sf` package once it is in your working directory. The downloaded files was renamed for this example so you will need to change the code to match your file name.
 
 ```{r}
 ontario_kba <- sf::st_read("ontario_kba.shp")
@@ -270,4 +270,4 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 # st_write(wood_ducks_longpoint,"wood_ducks_longpoint.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-**Congratulations**! You completed **Chapter 2 - Spatial Filtering: KBA's and Priority Places**. Here, you successfully filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You completed **Chapter 2 - Spatial Subsetting: KBA's and Priority Places**. Here, you spatially filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
