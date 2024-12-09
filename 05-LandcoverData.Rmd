@@ -58,14 +58,14 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
 
-To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select either data labeled `web_service` and `WMS` (English) ##Should this the be TIFF file? You should be directing the user to the `Data` file. \## Extract the data download and save the file to your directory before applying `terra::rast()`.
+To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select the TIFF file to download. Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
 # if the data are in your working directory
- landcover <- rast("landcover-2015-classification.tif")
+# landcover <- rast("landcover-2015-classification.tif")
 
 # else, specify the location of your data
-# landcover <- rast("path/to/your/landcover-2015-classification.tif")
+# landcover <- rast(path/to/your/landcover-2015-classification.tif)
 
 print(landcover)
 ```
@@ -131,10 +131,8 @@ freq(landcover_mask)
 
 Examine the categories of the masked land cover raster. The `cats()` function displays the color (RGB) table that associates each class with a distinct color. Let's save this to our environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function.
 
-#I stopped here. This is resulting in a 0x0 df??
-
 ```{r}
-landcover_rgb <- as.data.frame(cats(landcover_mask))
+landcover_rgb <- as.data.frame(coltab(landcover_mask))
 landcover_rgb
 ```
 
