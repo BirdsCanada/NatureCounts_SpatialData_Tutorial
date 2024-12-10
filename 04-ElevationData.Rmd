@@ -42,7 +42,7 @@ This tutorial uses the following spatial data.
 
 3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
-**Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select (**Explorer \> Accéder**) next to the **Téléchargement** option to explore the Lidar tiles on an interactive map .
+**Step 1**: Navigate to the [Lidar](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select (**Explorer \> Accéder**) next to the **Téléchargement** option to explore the Lidar tiles on an interactive map.
 
 ```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata1.PNG")

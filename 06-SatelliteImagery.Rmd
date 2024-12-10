@@ -116,6 +116,7 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 ```{r}
 mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
+
 Plot a true color composite of `sentinel_imagery` with a linear stretch.
 
 ```{r, eval = TRUE, warning = FALSE}
@@ -263,12 +264,13 @@ plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-Rename the NDVi raster layer. 
+Rename the NDVi raster layer.
 
 ```{r}
 names(mauricie_sl_ndvi) <- "ndvi"
 mauricie_sl_ndvi
 ```
+
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r, warning = FALSE, message = FALSE}
