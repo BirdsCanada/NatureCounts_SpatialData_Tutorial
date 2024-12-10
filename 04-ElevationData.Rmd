@@ -50,19 +50,19 @@ knitr::include_graphics("images/spatdata1.PNG")
 
 **Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary.
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image2, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata0.PNG")
 ```
 
 Alternatively, you can import your own **.shp** or **.kml** file using the **Import and Export** tab.
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image3, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata2.PNG")
 ```
 
 Specify the coordinate reference system (WGS84), click **Import**, and select your **.shp** or **.kml** file to display on the map.
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image4, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata3.PNG")
 ```
 
@@ -70,21 +70,23 @@ knitr::include_graphics("images/spatdata3.PNG")
 
 First, navigate to the **Map** tab and toggle on the visibility for the boundary and Lidar MNT layers by clicking on the eye symbol, if necessary. Hovering over this icon will display either the **Show Layer** or **Hide layer** option.
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image5, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata4.PNG")
 ```
 
 Your interactive map should now look something like this:
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image6, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata5.PNG")
 ```
 
 One by one, click and download the terrain data for each of the 6 Lidar tiles that intersect with the park boundary. Click your target tile, expand the **Téléchargement** window and click **Accéder** next to the MNT (1 m spatial resolution) data to download. Repeat for each tile.
 
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image7, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata6.PNG")
 ```
+
+This will open a webpage
 
 Save these files in your R project working directory for easy access during this tutorial.
 
