@@ -42,6 +42,39 @@ This tutorial uses the following spatial data.
 
 3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
+For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at least 5 min to download, so adjust the timeout limit accordingly. Otherwise, follow the steps below to download the data yourself using the LiDAR data platform.
+
+```{r}
+# Specify the directory where you want to save your DTM files. 
+output_dir <- "path/to/your/directory/folder"
+
+urls <- c(
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif",
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif",
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif",
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif",
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif",
+  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif"
+)
+
+output_files <- c("MNT_31I14NE.tif", "MNT_31I15NO.tif", "MNT_31I14SE.tif", "MNT_31I15SO.tif", "MNT_31I11NE.tif", "MNT_31I10NO.tif")
+
+# Increase the timeout limit (seconds)
+options(timeout = 600) 
+
+# Loop through each URL and download files
+for (i in seq_along(urls)) {
+  # Construct full file path
+  dest_file <- file.path(output_dir, output_files[i])
+  
+  # Download the file
+  download.file(urls[i], destfile = dest_file, mode = "wb")
+  
+  cat("Downloaded:", dest_file, "\n")
+}
+
+```
+
 **Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select (**Explorer \> Accéder**) next to the **Téléchargement** option to explore the Lidar tiles on an interactive map .
 
 ```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
