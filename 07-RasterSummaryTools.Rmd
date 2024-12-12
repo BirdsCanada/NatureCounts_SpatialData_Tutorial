@@ -279,7 +279,7 @@ landcover_summary <- mauricie_data %>%
   mutate(mean_abundance = ((total_individuals / sum(total_individuals))))
 ```
 
-Plot the relative mean abundance per land cover class.
+Plot the relative abundance per land cover class.
 
 ```{r}
 ggplot(landcover_summary, aes(x = landcover, y = mean_abundance, fill = total_individuals)) +
@@ -290,7 +290,7 @@ ggplot(landcover_summary, aes(x = landcover, y = mean_abundance, fill = total_in
     size = 3.5    # Adjust text size
   ) +
   scale_fill_gradient(
-    low = "lightgreen", high = "darkgreen", # Customize colors for the gradient
+    low = "lightblue", high = "darkblue", # Customize colors for the gradient
     name = "Abundance"                      # Legend title
   ) +
   theme_minimal() +
@@ -357,7 +357,57 @@ top_five
 
 #### EXAMPLE 3: Elevation Plots
 
-#### EXAMPLE 4: NDVI
+
+
+#### EXAMPLE 4: NDVI Plots
+
+Plot the relative species abundance for different NDVI ranges. 
+
+```{r}
+# Create NDVI ranges with numeric labels
+mauricie_data <- mauricie_data %>%
+  mutate(
+    ndvi_range = case_when(
+      ndvi > 0 & ndvi <= 0.2 ~ "0 to 0.2",
+      ndvi > 0.2 & ndvi <= 0.4 ~ "0.2 to 0.4",
+      ndvi > 0.4 & ndvi <= 0.6 ~ "0.4 to 0.6",
+      ndvi > 0.6 & ndvi <= 0.8 ~ "0.6 to 0.8",
+    )
+  )
+
+# Calculate species abundance for each NDVI range 
+ndvi_summary <- mauricie_data %>%
+  group_by(ndvi_range) %>%
+  summarize(
+    total_individuals = sum(ObservationCount, na.rm = TRUE),
+    total_species = n_distinct(scientific_name)
+  ) %>%
+  mutate(
+    relative_abundance = total_individuals / sum(total_individuals)
+  )
+
+# Plot relative species abundance by each NDVI range 
+ggplot(ndvi_summary, aes(x = ndvi_range, y = relative_abundance, fill = total_individuals)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(
+    aes(label = paste0("n = ", total_individuals)),
+    vjust = -0.5, # Position the text above the bars
+    size = 3.5    # Adjust text size
+  ) +
+  scale_fill_gradient(
+    low = "lightgreen", high = "darkgreen", # Customize colors for the gradient
+    name = "Abundance"                      # Legend title
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Relative Species Abundance According to NDVI Distribution",
+    x = "NDVI",
+    y = "Relative Abundance"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Plot species richness and minimum NDVI grouped by SiteCode.
 
 ```{r}
 # Calculate species richness by SiteCode
@@ -381,5 +431,8 @@ ggplot(species_ndvi_data, aes(x = min_ndvi, y = species_richness)) +
        y = "Bird Species Richness") +
   theme_minimal()
 ```
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
 
 Congratulations! You completed Chapter 7 - Raster Summary Tools. In this chapter, you successfully transformed and combined raster data, performed raster algebra and calculated local, global and zonal summary statistics. In [Chapter 8](08-AnalysisTools.Rmd), you can explore additional NatureCounts auxiliary data from nc_query_tables and analysis tools.
