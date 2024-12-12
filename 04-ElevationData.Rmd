@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-> In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply crop, mask, and reclassification procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
+> In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales.
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [4.4 LiDAR Data Resources].
 
 # 4.0 Learning Objectives
 
@@ -42,7 +42,7 @@ This tutorial uses the following spatial data.
 
 3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
-For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at least 5 min to download, so adjust the timeout limit accordingly. Otherwise, follow the steps below to download the data yourself using the LiDAR data platform.
+For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at least 5 min to download, so adjust the timeout limit accordingly. Otherwise, follow the steps below to access the data yourself using the LiDAR data platform.
 
 ```{r}
 # Specify the directory where you want to save your DTM files. 
@@ -83,19 +83,19 @@ knitr::include_graphics("images/spatdata1.PNG")
 
 **Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary.
 
-```{r image2, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image0, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata0.PNG")
 ```
 
 Alternatively, you can import your own **.shp** or **.kml** file using the **Import and Export** tab.
 
-```{r image3, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image2, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata2.PNG")
 ```
 
 Specify the coordinate reference system (WGS84), click **Import**, and select your **.shp** or **.kml** file to display on the map.
 
-```{r image4, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image3, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata3.PNG")
 ```
 
@@ -103,25 +103,25 @@ knitr::include_graphics("images/spatdata3.PNG")
 
 First, navigate to the **Map** tab and toggle on the visibility for the boundary and Lidar MNT layers by clicking on the eye symbol, if necessary. Hovering over this icon will display either the **Show Layer** or **Hide layer** option.
 
-```{r image5, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image4, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata4.PNG")
 ```
 
 Your interactive map should now look something like this:
 
-```{r image6, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image5, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata5.PNG")
 ```
 
 One by one, click and download the terrain data for each of the 6 Lidar tiles that intersect with the park boundary. Click your target tile, expand the **Téléchargement** window and click **Accéder** next to the MNT (1 m spatial resolution) data to download. Repeat for each tile.
 
-```{r image7, echo=FALSE, out.width="700px", fig.align='center'}
+```{r image6, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata6.PNG")
 ```
 
 This will open a webpage directory displaying a list of spatial data files available for the selected tile. Choose the MNT (.tif) file that includes the tile code in its name. For instance, for the first tile covering northern tip of the national park), select "MNT_31I14NE.tif." Repeat this process for each respective tile.
 
-```{r r image8, echo=FALSE, out.width="700px", fig.align='center'}
+```{r r image10, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata10.PNG")
 ```
 
@@ -429,5 +429,21 @@ Combine the elevation dataframe with the NatureCounts dataframe.
 mauricie_birds_df <- mauricie_birds_df %>%
   left_join(elevation_values_df, by = "record_id") # Join by record_id
 ```
+
+# 4.4 LiDAR Data Resources
+
+[LiDAR](https://natural-resources.canada.ca/sites/nrcan/files/mapstoolspublications/lidar-Nov-2023-EN.pdf) systems help produce extremely accurate measurements of surface elevation to digital terrain and elevation models across landscapes. These systems use instruments (sensors) that are commonly flown on aircraft and incorporate laser ranging for distance, GPS for geographic position and height, and aircraft altitude for the orientation of the instrument. The accuracy of LiDAR measurements depends on the strength of point returns, instrument precision & accuracy, and terrain characteristics, among other factors.
+
+```{r image11, echo=FALSE, out.width="700px", fig.align ='center'}
+knitr::include_graphics("images/spatdata11.PNG")
+```
+
+Conceptual figure depicts an airborne LiDAR system (‘LiDAR-i lend’, [Marek9134 (2012)](https://commons.wikimedia.org/wiki/File:LiDAR-i_lend.gif) CC-BY-SA-3.0).
+
+As of June 2022, Natural Resources Canada has produced their largest release of LiDAR-derived data made publicly available on [Open Maps](https://search.open.canada.ca/openmap/957782bf-847c-4644-a757-e383c0057995). This data is complementary to previous CanElevation Series products: the [HRDEM](https://open.canada.ca/data/en/dataset/957782bf-847c-4644-a757-e383c0057995) and [HRDEM Mosaic](https://open.canada.ca/data/en/dataset/0fe65119-e96e-4a57-8bfe-9d9245fba06b). The HRDEM download procedure can be found [here](https://ftp.maps.canada.ca/pub/elevation/dem_mne/highresolution_hauteresolution/HRDEM_Download_Instructions.pdf). Some notable open LiDAR data resources on the provincial-level include [LidarBC](https://lidar.gov.bc.ca/) - British Columbia and [Forêt ouverte](https://www.donneesquebec.ca/recherche/dataset/produits-derives-de-base-du-lidar) - Québec.
+
+The USGS provides LiDAR and its derived products through the [LidarExplorer](https://www.usgs.gov/tools/lidarexplorer) online application. [The National Map](https://www.usgs.gov/programs/national-geospatial-program/national-map) also represents the primary repository for geospatial data in the U.S.
+
+--------------------------------------------------------------------------------------------------------------------
 
 Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
