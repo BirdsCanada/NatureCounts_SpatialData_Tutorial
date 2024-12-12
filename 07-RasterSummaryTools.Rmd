@@ -326,7 +326,7 @@ ggplot(species_rank_landcover, aes(x = as.numeric(rank), y = total_abundance, co
   geom_point(size = 2) +
   theme_minimal() +
   labs(
-    title = "Abundance for High Rank Species across Broadleaf and Needleleaf Forests",
+    title = "Abundance of High Rank Species across Broadleaf and Needleleaf Forests",
     x = "Species Rank",
     y = "Abundance",
     color = "Landcover"
@@ -357,14 +357,57 @@ top_five
 
 #### EXAMPLE 3: Elevation Plots
 
+```{r}
+# Create elevation classes with labels 
+mauricie_data <- mauricie_data %>%
+  mutate(
+    elevation_class = case_when(
+      elevation < 200 ~ "Low",
+      elevation >= 200 & elevation < 400 ~ "Mid",
+      elevation >= 400 ~ "High"
+    ),
+    elevation_class = factor(elevation_class, levels = c("Low", "Mid", "High"))  # Set the factor levels
+  )
 
+# Calculate relative abundance for each elevation class
+elevation_summary <- mauricie_data %>%
+  group_by(elevation_class) %>%
+  summarize(
+    total_individuals = sum(ObservationCount, na.rm = TRUE),
+    total_species = n_distinct(scientific_name)
+  ) %>%
+  mutate(
+    relative_abundance = total_individuals / sum(total_individuals) 
+  )
+
+# Plot relative species abundance per elevation class
+ggplot(elevation_summary, aes(x = elevation_class, y = relative_abundance, fill = total_individuals)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(
+    aes(label = paste0("n = ", total_individuals)),
+    vjust = -0.5, # Position the text above the bars
+    size = 3.5    # Adjust text size
+  ) +
+  scale_fill_gradient(
+    low = "pink", high = "darkred", # Customize colors for the gradient
+    name = "Abundance"              # Legend title
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Relative Species Abundance by Elevation Class",
+    x = "Elevation",
+    y = "Relative Abundance"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
 
 #### EXAMPLE 4: NDVI Plots
 
 Plot the relative species abundance for different NDVI ranges. 
 
 ```{r}
-# Create NDVI ranges with numeric labels
+# Create NDVI classes with numeric labels
 mauricie_data <- mauricie_data %>%
   mutate(
     ndvi_range = case_when(
@@ -375,7 +418,7 @@ mauricie_data <- mauricie_data %>%
     )
   )
 
-# Calculate species abundance for each NDVI range 
+# Calculate species abundance for each NDVI class
 ndvi_summary <- mauricie_data %>%
   group_by(ndvi_range) %>%
   summarize(
@@ -386,7 +429,7 @@ ndvi_summary <- mauricie_data %>%
     relative_abundance = total_individuals / sum(total_individuals)
   )
 
-# Plot relative species abundance by each NDVI range 
+# Plot relative species abundance per NDVI class
 ggplot(ndvi_summary, aes(x = ndvi_range, y = relative_abundance, fill = total_individuals)) +
   geom_bar(stat = "identity", color = "black") +
   geom_text(
@@ -415,7 +458,7 @@ species_richness <- mauricie_data %>%
   group_by(SiteCode) %>%
   summarise(species_richness = n_distinct(scientific_name))
 
-# Calculate mean NDVI by SiteCode
+# Calculate minimum NDVI by SiteCode
 min_ndvi <- mauricie_data %>%
   group_by(SiteCode) %>%
   summarise(min_ndvi = min(ndvi, na.rm = TRUE))
@@ -423,10 +466,10 @@ min_ndvi <- mauricie_data %>%
 # Merge species richness and mean NDVI by SiteCode
 species_ndvi_data <- left_join(species_richness, min_ndvi, by = "SiteCode")
 
-# Plot species richness vs. mean NDVI
+# Plot species richness and minimum NDVI
 ggplot(species_ndvi_data, aes(x = min_ndvi, y = species_richness)) +
   geom_point() +
-  labs(title = "Bird Species Richness vs. Mean NDVI in La Mauricie National Park",
+  labs(title = "Species Richness and Minimum NDVI at Each Observation Site",
        x = "Min NDVI",
        y = "Bird Species Richness") +
   theme_minimal()
