@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-> In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will combine and reclassify raster data, calculate summary statistics, and explore data visualizations.
+> In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will combine and reclassify raster data, calculate summary statistics, and create data summaries and visualizations.
 
-**To proceed with this tutorial, you must complete sections 4.0 - 4.3 of [Chapter 4: Elevation Data](04-ElevationData.Rmd)** ***unless you're using your own data*****. They help you create and save raster files which are required for this lesson. To make this faster, we have provided the outputs from section 4.1 in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
+**To proceed with this tutorial, you must complete sections 4.0 - 4.3 of [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd)*unless you're using your own data*. They help you create and save raster files which are required for this lesson. To make this faster, we have provided the outputs from section 4.1 in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
 
 # 7.0 Learning Objectives
 
@@ -25,9 +25,9 @@ By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
 
 -   Reclassify raster data
 
--   Perform raster algebra and calculate summary statistics using local, global, and zonal functions
+-   Perform raster algebra using local, global, and zonal functions
 
--   Visualize raster data summaries
+-   Create and visualize NatureCounts data summaries using environmental covariates
 
 This R tutorial requires the following packages:
 
@@ -189,11 +189,11 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 par(mfrow = c(1, 1))
 ```
 
-# 7.3 Raster Algebra & Summary Statistics
+# 7.3 Raster Algebra (Local, Global, and Zonal Operations)
 
 Map algebra comprises a slew of useful operations that can be used to modify or summarize raster cell values with reference to nearby cells, zones, or statistical functions.
 
-**Local** operations involve all cell by cell operations across single or multi-layer rasters. In section 7.2, we performed a local operation by reclassifying elevation raster values into distinct groups. Custom functions used to calculate spectral indices (see [Chapter 6: SatelliteImagery](06-SatelliteImagery.Rmd)) are another example of local (pixel by pixel) operations.
+**Local** operations involve all cell by cell operations across single or multi-layer rasters. In Section [7.2 Raster Reclassification], we performed a local operation by reclassifying elevation raster values into distinct groups. Custom functions used to calculate spectral indices (see [Chapter 6: SatelliteImagery](06-SatelliteImagery.Rmd)) are another example of local (pixel by pixel) operations.
 
 **Global** operations can be used to derive descriptive raster statistics and summaries across entire SpatRaster. For example, you can visualize your raster data values using a histogram (`hist()`).
 
@@ -231,6 +231,8 @@ zonal_elevation_stats <- zonal(elevation_rast_proj, landcover_rast_resample, fun
 zonal_elevation_stats
 ```
 
+# 7.4 Summary Tools: Species Abundance
+
 In Chapter 4, Chapter 5, and Chapter 6 you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 Let's download all the environmental covariates into R and join them to a common dataframe.
@@ -260,8 +262,6 @@ Combine the environmental covariates with the NatureCounts data.
 mauricie_data <- mauricie_birds_df %>%
   merge(env_covariates_df, by = "record_id")
 ```
-
-# 7.4 Explore Patterns in Species Abundance
 
 We can summarize the combined NatureCounts and environmental data to explore possible trends in species abundance.
 
@@ -355,7 +355,7 @@ top_five <- species_rank_landcover %>%
 top_five
 ```
 
-#### EXAMPLE 3: Elevation Plots
+#### EXAMPLE 3: Elevation Plot
 
 ```{r}
 # Create elevation classes with labels 
@@ -404,7 +404,7 @@ ggplot(elevation_summary, aes(x = elevation_class, y = relative_abundance, fill 
 
 #### EXAMPLE 4: NDVI Plots
 
-Plot the relative species abundance for different NDVI ranges. 
+Plot the relative species abundance for different NDVI ranges.
 
 ```{r}
 # Create NDVI classes with numeric labels
@@ -475,7 +475,6 @@ ggplot(species_ndvi_data, aes(x = min_ndvi, y = species_richness)) +
   theme_minimal()
 ```
 
+------------------------------------------------------------------------
 
--------------------------------------------------------------------------------------------------------------------------------------------------
-
-Congratulations! You completed Chapter 7 - Raster Summary Tools. In this chapter, you successfully transformed and combined raster data, performed raster algebra and calculated local, global and zonal summary statistics. In [Chapter 8](08-AnalysisTools.Rmd), you can explore additional NatureCounts auxiliary data from nc_query_tables and analysis tools.
+Congratulations! You completed Chapter 7 - Raster Summary Tools. In this chapter, you successfully transformed and combined raster data, performed raster algebra operations, and created summary plot for NatureCounts data using environmental covariates.
