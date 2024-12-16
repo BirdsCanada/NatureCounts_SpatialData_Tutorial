@@ -23,7 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
--   Load and process land cover data (raster)
+-   Load and process land cover data (raster), including cropping and masking
 -   Extract unique pixel values from a raster data set
 -   Combine NatureCounts data with land cover data for analysis
 
@@ -55,14 +55,14 @@ This tutorial uses the following spatial data.
 Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r}
-mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
+mauricie_boundary <- st_read("Data/mauricie/boundary/mauricie_boundary.shp")
 ```
 
 To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select the TIFF file to download. Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
 # if the data are in your working directory
-# landcover <- rast("landcover-2015-classification.tif")
+ landcover <- rast("landcover-2015-classification.tif")
 
 # else, specify the location of your data
 # landcover <- rast(path/to/your/landcover-2015-classification.tif)
@@ -76,6 +76,11 @@ Transform the CRS of the National Park boundary to match that of the land cover 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
 
+# 5.2 Cropping and masking
+
+**Cropping** reduces the extent of a raster to the extent of another raster or vector.
+
+To crop a raster we can apply the `crop()` function from the `terra` package which uses the SpatVector format. Here, we crop the extent of the raster while converting the National Park Boundary to a SpatVector using `vect()`.
 Crop the national dataset to reduce the extent of the raster to the extent of the National Park.
 
 ```{r}
@@ -83,6 +88,10 @@ landcover_crop <- crop(landcover, vect(mauricie_boundary))
 print(landcover_crop)
 ```
 
+
+**Masking** assigns NA values to cells of a raster not covered by a vector.
+
+To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which also uses the SpatVector format. 
 Mask the national dataset and apply NA values to all cells outside the extent of the National Park.
 
 ```{r}
@@ -141,7 +150,7 @@ Filter the RGB dataframe to only include those classes represented in the masked
 ```{r}
 landcover_rgb <- landcover_rgb %>%
   rename_with(tolower) %>% # lowercase is more R friendly!
-  rename(landcover_class = class) %>%
+  rename(landcover_class = value) %>%
   filter(landcover_class %in% c(1, 5, 6, 8, 10, 14, 16, 17, 18)) %>% # filter based on the classes represented in the "landcover_crop"
   mutate(landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")) # assign land cover class labels
 ```
@@ -263,6 +272,7 @@ landcover_class_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bi
 
 Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
 
+##Error generated here. I have not finished reviewing this Chapters
 ```{r}
 landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>% 
  select(record_id, landcover_class = Class) %>%
