@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [4.4 LiDAR Data Resources].
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [LiDAR Data Resources](#Lidar4.4) at the end of this Chapter.
 
 # 4.0 Learning Objectives
 
@@ -42,11 +42,13 @@ This tutorial uses the following spatial data.
 
 3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
-For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at least 5 min to download, so adjust the timeout limit accordingly. Otherwise, follow the steps below to access the data yourself using the LiDAR data platform.
+For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at 45 min to download, so adjust the timeout limit accordingly. If you wish to get experience access LiDAR data yourself, follow the steps [at the end of this Chapter](#Lidar4.5).
 
 ```{r}
-# Specify the directory where you want to save your DTM files. 
-output_dir <- "path/to/your/directory/folder"
+# Specify the directory where you want to save your DTM files. This should either be your root working directroy or a subdirectory.
+
+output_dir <- "path/to/your/directory/folder" #to specify your directory manually
+#output_dir <- getwd() # Use this line if you want to save the files in your root working directory
 
 urls <- c(
   "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif",
@@ -60,7 +62,7 @@ urls <- c(
 output_files <- c("MNT_31I14NE.tif", "MNT_31I15NO.tif", "MNT_31I14SE.tif", "MNT_31I15SO.tif", "MNT_31I11NE.tif", "MNT_31I10NO.tif")
 
 # Increase the timeout limit (seconds)
-options(timeout = 600) 
+options(timeout = 15000) 
 
 # Loop through each URL and download files
 for (i in seq_along(urls)) {
@@ -75,63 +77,7 @@ for (i in seq_along(urls)) {
 
 ```
 
-**Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select (**Explorer \> Accéder**) next to the **Téléchargement** option to explore the Lidar tiles on an interactive map .
-
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata1.PNG")
-```
-
-**Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary.
-
-```{r image0, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata0.PNG")
-```
-
-Alternatively, you can import your own **.shp** or **.kml** file using the **Import and Export** tab.
-
-```{r image2, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata2.PNG")
-```
-
-Specify the coordinate reference system (WGS84), click **Import**, and select your **.shp** or **.kml** file to display on the map.
-
-```{r image3, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata3.PNG")
-```
-
-**Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
-
-First, navigate to the **Map** tab and toggle on the visibility for the boundary and Lidar MNT layers by clicking on the eye symbol, if necessary. Hovering over this icon will display either the **Show Layer** or **Hide layer** option.
-
-```{r image4, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata4.PNG")
-```
-
-Your interactive map should now look something like this:
-
-```{r image5, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata5.PNG")
-```
-
-One by one, click and download the terrain data for each of the 6 Lidar tiles that intersect with the park boundary. Click your target tile, expand the **Téléchargement** window and click **Accéder** next to the MNT (1 m spatial resolution) data to download. Repeat for each tile.
-
-```{r image6, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata6.PNG")
-```
-
-This will open a webpage directory displaying a list of spatial data files available for the selected tile. Choose the MNT (.tif) file that includes the tile code in its name. For instance, for the first tile covering northern tip of the national park), select "MNT_31I14NE.tif." Repeat this process for each respective tile.
-
-```{r r image10, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata10.PNG")
-```
-
-Save these files in your R project working directory for easy access during this tutorial.
-
-```{r evel=FALSE}
-getwd()
-```
-
-# 4.1 Data Setup {#datasetup}
+# 4.1 Data Setup {#4.1datasetup}
 
 To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
 
@@ -155,7 +101,7 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files is used again in [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -169,12 +115,6 @@ To assess the species distribution within the National Park, download data from 
 
 Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
 
-Read in the list of species represented in NatureCounts:
-
-```{r}
-species_names <- search_species()
-```
-
 Download NatureCounts data:
 
 ```{r}
@@ -187,6 +127,12 @@ eBird has the greatest number of provincial bird records, however, this collecti
 
 ```{r, eval = FALSE}
 # quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+```
+
+Read in the list of species represented in NatureCounts:
+
+```{r}
+species_names <- search_species()
 ```
 
 To create date and doy columns and ensure that the ObservationCount column is in the correct numeric format we can apply the `format_dates()` and `mutate()` functions. We will also filter the dataset to exclude rows with missing coordinates.
@@ -263,12 +209,12 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(mauricie_birds_df, "data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
+#write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
 # 4.2 DEM, DSM & DTM
 
-Digital elevation datasets store topographic information like elevation or slope and are a useful way to interpret landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
+Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
 
 **Digital Elevation Model** - represents the bare-Earth surface and [excludes]{.underline} all terrain vector features (i.e. streams, breaklines, and ridges), and all ground objects (power lines, buildings, trees, and vegetation).
 
@@ -279,14 +225,17 @@ Digital elevation datasets store topographic information like elevation or slope
 Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
-dir_path <- "path/to/your/directory"
+
+output_dir <- "path/to/your/directory/folder" #to specify your directory manually
+
+#output_dir <- getwd() # Use this line if you want to retrieve the files in your root working directory
 ```
 
 Create a mosaic of the adjacent DTM rasters.
 
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
-dtm_files <- list.files(dir_path, pattern = "\\.tif$", full.names = TRUE)
+dtm_files <- list.files(output_dir, pattern = "\\.tif$", full.names = TRUE)
 
 # Read into a list of SpatRaster objects
 dtm_list <- lapply(dtm_files, rast)
@@ -338,7 +287,7 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be useful to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`.
 
 > To execute this code chunk, remove the \#
 
@@ -430,7 +379,13 @@ mauricie_birds_df <- mauricie_birds_df %>%
   left_join(elevation_values_df, by = "record_id") # Join by record_id
 ```
 
-# 4.4 LiDAR Data Resources
+
+------------------------------------------------------------------------
+
+Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data. Below are some additional resources you may find useful to further your understanding of LiDAR data. 
+
+
+# 4.4 Data Resources {#Lidar4.4}
 
 [LiDAR](https://natural-resources.canada.ca/sites/nrcan/files/mapstoolspublications/lidar-Nov-2023-EN.pdf) systems help produce extremely accurate measurements of surface elevation to digital terrain and elevation models across landscapes. These systems use instruments (sensors) that are commonly flown on aircraft and incorporate laser ranging for distance, GPS for geographic position and height, and aircraft altitude for the orientation of the instrument. The accuracy of LiDAR measurements depends on the strength of point returns, instrument precision & accuracy, and terrain characteristics, among other factors.
 
@@ -444,6 +399,62 @@ As of June 2022, Natural Resources Canada has produced their largest release of 
 
 The USGS provides LiDAR and its derived products through the [LidarExplorer](https://www.usgs.gov/tools/lidarexplorer) online application. [The National Map](https://www.usgs.gov/programs/national-geospatial-program/national-map) also represents the primary repository for geospatial data in the U.S.
 
-------------------------------------------------------------------------
+# 4.5 Manual Data Download {#Lidar4.5}
 
-Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
+If you wish to access LiDAR data for La Mauricie National Park yourself to gain experience with the process, follow the steps below. The data are available on the [Forêt ouverte](https://www.donneesquebec.ca/recherche/dataset/produits-derives-de-base-du-lidar) platform.
+
+**Step 1**: Navigate to the Lidar data site. Under **Données et ressources** \> **Carte interactive** \> **Forêt ouverte** select (**Explorer \> Accéder**) next to the **Téléchargement** option to explore the Lidar tiles on an interactive map .
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata1.PNG")
+```
+
+**Step 2**: Using the search bar, search for **Parc national de la Mauricie**. Under Layers, toggle on **Parc nationaux du Canada** to visualize the park boundary.
+
+```{r image0, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata0.PNG")
+```
+
+Alternatively, you can import your own **.shp** or **.kml** file using the **Import and Export** tab.
+
+```{r image2, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata2.PNG")
+```
+
+Specify the coordinate reference system (WGS84), click **Import**, and select your **.shp** or **.kml** file to display on the map.
+
+```{r image3, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata3.PNG")
+```
+
+**Step 3**: Download the Modèle num. terrain (MNT) (Résolution spatiale 1 m) for each of the six Lidar tiles that intersect with the park (14NE, 15NO, 14SE, 15SO, 11NE, 10NO).
+
+First, navigate to the **Map** tab and toggle on the visibility for the boundary and Lidar MNT layers by clicking on the eye symbol, if necessary. Hovering over this icon will display either the **Show Layer** or **Hide layer** option.
+
+```{r image4, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata4.PNG")
+```
+
+Your interactive map should now look something like this:
+
+```{r image5, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata5.PNG")
+```
+
+One by one, click and download the terrain data for each of the 6 Lidar tiles that intersect with the park boundary. Click your target tile, expand the **Téléchargement** window and click **Accéder** next to the MNT (1 m spatial resolution) data to download. Repeat for each tile.
+
+```{r image6, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata6.PNG")
+```
+
+This will open a webpage directory displaying a list of spatial data files available for the selected tile. Choose the MNT (.tif) file that includes the tile code in its name. For instance, for the first tile covering northern tip of the national park), select "MNT_31I14NE.tif." Repeat this process for each respective tile.
+
+```{r r image10, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata10.PNG")
+```
+
+Save these files in your R project working directory for easy access during this tutorial.
+
+```{r evel=FALSE}
+getwd()
+```
