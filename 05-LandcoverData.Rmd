@@ -124,7 +124,6 @@ OPTIONAL: To write the masked raster to your disk, you can use the writeRaster()
 To execute this code chunk, remove the \#
 
 ```{r}
-
 # getwd() # to get the path to your working directoy
 
 # output_path <- "path/to/workingdirectory/" 
@@ -272,11 +271,15 @@ landcover_class_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bi
 
 Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
 
-##Error generated here. I have not finished reviewing this Chapters
 ```{r}
-landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>% 
- select(record_id, landcover_class = Class) %>%
- left_join(landcover_rgb[, c("landcover_class", "landcover")], by = "landcover_class")
+landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>%
+  select(record_id, landcover_class = Class) %>%
+  mutate(landcover_class = as.character(landcover_class)) %>%  # Convert to character
+  left_join(
+    landcover_rgb %>% 
+      mutate(landcover_class = as.character(landcover_class)), # Convert to character
+    by = "landcover_class"
+  )
 ```
 
 OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
@@ -291,8 +294,17 @@ Combine the land cover dataframe with the NatureCounts dataframe.
 
 ```{r}
 mauricie_birds_df <- mauricie_birds_df %>%
-  left_join(landcover_class_df, by = "record_id") %>% # Join by record_id
-  left_join(landcover_rgb, by = "landcover_class") # Join by land cover class
+  left_join(
+    landcover_class_df %>%
+      mutate(landcover_class = as.character(landcover_class)), # Convert to character
+    by = "record_id" # join by record_id
+  ) %>%
+  left_join(
+    landcover_rgb %>%
+      mutate(landcover_class = as.character(landcover_class)), # Convert to character
+    by = "landcover_class" # join by land cover class
+  )
+
 ```
 
 **Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In [Chapter 6](06-SatelliteImagery.Rmd), you can explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
