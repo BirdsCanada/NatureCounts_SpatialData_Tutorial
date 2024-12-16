@@ -15,15 +15,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [LiDAR Data Resources](#Lidar4.4) at the end of this Chapter.
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [LiDAR Data Resources](#4.4LiDAR) at the end of this Chapter.
 
-# 4.0 Learning Objectives
+# 4.0 Learning Objectives {#4.0LearningObjectives}
 
 By the end of **Chapter 4 - ElevationData**, users will know how to:
 
--   Process Digital Terrain Model (DTM)
--   Crop and mask raster data
+-   Process Digital Terrain Models (DTMs), including cropping and masking
+-   Extract elevation data (raster values) at observation sites (vector points)
 -   Combine NatureCounts data with elevation data for analysis
+-   Access LiDAR-derived data products
 
 This R tutorial requires the following packages:
 
@@ -46,7 +47,7 @@ For quick-access to the elevation data, download the .tif files from their URL u
 
 **Click the following hyperlinks to download the LiDAR-derived elevation eata for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to a folder in your directory.**
 
-# 4.1 Data Setup {#4.1datasetup}
+# 4.1 Data Setup {#4.1DataSetup}
 
 To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
 
@@ -181,7 +182,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 #write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
-# 4.2 DEM, DSM & DTM
+# 4.2 DEM, DSM & DTM {#4.2DigitalElevationModels}
 
 Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
 
@@ -238,7 +239,7 @@ plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-# 4.3 Cropping and masking
+# 4.3 Crop & Mask Functions {#4.3Crop&Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -352,7 +353,7 @@ mauricie_birds_df <- mauricie_birds_df %>%
 
 Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data. Below are some additional resources you may find useful to further your understanding of LiDAR data.
 
-# 4.4 Data Resources {#Lidar4.4}
+# 4.4 LiDAR Data Resources {#4.4LiDAR}
 
 [LiDAR](https://natural-resources.canada.ca/sites/nrcan/files/mapstoolspublications/lidar-Nov-2023-EN.pdf) systems help produce extremely accurate measurements of surface elevation to digital terrain and elevation models across landscapes. These systems use instruments (sensors) that are commonly flown on aircraft and incorporate laser ranging for distance, GPS for geographic position and height, and aircraft altitude for the orientation of the instrument. The accuracy of LiDAR measurements depends on the strength of point returns, instrument precision & accuracy, and terrain characteristics, among other factors.
 
@@ -366,7 +367,7 @@ As of June 2022, Natural Resources Canada has produced their largest release of 
 
 The USGS provides LiDAR and its derived products through the [LidarExplorer](https://www.usgs.gov/tools/lidarexplorer) online application. [The National Map](https://www.usgs.gov/programs/national-geospatial-program/national-map) also represents the primary repository for geospatial data in the U.S.
 
-# 4.5 Manual Data Download {#Lidar4.5}
+# 4.5 Manual Data Download {#4.5LiDAR}
 
 If you wish to access LiDAR data for La Mauricie National Park yourself to gain experience with the process, follow the steps below. The data are available on the [Forêt ouverte](https://www.donneesquebec.ca/recherche/dataset/produits-derives-de-base-du-lidar) platform.
 
