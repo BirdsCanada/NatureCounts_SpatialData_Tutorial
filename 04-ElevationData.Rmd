@@ -42,40 +42,9 @@ This tutorial uses the following spatial data.
 
 3.  [Forêt ouverte (lidar-derived products)](https://www.donneesquebec.ca/recherche/fr/dataset/produits-derives-de-base-du-lidar) - Digital Terrain Models (DTMs)
 
-For quick-access to the elevation data, specify your output directory and run the code chunk below to download the .tif files from their URL. This could take at 45 min to download, so adjust the timeout limit accordingly. If you wish to get experience access LiDAR data yourself, follow the steps [at the end of this Chapter](#Lidar4.5).
+For quick-access to the elevation data, download the .tif files from their URL using the hyperlinks below. If you wish to gain experience in how-to access LiDAR data yourself, follow the steps [at the end of this Chapter](#Lidar4.5).
 
-```{r}
-# Specify the directory where you want to save your DTM files. This should either be your root working directroy or a subdirectory.
-
-output_dir <- "path/to/your/directory/folder" #to specify your directory manually
-#output_dir <- getwd() # Use this line if you want to save the files in your root working directory
-
-urls <- c(
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif",
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif",
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif",
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif",
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif",
-  "https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif"
-)
-
-output_files <- c("MNT_31I14NE.tif", "MNT_31I15NO.tif", "MNT_31I14SE.tif", "MNT_31I15SO.tif", "MNT_31I11NE.tif", "MNT_31I10NO.tif")
-
-# Increase the timeout limit (seconds)
-options(timeout = 15000) 
-
-# Loop through each URL and download files
-for (i in seq_along(urls)) {
-  # Construct full file path
-  dest_file <- file.path(output_dir, output_files[i])
-  
-  # Download the file
-  download.file(urls[i], destfile = dest_file, mode = "wb")
-  
-  cat("Downloaded:", dest_file, "\n")
-}
-
-```
+**Click the following hyperlinks to download the LiDAR-derived elevation eata for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to a folder in your directory.**
 
 # 4.1 Data Setup {#4.1datasetup}
 
@@ -379,11 +348,9 @@ mauricie_birds_df <- mauricie_birds_df %>%
   left_join(elevation_values_df, by = "record_id") # Join by record_id
 ```
 
-
 ------------------------------------------------------------------------
 
-Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data. Below are some additional resources you may find useful to further your understanding of LiDAR data. 
-
+Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over an area of interest. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data. Below are some additional resources you may find useful to further your understanding of LiDAR data.
 
 # 4.4 Data Resources {#Lidar4.4}
 
