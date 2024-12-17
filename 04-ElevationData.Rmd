@@ -22,8 +22,8 @@ La Mauricie National Park is situated in the Laurentian mountains and covers 536
 By the end of **Chapter 4 - ElevationData**, users will know how to:
 
 -   Distinguish between different types of digital elevation datasets: [4.2 DEM, DSM & DTM](#4.2DigitalElevationModels)
--   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions]
--   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data]
+-   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions](#4.3Crop&Mask)
+-   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data](#4.4Map&Extract)
 -   Access LiDAR-derived data products: [4.5 LiDAR Data Resources](#4.5LiDAR) and [4.6 Manual Data Download](#4.6LiDAR)
 
 This R tutorial requires the following packages:
