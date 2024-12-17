@@ -23,10 +23,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
--   Process land cover data (raster), including cropping and masking
--   Load and interpret raster data color maps
--   Extract unique pixel values from a raster data set
--   Combine NatureCounts data with land cover data for analysis
+-   Process land cover data (raster), including cropping and masking: [5.2 Crop & Mask Functions]
+-   Load and interpret raster data color maps: [5.3 Raster Color Maps]
+-   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data]
 
 This R tutorial requires the following packages:
 
@@ -77,7 +76,7 @@ Transform the CRS of the National Park boundary to match that of the land cover 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
 
-# 5.2 Crop & Mask Functions {#5.2Crop&Mask}
+# 5.2 Crop & Mask Functions  {#5.2Crop&Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -172,7 +171,7 @@ landcover_mask_df <- landcover_mask_df %>%
   left_join(landcover_rgb %>% mutate(landcover_class = as.factor(landcover_class)), by = "landcover_class")
 ```
 
-# 5.4 Map & Extract Land Cover Data
+# 5.4 Map & Extract Land Cover Data {#5.4Map&Extract}
 
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
@@ -261,7 +260,7 @@ ggplot() +
   coord_sf()
 ```
 
-Extract the land cover class ID for each observation site and append it to `mauricie_birds`.
+Extract the land cover class ID for each observation site and append it to `mauricie_birds_df`.
 
 First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
@@ -294,7 +293,7 @@ OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.c
 # write.csv(landcover_class_df, "data/mauricie/landcover_class_df.csv", row.names = FALSE)
 ```
 
-Combine the land cover dataframe with the NatureCounts dataframe.
+Combine the land cover RGB and land cover class dataframes with the NatureCounts dataframe.
 
 ```{r}
 mauricie_birds_df <- mauricie_birds_df %>%
