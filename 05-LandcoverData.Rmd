@@ -23,9 +23,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
--   Process land cover data (raster), including cropping and masking: [5.2 Crop & Mask Functions]
--   Load and interpret raster data color maps: [5.3 Raster Color Maps]
--   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data]
+-   Process land cover data (raster), including cropping and masking: [5.2 Crop & Mask Functions](#5.2Crop-Mask)
+-   Load and interpret raster data color maps: [5.3 Raster Color Maps](#5.3ColorMaps)
+-   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data](#5.4Map-Extract)
 
 This R tutorial requires the following packages:
 
@@ -76,7 +76,7 @@ Transform the CRS of the National Park boundary to match that of the land cover 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
 
-# 5.2 Crop & Mask Functions  {#5.2Crop&Mask}
+# 5.2 Crop & Mask Functions  {#5.2Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -130,7 +130,7 @@ To execute this code chunk, remove the \#
 
 # 5.3 Raster Color Maps {#5.3ColorMaps}
 
-Raster color maps are tables that are used to associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
+Color maps are attribute tables that associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
 
 Examine the contents of the masked land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region.
 
@@ -171,7 +171,7 @@ landcover_mask_df <- landcover_mask_df %>%
   left_join(landcover_rgb %>% mutate(landcover_class = as.factor(landcover_class)), by = "landcover_class")
 ```
 
-# 5.4 Map & Extract Land Cover Data {#5.4Map&Extract}
+# 5.4 Map & Extract Land Cover Data  {#5.4Map-Extract}
 
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
