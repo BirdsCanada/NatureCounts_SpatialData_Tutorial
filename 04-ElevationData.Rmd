@@ -21,7 +21,7 @@ La Mauricie National Park is situated in the Laurentian mountains and covers 536
 
 By the end of **Chapter 4 - ElevationData**, users will know how to:
 
--   Distinguish between different types of digital elevation datasets: [4.2 DEM, DSM & DTM](#4.2DigitalElevationModels)
+-   Distinguish between different types of digital elevation datasets: [4.2 Elevation Models](#4.2ElevationModels)
 -   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions](#4.3Crop-Mask)
 -   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data](#4.4Map-Extract)
 -   Access LiDAR-derived data products: [4.5 LiDAR Data Resources](#4.5LiDAR) and [4.6 Manual Data Download](#4.6LiDAR)
@@ -59,7 +59,7 @@ national_parks <- st_read("vw_Places_Public_lieux_public_APCA.shp")
 national_parks <- st_read("path/to/your/shp")
 ```
 
-Filter the national_parks dataset for La Mauricie National Park.
+Filter the **national_parks** dataset for La Mauricie National Park.
 
 ```{r}
 View(national_parks) # to find the correct object ID
@@ -71,7 +71,7 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files are used again in [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded them to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files are used again in [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded them to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -179,7 +179,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 > To execute this code chunk, remove the \#
 
 ```{r}
-#write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
+# write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
 # 4.2 Elevation Models {#4.2DigitalElevationData}
@@ -196,9 +196,9 @@ Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
 
-output_dir <- "path/to/your/directory/folder" #to specify your directory manually
+output_dir <- "path/to/your/directory/folder" # to specify your directory manually
 
-#output_dir <- getwd() # Use this line if you want to retrieve the files in your root working directory
+# output_dir <- getwd() # Use this line if you want to retrieve the files in your root working directory
 ```
 
 Create a mosaic of the adjacent DTM rasters.
@@ -239,7 +239,7 @@ plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-# 4.3 Crop & Mask Functions  {#4.3Crop-Mask}
+# 4.3 Crop & Mask Functions {#4.3Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -336,7 +336,7 @@ elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
   select(record_id, elevation = Band_1)
 ```
 
-OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
