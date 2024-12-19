@@ -246,7 +246,7 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 To crop a raster we can apply the `crop()` function from the `terra` package which uses the SpatVector format. Here, we crop the extent of the raster while converting the National Park Boundary to a SpatVector using `vect()`.
 
 ```{r}
-mauricie_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
+dtm_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
 ```
 
 **Masking** assigns NA values to cells of a raster not covered by a vector.
@@ -254,7 +254,7 @@ mauricie_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
 To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which also uses the SpatVector format.
 
 ```{r, warning = FALSE}
-mauricie_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
+dtm_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
 OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`.
@@ -262,9 +262,9 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_path <- "path/to/your/folder/mauricie_mask.tif"  
+# output_path <- "path/to/your/folder/dtm_mask.tif"  
 
-# writeRaster(mauricie_mask, output_path, overwrite = TRUE)
+# writeRaster(dtm_mask, output_path, overwrite = TRUE)
 ```
 
 # 4.4 Map & Extract Digital Elevation Data {#4.4Map-Extract}
@@ -281,8 +281,8 @@ plot(dtm_mosaic, main = "regional DTM")
 # Overlay the National Park boundary on the first plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 
-# Plot mauricie_mask
-plot(mauricie_mask, main = "masked DTM")
+# Plot dtm_mask
+plot(dtm_mask, main = "masked DTM")
 
 # Overlay the National Park boundary on the second plot
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
@@ -301,10 +301,10 @@ To map the NatureCounts and DTM data:
 
 ```{r}
 # Match the CRS
-mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_mask))
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_mask))
 
-# Plot the mauricie_mask raster
-plot(mauricie_mask, main = "Mauricie Mask with Site Summary Points")
+# Plot the dtm_mask raster
+plot(dtm_mask, main = "Mauricie Mask with Site Summary Points")
 
 # Overlay the National Park boundary in red
 plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE, lwd = 2)
@@ -323,10 +323,10 @@ First, make sure the CRS of both spatial data match and then use `terra::extract
 
 ```{r}
 # Match the CRS
-mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(mauricie_mask))
+mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(dtm_mask))
 
 # Extract the elevation values for each site
-elevation_values_sf <- terra::extract(mauricie_mask, vect(mauricie_birds_sf), bind = TRUE)
+elevation_values_sf <- terra::extract(dtm_mask, vect(mauricie_birds_sf), bind = TRUE)
 ```
 
 Convert the sf object holding the extracted elevation values to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
