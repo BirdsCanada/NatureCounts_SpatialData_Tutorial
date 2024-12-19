@@ -17,17 +17,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **The National Park boundary and NatureCounts data are available for download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. Quick access to the raster data outputs from [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) which are required for this lesson are also available through the Google Drive folder. Once there, download and extract the** *dtm_mask (.zip)* **and** *landcover_mask* *(.zip)* **files to your directory. If you wish to gain experience in how to download, process, and save either of these environmental layers yourself, return to the earlier chapters of this tutorial series.**
 
-# 7.0 Learning Objectives
+# 7.0 Learning Objectives {#7.0LearningObjectives}
 
 By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
 
--   Transform and combine raster data objects
+-   Transform and combine raster data objects: [7.1 Raster Data Transformations](#7.1RasterDataTransformations)
 
--   Reclassify raster data
+-   Reclassify raster data: [7.2 Raster Reclassification](#7.2RasterReclassification)
 
--   Perform raster algebra using local, global, and zonal functions
+-   Perform raster algebra using local, global, and zonal functions: [7.3 Raster Algebra](#7.3RasterAlgebra)
 
--   Create and visualize NatureCounts data summaries using environmental covariates
+-   Create and visualize NatureCounts data summaries using environmental covariates: [7.4 Summary Tools: Species Abundance](#7.4SummaryTools)
 
 This R tutorial requires the following packages:
 
@@ -44,7 +44,7 @@ Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** fou
 mauricie_boundary <- sf::st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
 
-# 7.1 Raster Data Transformations
+# 7.1 Raster Data Transformations {#7.1RasterDataTransformations}
 
 Raster data is stored as a SpatRaster object and can have one or multiple layers. To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`:
 
@@ -139,7 +139,7 @@ mauricie_rast$elevation
 mauricie_rast[["landcover_class"]]
 ```
 
-# 7.2 Raster Reclassification
+# 7.2 Raster Reclassification {# 7.2RasterReclassification}
 
 When communicating our data, it might be useful to apply **local** operations such as the reclassification of a range of raster values into a smaller set of classes. In this process, a range of values are binned to a new (categorical) value. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
 
@@ -189,7 +189,7 @@ plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 par(mfrow = c(1, 1))
 ```
 
-# 7.3 Raster Algebra (Local, Global, and Zonal Operations)
+# 7.3 Raster Algebra (Local, Global, and Zonal Operations) {#7.3RasterAlgebra}
 
 Map algebra comprises a slew of useful operations that can be used to modify or summarize raster cell values with reference to nearby cells, zones, or statistical functions.
 
@@ -231,7 +231,7 @@ zonal_elevation_stats <- zonal(elevation_rast_proj, landcover_rast_resample, fun
 zonal_elevation_stats
 ```
 
-# 7.4 Summary Tools: Species Abundance
+# 7.4 Summary Tools: Species Abundance {#7.4SummaryTools}
 
 In Chapter 4, Chapter 5, and Chapter 6 you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
