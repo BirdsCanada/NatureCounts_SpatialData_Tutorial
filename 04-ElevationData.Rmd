@@ -15,15 +15,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
-La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [LiDAR Data Resources](#4.4LiDAR) at the end of this Chapter.
+La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species. Light Detection and Ranging (**LiDAR**) is an active remote sensing technology. It is performed using laser scanners that emit pulses of light and determine the position of target 3D objects by measuring the amount of time between pulses being emitted and received. It is a revolutionary technology that helps in the acquisition of extremely accurate digital elevation data over wide spatial and temporal scales. For more info and examples of LiDAR data resources specific to your province, see section [LiDAR Data Resources](#4.5LiDAR) at the end of this Chapter.
 
 # 4.0 Learning Objectives {#4.0LearningObjectives}
 
 By the end of **Chapter 4 - ElevationData**, users will know how to:
 
 -   Distinguish between different types of digital elevation datasets: [4.2 DEM, DSM & DTM](#4.2DigitalElevationModels)
--   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions](#4.3Crop&Mask)
--   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data](#4.4Map&Extract)
+-   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions](#4.3Crop-Mask)
+-   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data](#4.4Map-Extract)
 -   Access LiDAR-derived data products: [4.5 LiDAR Data Resources](#4.5LiDAR) and [4.6 Manual Data Download](#4.6LiDAR)
 
 This R tutorial requires the following packages:
@@ -45,7 +45,7 @@ This tutorial uses the following spatial data.
 
 For quick-access to the elevation data, download the .tif files from their URL using the hyperlinks below. If you wish to gain experience in how-to access LiDAR data yourself, follow the steps [at the end of this Chapter](#4.6LiDAR).
 
-**Click the following hyperlinks to download the LiDAR-derived elevation eata for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to a folder in your directory.**
+**Click the following hyperlinks to download the LiDAR-derived elevation data for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to a folder in your directory.**
 
 # 4.1 Data Setup {#4.1DataSetup}
 
@@ -71,7 +71,7 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files is used again in [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the boundary as a shapefile to your disk, use the `st_write()` function. **The boundary files are used again in [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded them to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -182,7 +182,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 #write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
-# 4.2 DEM, DSM & DTM {#4.2DigitalElevationData}
+# 4.2 Elevation Models {#4.2DigitalElevationData}
 
 Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
 
@@ -239,7 +239,7 @@ plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-# 4.3 Crop & Mask Functions {#4.3Crop&Mask}
+# 4.3 Crop & Mask Functions  {#4.3Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -267,7 +267,7 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 # writeRaster(mauricie_mask, output_path, overwrite = TRUE)
 ```
 
-# 4.4 Map & Extract Digital Elevation Data {#4.4Map&Extract}
+# 4.4 Map & Extract Digital Elevation Data {#4.4Map-Extract}
 
 Visualize the regional and masked DTM's with a two-panel plot.
 
