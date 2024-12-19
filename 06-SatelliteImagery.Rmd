@@ -374,27 +374,4 @@ Note: The **Visualize** tab will help you visualize your satellite image using t
 knitr::include_graphics("images/spatdata9.PNG")
 ```
 
-# 6.5 MODISTools
 
-```{r}
-# For interaction with the web service
-library(httr)
-library(readr)
-library(jsonlite)
-
-# For plotting
-library(ggplot2)
-library(scales)
-```
-
-```{r}
-request_url <- GET("https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?latitude=46.787474&longitude=-72.980392&band=250m_16_days_NDVI&startDate=A2011129&endDate=A2011209&kmAboveBelow=15&kmLeftRight=17")
-
-dates <- content(request_url)$dates
-
-modis_dates <- lapply(dates, function(dt) dt$modis_date)
-calendar_dates <- lapply(dates, function(dt) dt$calendar_date)
-
-# Print the first ten MODIS dates
-dates[1:10]
-```
