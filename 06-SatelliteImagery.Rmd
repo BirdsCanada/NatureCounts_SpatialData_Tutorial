@@ -17,16 +17,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-synchronous orbit phased at 180° to each other. The satellites carry multispectral sensors with 13 spectral bands and have a revisit frequency of 5 days and orbital swath width of 290 km. Their high resolution products support a variety of services and applications including land management, agriculture, forestry, disaster control, humanitarian relief operations, risk mapping, and security concerns.
 
-**To proceed with this tutorial, download the necessary packages in [6.0 Learning Objectives](#6.0LearningObjectives) and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing). Make sure to grab the *.shp* file as well as ALL accompanying files.**
+**To proceed with this tutorial, download the necessary packages in [6.0 Learning Objectives](#6.0LearningObjectives) and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
 
 # 6.0 Learning Objectives {#6.0LearningObjectives}
 
 By the end of **Chapter 6 - SatelliteImagery**, users will know how to:
 
--   Plot true color composites of satellite imagery: [6.1 Color Composite Images]
+-   Plot true and false color composites of satellite imagery: [6.1 Color Composite Images](#6.1ColorComposites)
 -   Create digital water masks and calculate NDWI and NDVI indices: [6.2 Calculate Spectral Indices](#6.2SpectralIndices)
--   Combine NatureCounts data with spectral index values for analysis: [6.3 Map & Extract Spectral Indices]
--   Explore and download satellite imagery data: [6.4 Copernicus Data Download]
+-   Combine NatureCounts data with spectral index values for analysis: [6.3 Map & Extract Spectral Indices](#6.3Map-Extract)
+-   Explore and download satellite imagery data: [6.4 Copernicus Data Download](#6.4CopernicusDataDownload)
 
 This R tutorial requires the following packages:
 
@@ -241,7 +241,7 @@ calc_ndvi <- function(nir, red) {
 mauricie_sl_ndvi <- calc_ndvi(mauricie_sl_mask$nir, mauricie_sl_mask$red)
 ```
 
-# 6.3 Map & Extract Spectral Indices {#6.3Map&Extract}
+# 6.3 Map & Extract Spectral Indices {#6.3Map-Extract}
 
 Plot `mauricie_sl_ndvi` and the National Park boundary.
 
@@ -321,7 +321,7 @@ ndvi_values_df <- terra::as.data.frame(ndvi_values_sf) %>%
  select(record_id, ndvi) 
 ```
 
-OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -372,4 +372,29 @@ Note: The **Visualize** tab will help you visualize your satellite image using t
 
 ```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata9.PNG")
+```
+
+# 6.5 MODISTools
+
+```{r}
+# For interaction with the web service
+library(httr)
+library(readr)
+library(jsonlite)
+
+# For plotting
+library(ggplot2)
+library(scales)
+```
+
+```{r}
+request_url <- GET("https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?latitude=46.787474&longitude=-72.980392&band=250m_16_days_NDVI&startDate=A2011129&endDate=A2011209&kmAboveBelow=15&kmLeftRight=17")
+
+dates <- content(request_url)$dates
+
+modis_dates <- lapply(dates, function(dt) dt$modis_date)
+calendar_dates <- lapply(dates, function(dt) dt$calendar_date)
+
+# Print the first ten MODIS dates
+dates[1:10]
 ```
