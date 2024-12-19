@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will combine and reclassify raster data, calculate summary statistics, and create data summaries and visualizations.
 
-**To proceed with this tutorial, you must complete sections 4.0 - 4.3 of [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd)*unless you're using your own data*. They help you create and save raster files which are required for this lesson. To make this faster, we have provided the outputs from section 4.1 in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
+**The National Park boundary and NatureCounts data are available for download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. Quick access to the raster data outputs from [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) which are required for this lesson are also available through the Google Drive folder. Once there, download and extract the** *dtm_mask (.zip)* **and** *landcover_mask* *(.zip)* **files to your directory. If you wish to gain experience in how to download, process, and save either of these environmental layers yourself, return to the earlier chapters of this tutorial series.**
 
 # 7.0 Learning Objectives
 
@@ -49,7 +49,7 @@ mauricie_boundary <- sf::st_read("data/mauricie/boundary/mauricie_boundary.shp")
 Raster data is stored as a SpatRaster object and can have one or multiple layers. To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`:
 
 ```{r}
-elevation_rast <- rast("path/to/your/mauricie_mask.tif")
+elevation_rast <- rast("path/to/your/dtm_mask.tif")
 elevation_rast
 ```
 
