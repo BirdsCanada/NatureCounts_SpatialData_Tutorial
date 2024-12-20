@@ -374,4 +374,3 @@ Note: The **Visualize** tab will help you visualize your satellite image using t
 knitr::include_graphics("images/spatdata9.PNG")
 ```
 
-
