@@ -24,7 +24,29 @@ nc_query_tables
 Brief instructions on how to list available datasets
 
 ```{r}
+library(naturecounts)
+nc_query_table() #to see what is openly accessible. 
+nc_query_table(username = "YOURUSERNAME") #to see what your personal account can access. For permission to sepcific datatable, contact naturecounts@birdscanada.org
+
 rnest <- nc_query_table("Rnest")
+
+
+life<-nc_query_table("SpeciesLifeHistory") #contains information on species life history traits
+
+#Sample code how to access a species 3 generation length
+
+species <- "Canada Jay"
+
+sp_id <- meta_species_taxonomy() %>% 
+  filter(english_name %in% species) %>% pull(species_id)
+
+gen_years <- nc_query_table(table = "SpeciesLifeHistory") %>%
+  filter(subcategDescr == "Average generation length (years)") %>% 
+  filter(speciesID %in% sp_id) %>% pull(value) %>% as.numeric()
+
+gen_3_years <- round(gen_years  *  3)
+
+
 ```
 
 
@@ -49,6 +71,8 @@ Statistical models like the **Occupancy Model** and **Generalized Linear Model**
 Read in the NatureCounts data covering the National Park. 
 
 ```{r, warning = FALSE, message = FALSE}
+
+##Start from the top and show the user how to download the data. Suggest selecting another dataset, as discussed. 
 mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
 ```
 
