@@ -17,17 +17,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-synchronous orbit phased at 180° to each other. The satellites carry multispectral sensors with 13 spectral bands and have a revisit frequency of 5 days and orbital swath width of 290 km. Their high resolution products support a variety of services and applications including land management, agriculture, forestry, disaster control, humanitarian relief operations, risk mapping, and security concerns.
 
-**To proceed with this tutorial, download the necessary packages in [6.0 Learning Objectives] and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing). Make sure to grab the *.shp* file as well as ALL accompanying files.**
+**To proceed with this tutorial, download the necessary packages in [6.0 Learning Objectives](#6.0LearningObjectives) and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
 
-# 6.0 Learning Objectives
+# 6.0 Learning Objectives {#6.0LearningObjectives}
 
 By the end of **Chapter 6 - SatelliteImagery**, users will know how to:
 
--   Download satellite imagery data
--   Plot true color composites of satellite imagery
--   Create digital water masks
--   Calculate NDWI and NDVI indices
--   Link NatureCounts data to spectral index values for analysis
+-   Plot true and false color composites of satellite imagery: [6.1 Color Composite Images](#6.1ColorComposites)
+-   Create digital water masks and calculate NDWI and NDVI indices: [6.2 Calculate Spectral Indices](#6.2SpectralIndices)
+-   Combine NatureCounts data with spectral index values for analysis: [6.3 Map & Extract Spectral Indices](#6.3Map-Extract)
+-   Explore and download satellite imagery data: [6.4 Copernicus Data Download](#6.4CopernicusDataDownload)
 
 This R tutorial requires the following packages:
 
@@ -40,57 +39,27 @@ library(tidyverse)
 
 This tutorial uses the following spatial data.
 
-1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles\*
+1.  [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca) - Boundary shapefiles
 
-2.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations\*
-
-    \*These data are available for download via Section 4.1: Data Setup in [Chapter 4](04-ElevationData.Rmd), the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)
+2.  [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) - NatureCounts bird observations
 
 3.  [Copernicus](https://www.copernicus.eu/en) Satellite Data - SENTINEL2 imagery
 
-# 6.1 Copernicus Data Download
+The National Park boundary and NatureCounts data are available for download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial.git) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. Quick access to the Copernicus satellite data is also available but only through [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) due to file size limitations. Once there, download and extract the **copernicus_R10m** (.*zip)* file to your directory. If you wish to gain experience in how-to access Copernicus satellite imagery yourself, follow the steps [at the end of this Chapter](#6.1CopernicusDataDownload).
 
-The Copernicus Data Space Ecosystem Browser is the central hub for accessing and exploring Earth observation and environmental data from Copernicus satellites. You can [register](https://documentation.dataspace.copernicus.eu/Registration.html) for an account, read more [About the Browser](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search) (including [Product Search](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search)), and navigate to the [Browser](https://browser.dataspace.copernicus.eu/?zoom=5&lat=50.16282&lng=20.78613&visualizationUrl=U2FsdGVkX18pLKFF9fc91CA1u22Ai6SDDnfmD7NKnUTo9VEy0zAaaijJiGeg0RjaXy7sLHZpigJffz1REZVnF3BP1%2BaRJ8UQRjPdH4g5mSZmR4tNPleYMpU5qikJ2VAP&datasetId=S2_L2A_CDAS&demSource3D=%22MAPZEN%22&cloudCoverage=30&dateMode=SINGLE) to continue with this tutorial.
+# 6.1 Color Composite Images {#6.1ColorComposites}
 
-1)  Hover over the **Create an area of interest** tab, symbolized by the pentagon shape in the upper righthand corner. Then, select the **Upload a file to create an area of interest** option, represented by the upward arrow on the pop out submenu. Upload the KML National Park boundary file we created in Chapter 4, section 4.1 or grab it from the repository (data/mauricie).
+Multispectral sensors measure the amount of light energy reflected off surface features. How this reflection occurs depends on factors like the surface roughness of the object (relative to the wavelength of energy) or the incidence angle at which the energy strikes. Every surface material will have a distinct spectral signature which describes the percentage of radiation reflected from an object at different wavelengths.
 
-2)  In the **Search** tab (top, left side of window), under **Search Criteria**, copy and paste the name of the SENTINEL-2 image described below. Alternatively, you can select any other image relevant to your research. Note that cloud cover will affect our ability to calculate spectral indices so be mindful of this when selecting your image and adjust your study area or time range accordingly.
+For vegetation, spectral reflectance also depends on the structural components of leaves: pigments like chrolophyll *a* & *b*, and beta-carotene in the palisade mesophyll (outer leaf), near-infrared (NIR) scattering in the spongy mesophyll (inner leaf), and water content. Healthy vegetation (*more chlorophyll, high water content*) absorbs more visible light, **reflects more NIR**, and absorbs more middle-infrared (MIR). These type of interactions are the basis for calculating spectral indices, as explored in the [next section](#6.2SpectralIndices).
 
-    **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
+These interactions also mean that we can represent multispectral imagery through color composites to strategically emphasize surface properties using combinations of different bands (range of wavelengths):
 
-    **Size**: 1090MB
+> **Natural (True) Color Composites** - use visible red, green, and blue (RGB) bands in their respective color channels to depict what the human eye would naturally see.
+>
+> **False Color Composites** - use non-visible band like NIR, MIR, or SWIR for RGB color channels to depict wavelengths invisible to the naked eye. Different band combinations help highlight surface features.
 
-    **Sensing time**: 2020-06-19T15:49:11.024000Z
-
-    **Platform short name**: SENTINEL-2
-
-    **Instrument short name**: MSI
-
-3)  Click the info icon in the bottom right corner of your search result and the **Product info** window will pop up. Once here, verify that you have selected the satellite image you want and then download it by clicking the **Download** option in the lower righthand corner.
-
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata7.PNG")
-```
-
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata8.PNG")
-```
-
-Note: The **Visualize** tab will help you visualize your satellite image using true color and false color composites and NDVI, among other layers. These are based on a combination of bands stored in our image download. This tutorial will guide you through custom satellite image visualizations and spectral index calculation with corrections.
-
-```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
-knitr::include_graphics("images/spatdata9.PNG")
-```
-
-The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://link.springer.com/article/10.1007/s11676-020-01155-1)) is a common proxy for primary productivity collected using remote sensing. It is a measure of vegetation health that describes the greenness and the density of vegetation captured in a satellite image. Healthy vegetation will absorb most visible light and reflect most near-infrared light, depending on the amount of chlorophyll found in its biomass.
-
-The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
-
-Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
-
-# 6.2 Spectral Indices
-
-Read each band stored in the downloaded satellite imagery folder labeled S2A_MSIL2A. Copy the file path to S2A_MSIL2A... \> GRANULE \> L2A... \> IMG_DATA \> R10m which contains the images representing each band.
+Specify the path to your folder containing the satellite images in the code chunk below. Each image represents a distinct band. If you downloaded the data by following [Section 6.3](#6.3CopernicusDataDownload), look for the folder labeled S2A_MSIL2A. Copy the file path to S2A_MSIL2A... \> GRANULE \> L2A... \> IMG_DATA \> R10m which contains the satellite images we will use here.
 
 ```{r}
 bands <- list.files(path = "path/to/your/folder/R10m", 
@@ -111,11 +80,12 @@ nlyr(sentinel_imagery)
 ext(sentinel_imagery)
 ```
 
-Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd), the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial.git) or, the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder.
 
 ```{r}
 mauricie_boundary <- st_read("data/mauricie/boundary/mauricie_boundary.shp")
 ```
+
 Plot a true color composite of `sentinel_imagery` with a linear stretch.
 
 ```{r, eval = TRUE, warning = FALSE}
@@ -140,6 +110,24 @@ terra::plotRGB(mauricie_sl, r = 4, g = 3, b = 2, stretch = "lin", lwd = 2, axes 
 # Add the boundary shapefile to the plot
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
+
+Now plot the cropped image in false color. Here, we'll use the standard false color composite where red, green, and blue channels are used to visualize NIR, red, and green respectively.
+
+```{r}
+# Plot the false color composite
+terra::plotRGB(mauricie_sl, r = 5, g = 4, b = 3, stretch = "lin", lwd = 2, axes = FALSE)
+
+# Add the boundary shapefile to the plot
+plot(st_geometry(mauricie_boundary), col = NA, border ="green", add = TRUE)
+```
+
+# 6.2 Calculate Spectral Indices {#6.2SpectralIndices}
+
+The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://link.springer.com/article/10.1007/s11676-020-01155-1)) is a common proxy for primary productivity collected using remote sensing. It is a measure of vegetation health that describes the greenness and the density of vegetation captured in a satellite image. Healthy vegetation will absorb most visible light and reflect most near-infrared light, depending on its structural integrity and the amount of chlorophyll found in its biomass.
+
+The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
+
+Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will read in Sentinel-2 satellite imagery over the region spanning La Mauricie National Park and calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
 
 To avoid the effect of water when analyzing spectral indices we can apply a water mask by creating and applying the following function to calculate NDWI:
 
@@ -253,6 +241,8 @@ calc_ndvi <- function(nir, red) {
 mauricie_sl_ndvi <- calc_ndvi(mauricie_sl_mask$nir, mauricie_sl_mask$red)
 ```
 
+# 6.3 Map & Extract Spectral Indices {#6.3Map-Extract}
+
 Plot `mauricie_sl_ndvi` and the National Park boundary.
 
 ```{r}
@@ -263,13 +253,14 @@ plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
 plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 ```
 
-Rename the NDVi raster layer. 
+Rename the NDVI raster layer.
 
 ```{r}
 names(mauricie_sl_ndvi) <- "ndvi"
 mauricie_sl_ndvi
 ```
-Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd), the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial.git) or, the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder.
 
 ```{r, warning = FALSE, message = FALSE}
 mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
@@ -330,7 +321,7 @@ ndvi_values_df <- terra::as.data.frame(ndvi_values_sf) %>%
  select(record_id, ndvi) 
 ```
 
-OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -345,4 +336,42 @@ mauricie_birds_df <- mauricie_birds_df %>%
   left_join(ndvi_values_df, by = "record_id") # Join by observation record ID
 ```
 
-**Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over an area of interest. In [Chapter 7](07-RasterSummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
+------------------------------------------------------------------------
+
+**Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over vector data points. In [Chapter 7](07-RasterSummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
+
+# 6.4 Copernicus Data Download {#6.4CopernicusDataDownload}
+
+The Copernicus Data Space Ecosystem Browser is the central hub for accessing and exploring Earth observation and environmental data from Copernicus satellites. You can [register](https://documentation.dataspace.copernicus.eu/Registration.html) for an account, read more [About the Browser](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search) (including [Product Search](https://documentation.dataspace.copernicus.eu/Applications/Browser.html#product-search)), and navigate to the [Browser](https://browser.dataspace.copernicus.eu/?zoom=5&lat=50.16282&lng=20.78613&visualizationUrl=U2FsdGVkX18pLKFF9fc91CA1u22Ai6SDDnfmD7NKnUTo9VEy0zAaaijJiGeg0RjaXy7sLHZpigJffz1REZVnF3BP1%2BaRJ8UQRjPdH4g5mSZmR4tNPleYMpU5qikJ2VAP&datasetId=S2_L2A_CDAS&demSource3D=%22MAPZEN%22&cloudCoverage=30&dateMode=SINGLE) to continue with this tutorial.
+
+1)  Hover over the **Create an area of interest** tab, symbolized by the pentagon shape in the upper righthand corner. Then, select the **Upload a file to create an area of interest** option, represented by the upward arrow on the pop out submenu. Upload the KML National Park boundary file we created in Chapter 4, section 4.1 or grab it from the repository (data/mauricie).
+
+2)  In the **Search** tab (top, left side of window), under **Search Criteria**, copy and paste the name of the SENTINEL-2 image described below. Alternatively, you can select any other image relevant to your research. Note that cloud cover will affect our ability to calculate spectral indices so be mindful of this when selecting your image and adjust your study area or time range accordingly.
+
+    **Name**: S2A_MSIL2A_20200619T154911_N0500_R054_T18TXS_20230428T011527.SAFE
+
+    **Size**: 1090MB
+
+    **Sensing time**: 2020-06-19T15:49:11.024000Z
+
+    **Platform short name**: SENTINEL-2
+
+    **Instrument short name**: MSI
+
+3)  Click the info icon in the bottom right corner of your search result and the **Product info** window will pop up. Once here, verify that you have selected the satellite image you want and then download it by clicking the **Download** option in the lower righthand corner.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata7.PNG")
+```
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata8.PNG")
+```
+
+Note: The **Visualize** tab will help you visualize your satellite image using true color and false color composites and NDVI, among other layers. These are based on a combination of bands stored in our image download. This tutorial will guide you through custom satellite image visualizations and spectral index calculation with corrections.
+
+```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
+knitr::include_graphics("images/spatdata9.PNG")
+```
+
+

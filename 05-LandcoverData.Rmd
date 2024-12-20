@@ -17,16 +17,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **Land cover** describes the surface cover on the ground like vegetation, urban, water, and bare soil while **land use** describes the purpose that the land serves like recreation, wildlife habitat, and agriculture. See [Land Cover & Land Use](https://natural-resources.canada.ca/maps-tools-and-publications/satellite-imagery-elevation-data-and-air-photos/tutorial-fundamentals-remote-sensing/educational-resources-applications/land-cover-land-use/land-cover-land-use/9373) from Natural Resources Canada for more information.
 
-**To proceed with this tutorial, download the necessary packages in [5.0 Learning Objectives](#5.0LearningObjectives) and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing). Make sure to grab the *.shp* file as well as ALL accompanying files.**
+**To proceed with this tutorial, download the necessary packages in [5.0 Learning Objectives](#5.0LearningObjectives) and complete section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **It helps you download the National Park boundary and NatureCounts data which are required for this lesson. Alternatively, you can access these files in the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).**
 
 # 5.0 Learning Objectives {#5.0LearningObjectives}
 
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
--   Process land cover data (raster), including cropping and masking
--   Load and interpret raster data color maps
--   Extract unique pixel values from a raster data set
--   Combine NatureCounts data with land cover data for analysis
+-   Process land cover rasters, including cropping and masking: [5.2 Crop & Mask Functions](#5.2Crop-Mask)
+-   Load and interpret raster data color maps: [5.3 Raster Color Maps](#5.3ColorMaps)
+-   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data](#5.4Map-Extract)
 
 This R tutorial requires the following packages:
 
@@ -77,7 +76,7 @@ Transform the CRS of the National Park boundary to match that of the land cover 
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
 
-# 5.2 Crop & Mask Functions {#5.2Crop&Mask}
+# 5.2 Crop & Mask Functions {#5.2Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -96,6 +95,8 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 landcover_mask <- mask(landcover_crop, vect(mauricie_boundary))
 print(landcover_mask)
 ```
+
+Visualize the cropped and masked land cover rasters with a two-panel plot.
 
 ```{r}
 # Set up the plot area for 1 row and 2 columns
@@ -117,7 +118,7 @@ plot(st_geometry(mauricie_boundary), col = NA, border ="purple", lwd = 2, add = 
 par(mfrow = c(1, 1))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. **This raster will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. You must complete the above sections and save this raster to proceed with Chapter 7 unless you're using your own data.
+OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. **This raster will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
 
 To execute this code chunk, remove the \#
 
@@ -131,7 +132,7 @@ To execute this code chunk, remove the \#
 
 # 5.3 Raster Color Maps {#5.3ColorMaps}
 
-Raster color maps are tables that are used to associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
+Color maps are attribute tables that associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
 
 Examine the contents of the masked land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region.
 
@@ -156,7 +157,7 @@ landcover_rgb <- landcover_rgb %>%
   mutate(landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")) # assign land cover class labels
 ```
 
-Let's combine the RGB values with the raster data.
+Let's combine the color table with the raster data.
 
 First, convert the cropped landcover raster to a dataframe.
 
@@ -172,7 +173,7 @@ landcover_mask_df <- landcover_mask_df %>%
   left_join(landcover_rgb %>% mutate(landcover_class = as.factor(landcover_class)), by = "landcover_class")
 ```
 
-# 5.4 Map & Extract Land Cover Data
+# 5.4 Map & Extract Land Cover Data {#5.4Map-Extract}
 
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
@@ -261,7 +262,7 @@ ggplot() +
   coord_sf()
 ```
 
-Extract the land cover class ID for each observation site and append it to `mauricie_birds`.
+Extract the land cover class ID for each observation site and append it to `mauricie_birds_df`.
 
 First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
@@ -286,7 +287,7 @@ landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>%
   )
 ```
 
-OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -294,7 +295,7 @@ OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.c
 # write.csv(landcover_class_df, "data/mauricie/landcover_class_df.csv", row.names = FALSE)
 ```
 
-Combine the land cover dataframe with the NatureCounts dataframe.
+Combine the color table and land cover class dataframes with the NatureCounts dataframe.
 
 ```{r}
 mauricie_birds_df <- mauricie_birds_df %>%
@@ -311,4 +312,6 @@ mauricie_birds_df <- mauricie_birds_df %>%
 
 ```
 
-**Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In [Chapter 6](06-SatelliteImagery.Rmd), you can explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
+------------------------------------------------------------------------
+
+**Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data, interpreted a raster color table, and combined NatureCounts data with land cover class values. In [Chapter 6](06-SatelliteImagery.Rmd), you can explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
