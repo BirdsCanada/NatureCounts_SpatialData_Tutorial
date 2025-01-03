@@ -373,5 +373,3 @@ Note: The **Visualize** tab will help you visualize your satellite image using t
 ```{r image1, echo=FALSE, out.width="700px", fig.align='center'}
 knitr::include_graphics("images/spatdata9.PNG")
 ```
-
-
