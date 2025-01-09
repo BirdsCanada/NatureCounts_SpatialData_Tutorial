@@ -23,9 +23,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
--   Process land cover rasters, including cropping and masking: [5.2 Crop & Mask Functions](#5.2Crop-Mask)
--   Load and interpret raster data color maps: [5.3 Raster Color Maps](#5.3ColorMaps)
--   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data](#5.4Map-Extract)
+-   Load and interpret raster data color maps: [5.2 Raster Color Maps](#5.2ColorMaps)
+-   Create buffers around observation sites (points): [5.3 Point Buffers](#5.3PointBuffers)
+-   Calculate landscape metrics, including PLAND, NP, and ED: [5.4 Landscape Metrics](#5.4LandscapeMetrics)
+-   Combine NatureCounts data with land cover data for analysis: [5.4 Map & Extract Land Cover Data](#5.5Map-Extract)
 
 This R tutorial requires the following packages:
 
@@ -38,6 +39,8 @@ library(lubridate)
 library(readr)
 library(leaflet)
 library(leaflet.extras)
+library(landscapemetrics)
+library(units)
 ```
 
 This tutorial uses the following spatial data.
@@ -75,8 +78,6 @@ Transform the CRS of the National Park boundary to match that of the land cover 
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover))
 ```
-
-# 5.2 Crop & Mask Functions {#5.2Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
@@ -130,7 +131,7 @@ To execute this code chunk, remove the \#
 # writeRaster(landcover_mask, output_path, overwrite = TRUE)
 ```
 
-# 5.3 Raster Color Maps {#5.3ColorMaps}
+# 5.2 Raster Color Maps {#5.2ColorMaps}
 
 Color maps are attribute tables that associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
 
@@ -173,7 +174,176 @@ landcover_mask_df <- landcover_mask_df %>%
   left_join(landcover_rgb %>% mutate(landcover_class = as.factor(landcover_class)), by = "landcover_class")
 ```
 
-# 5.4 Map & Extract Land Cover Data {#5.4Map-Extract}
+# 5.3 Point Buffers {#5.3PointBuffers}
+
+Buffers allow us to generate polygons at a specified distance around points, lines or other polygons. Because birds use their habitat at the landscape-level and not at a single observation point, buffers allow us to summarize land cover data within neighborhoods and include habitat information around an observation location. 
+
+Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+
+```{r}
+mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+```
+
+Create an `sf` object from the NatureCounts data, summarized by locality and survey year.
+
+```{r}
+mauricie_birds_local <- mauricie_birds_df %>%
+  distinct(Locality, survey_year, longitude, latitude) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Use the `st_buffer` function to generate 3 km diameter circular neighborhoods centered at each observation location. Reminder that our land cover data is from 2015, so we'll filter the NatureCounts data for the most recent survey year (2014). 
+
+```{r}
+mauricie_birds_buffer <- mauricie_birds_local %>%
+  st_buffer(dist = set_units(1.5, "km")) %>%
+  filter(survey_year == 2014)
+```
+
+# 5.4 Landscape Metrics {#5.4LandscapeMetrics}
+
+In landscape ecology, the composition and configuration of land types tells us what habitat is available and how its distributed spatially. **Landscape metrics** help us characterize these spatial patterns across landscapes.
+
+The `landscapemetrics` package can be used to calculate some common metrics that quantify habitat composition and configuration:
+
+-   Percent landcover (PLAND) - percent of landscape of a given class
+
+-   Edge density (ED) - total boundary length of all patches of a given class per unit area
+
+-   Number of patches (NP) - Description 
+
+-   Largest patch index (LPI) - percent of the landscape comprised of the single largest patch 
+-   Mean core area index (CAI_MN) - percent of the patch that is comprised of core area which is a compound measure of shape, area, and edge depth. 
+
+-   Patch Cohesion Index (COHESION) - area-weighted mean perimeter-area ratio that helps assess connectivity
+
+> A "patch" is an intuitive concept that describes a contiguous group of cells of the same landcover category. Patches can be defined using the 4-neighbour or 8-neighbour rules. 
+
+For each point buffer and each locality (Atlas Square), crop & mask the land cover data, calculate PLAND and ED, and create a dataframe containing the class-level landscape metrics.
+
+```{r}
+lsm <- list()
+
+for (i in seq_len(nrow(mauricie_birds_buffer))) {
+  buffer_i <- st_transform(mauricie_birds_buffer[i, ], crs = crs(landcover))  # Match the CRS between the buffer zones and land cover
+  
+  # Crop and mask the landcover data
+  lsm[[i]] <- crop(landcover, buffer_i) |> 
+    mask(buffer_i) |> 
+    # Calculate landscape metrics
+    calculate_lsm(level = "class", metric = c("pland", "ed")) |> 
+    # Add identifying variables
+    mutate(Locality= buffer_i$Locality, 
+           survey_year = buffer_i$survey_year) |> 
+    select(Locality, survey_year, class, metric, value)
+}
+
+# Combine results into a single dataframe
+lsm <- bind_rows(lsm)
+```
+
+Add land cover class labels to the dataframe containing the calculated landscape metrics.
+
+```{r}
+# Define the land cover class labels 
+lc_classes <- tibble(
+  class = c(1, 5, 6, 8, 10, 14, 16, 17, 18),
+  landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")
+)
+
+lsm <- inner_join(lsm, lc_classes, by = "class")
+```
+
+Calculate the mean class-level PLAND and ED per Locality and convert to wide format. 
+
+```{r}
+# Calculate mean class-level metrics per Locality and convert to wide format
+lsm_wide <- lsm %>%
+  group_by(Locality, landcover, metric) %>% 
+  summarise(mean_value = mean(value, na.rm = TRUE), .groups = "drop") %>% 
+  pivot_wider(
+    names_from = c(landcover, metric),    # Pull new column names from the landcover and metric rows
+    values_from = mean_value,             # Populate the new columns with the mean landscape metric values
+    names_glue = "{metric}_{landcover}"   # Create custom names for the new columns 
+  )
+
+# View the resulting dataframe
+print(lsm_wide)
+```
+
+Compare the PLAND and ED values across each Atlas Square.
+
+```{r}
+# Filter for pland metric and calculate mean values
+pland_means <- lsm %>%
+  filter(metric == "pland") %>%           # Filter only pland values
+  group_by(Locality, landcover) %>%       # Group by Locality and landcover
+  summarise(mean_pland = mean(value, na.rm = TRUE), .groups = "drop") # Calculate mean pland values
+
+# Create the barplot with facets
+ggplot(pland_means, aes(x = landcover, y = mean_pland, fill = landcover)) +
+  geom_col() +                            # Bar plot for mean pland values
+  facet_wrap(~ Locality, scales = "free_y") + # One panel per Atlas Square
+  labs(
+    title = "Mean class-level PLAND values per locality",
+    x = "Landcover",
+    y = "Mean PLAND",
+    fill = "Landcover"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # Rotate x-axis labels for clarity
+  )
+```
+
+If you wanted to calculate more landscape metrics within each point buffer without grouping by Locality, you can apply the `calculate_lsm()` function a little differently. 
+
+Match the CRS of the buffer layer to the land cover data.
+
+```{r}
+mauricie_birds_buffer <- st_transform(mauricie_birds_buffer, crs = st_crs(landcover_mask))
+```
+
+Crop and mask the landcover data to each buffer zone created in Section [5.3 Point Buffers](#5.3PointBuffers).
+
+```{r}
+mauricie_birds_buffer_mask <- mask(landcover_mask, mauricie_birds_buffer)
+```
+
+Use the `calculate_lsm()` function to calculate several metrics within each neighborhood and for each represented class.
+
+```{r}
+more_lsm <- calculate_lsm(mauricie_birds_buffer_mask,
+                               what = c("lsm_c_pland", "lsm_c_np",
+                                        "lsm_c_cai_mn",
+                                        "lsm_c_lpi", "lsm_c_cohesion", "lsm_c_ed"))
+```
+
+As an example, lets compare the calculated landscape metrics across the **forest** landcover classes (classes 1, 5, and 6). 
+
+Join the landcover labels to the **more_lsm** dataframe and filter by label.
+
+```{r}
+more_lsm_filt <- more_lsm %>%
+  left_join(lc_classes, by = "class") %>%
+  filter(landcover %in% c("needleleaf", "broadleaf", "mixed forest"))
+```
+
+Plot the class-level metrics we calculated across forest type.
+
+```{r}
+ggplot(more_lsm_filt, aes(x = landcover, y = value)) +
+  geom_point(aes(size = 3, color = factor(class))) +
+  facet_wrap(~metric, scales = 'free') +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  scale_color_brewer(palette = "Set1") +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  labs(x = 'Landcover', y = 'Value')
+```
+**Note**: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results. 
+
+# 5.5 Map & Extract Land Cover Data {#5.5Map-Extract}
 
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 

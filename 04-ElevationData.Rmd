@@ -22,7 +22,7 @@ La Mauricie National Park is situated in the Laurentian mountains and covers 536
 By the end of **Chapter 4 - ElevationData**, users will know how to:
 
 -   Distinguish between different types of digital elevation datasets: [4.2 Elevation Models](#4.2ElevationModels)
--   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Crop & Mask Functions](#4.3Crop-Mask)
+-   Process Digital Terrain Models (DTMs), including cropping and masking: [4.3 Spatial Extents - Crop and Mask](#4.3Crop-Mask)
 -   Extract elevation data (raster values) at observation sites (vector points): [4.4 Map & Extract Digital Elevation Data](#4.4Map-Extract)
 -   Know how to access LiDAR-derived data products: [4.5 LiDAR Data Resources](#4.5LiDAR) and [4.6 Manual Data Download](#4.6LiDAR)
 
@@ -182,7 +182,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 # write.csv(mauricie_birds_df, "Data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
-# 4.2 Elevation Models {#4.2DigitalElevationData}
+# 4.2 Elevation Models {#4.2ElevationModels}
 
 Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
 
@@ -239,7 +239,7 @@ plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-# 4.3 Crop & Mask Functions {#4.3Crop-Mask}
+# 4.3 Spatial Extents: Crop & Mask {#4.3Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
 
