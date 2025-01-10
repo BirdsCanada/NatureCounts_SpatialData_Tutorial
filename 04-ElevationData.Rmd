@@ -144,12 +144,12 @@ mauricie_birds_summary <- mauricie_birds_sf %>%
 mauricie_birds_summary
 ```
 
-If you wanted to summarize total count for each species at each point count site you could adjust the pipe using `pivot_wider()`.
+If you wanted to summarize total count for each species at each Atlas Block you could adjust the pipe using `pivot_wider()`.
 
 ```{r}
 mauricie_species_summary <- mauricie_birds_sf %>%
   st_drop_geometry() %>%  # drop the geometry column
-  group_by(english_name, SiteCode) %>%
+  group_by(english_name, Locality) %>%
   summarise(total_count = sum(ObservationCount, na.rm = TRUE)) %>% # calculates the total_count column
   pivot_wider(names_from = english_name, # populates the column names with each species common name
               values_from = total_count, # populates each cell with total_count
