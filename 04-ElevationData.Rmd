@@ -93,7 +93,7 @@ eBird has the greatest number of provincial bird records, however, this collecti
 > To execute this code chunk, remove the \#
 
 ```{r, eval = FALSE}
-# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
+# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", field_set = "extended", info = "spatial_data_tutorial")
 ```
 
 Read in the list of species names from NatureCounts which can be linked to the species id:
