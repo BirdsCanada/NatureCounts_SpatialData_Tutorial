@@ -84,7 +84,7 @@ Don't forget to replace `testuser` with your NatureCounts username. You will be 
 Download NatureCounts data:
 
 ```{r}
-quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", fields_set = "extended", info = "spatial_data_tutorial", timeout = 500)
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
 ```
 
 eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
@@ -92,7 +92,7 @@ eBird has the greatest number of provincial bird records, however, this collecti
 > To execute this code chunk, remove the \#
 
 ```{r, eval = FALSE}
-# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", field_set = "extended", info = "spatial_data_tutorial")
+# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
 Read in the list of species names from NatureCounts which can be linked to the species id:
