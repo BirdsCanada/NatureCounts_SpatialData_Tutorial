@@ -26,7 +26,7 @@ By the end of **Chapter 3 - Climate Data**, users will know how to:
 This tutorial utilizes the following bird occurrence, spatial, and climate data sources:
 
 | Data | Description |
-|----|----|
+|------------------------------------|------------------------------------|
 | [eBird Canada (Prairies)](https://naturecounts.ca/nc/default/datasets.jsp?code=EBIRD-CA-PR) | NatureCounts, EBIRD-CA-PR (1800-2024) |
 | Alberta Breeding Bird Atlas | NatureCounts, ABATLAS1 ([1987-1992](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS1)) and ABATLAS2 ([2000-2005](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS2)) |
 | [Alberta Bird Records](https://naturecounts.ca/nc/default/datasets.jsp?code=ABBIRDRECS) | NatureCounts, ABIRDRECS (1941-2006) |
@@ -34,7 +34,7 @@ This tutorial utilizes the following bird occurrence, spatial, and climate data 
 | [Environment and Climate Change Canada](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html) | Historical (vector) weather data, accessed through the `weathercan` R package |
 | [WorldClim](https://www.worldclim.org/data/bioclim.html) | Historical (raster) climate data. Includes nineteen bioclimatic variables representing the 1970-2000 average |
 
-This tutorial requires the following **packages**:
+Load the necessary packages:
 
 ```{r package library, warning = FALSE, message = FALSE}
 library(tidyverse)
