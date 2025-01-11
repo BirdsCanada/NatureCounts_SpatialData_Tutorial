@@ -135,7 +135,7 @@ To execute this code chunk, remove the \#
 # writeRaster(landcover_mask, output_path, overwrite = TRUE) 
 ```
 
-# 5.2 Raster Color Maps {#5.2ColorMaps}  ###Note certain we need the colour map. we can just have ggplot assign random colours? If this is the case, we just want to assign landcover values to thier names####
+# 5.2 Raster Color Maps {#5.2ColorMaps} ###Note certain we need the colour map. we can just have ggplot assign random colours? If this is the case, we just want to assign landcover values to thier names
 
 Color maps are attribute tables that associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information.
 
@@ -180,8 +180,7 @@ landcover_mask_df <- landcover_mask_df %>%
 
 Now lets map the cropped land cover raster using `ggplot()`.
 
-###NOTE THIS MAP LOOKS REALLY WONGKY ON MY END ###
-##Why do we assign the color ourselves. I think it would be easier if you let ggplot just pick random colour for each landcover_class. This would elimiate the need to keep the landcover_rgb dataframe which I think is somewhat confusing ###
+###NOTE THIS MAP LOOKS REALLY WONGKY ON MY END \### ##Why do we assign the color ourselves. I think it would be easier if you let ggplot just pick random colour for each landcover_class. This would elimiate the need to keep the landcover_rgb dataframe which I think is somewhat confusing \###
 
 ```{r}
 ggplot() +
@@ -203,7 +202,6 @@ ggplot() +
   geom_sf(data = mauricie_boundary, fill = NA, color = "purple", size = 1.5)
 ```
 
-
 # 5.3 Point Buffers {#5.3PointBuffers}
 
 Buffers allow us to generate polygons at a specified distance around points, lines or other polygons. Because birds use their habitat at the landscape-level and not at a single observation point, buffers allow us to summarize land cover and habitat information within the local neighborhood.
@@ -223,6 +221,7 @@ mauricie_birds_local <- mauricie_birds_df %>% filter(survey_year == 2014) %>%
 ```
 
 Assign a unique identifier to each observation location.
+
 ```{r}
 mauricie_birds_local$point_id <- paste0("point_id_", seq_len(nrow(mauricie_birds_local)))
 ```
@@ -337,8 +336,7 @@ ggplot(pland_means, aes(x = landcover, y = mean_pland, fill = landcover)) +
 
 # 5.5 Map & Extract Land Cover Data {#5.5Map-Extract}
 
-####DELETED CODE. redundant with the previous section####
-Create a spatial dataframe from the NatureCounts data and join the unique point_id from the buffer geometry to the NatureCounts data by latitude and longitude using `st_join`.
+####DELETED CODE. redundant with the previous section#### Create a spatial dataframe from the NatureCounts data and join the unique point_id from the buffer geometry to the NatureCounts data by latitude and longitude using `st_join`.
 
 ```{r}
 mauricie_birds_sf <- sf::st_as_sf(mauricie_birds_df, 
@@ -348,6 +346,7 @@ mauricie_birds_sf <- st_join(mauricie_birds_sf, mauricie_birds_local, join = st_
 ```
 
 Transform the CRS of the National Park boundary to match the NatureCounts data.
+
 ```{r}
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
 ```
@@ -402,9 +401,7 @@ ggplot() +
   coord_sf()
 ```
 
-
-##DO WE NEED TO KNOW THIS?I WOULD SAY WE COULD END AT THE BUFFER TOOL SINCE THIS IS GOING TO BE MOST USEFUL###
-Extract the land cover class id for each point id and append it to `mauricie_birds_df`.
+##DO WE NEED TO KNOW THIS?I WOULD SAY WE COULD END AT THE BUFFER TOOL SINCE THIS IS GOING TO BE MOST USEFUL### Extract the land cover class id for each point id and append it to `mauricie_birds_df`.
 
 First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
