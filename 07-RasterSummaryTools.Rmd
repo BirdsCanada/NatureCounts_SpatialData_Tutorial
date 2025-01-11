@@ -262,7 +262,7 @@ mauricie_data <- mauricie_birds_df %>%
 
 We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance.
 
-#### EXAMPLE 1: Landscape Association Plots 
+#### EXAMPLE 1: Landscape Association Plots
 
 Calculate the species abundance (number of individuals) for each land cover class relative to the entire National Park population. ###SPECIES RICHNESS (distrinct) Might be more useful###
 
