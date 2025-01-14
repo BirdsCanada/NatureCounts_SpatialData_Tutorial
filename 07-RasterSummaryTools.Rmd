@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Chapter 7: Raster Summary Tools
 
-##### Author: Dimitrios Markou
+##### Authors: Dimitrios Markou, Danielle Ethier
 
 > In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will combine and reclassify raster data, calculate summary statistics, and create data summaries and visualizations.
 
@@ -233,7 +233,7 @@ zonal_elevation_stats
 
 # 7.4 Summary Tools: Species Abundance {#7.4SummaryTools}
 
-In Chapter 4, Chapter 5, and Chapter 6 you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 Let's download all the environmental covariates into R and join them to a common dataframe.
 
