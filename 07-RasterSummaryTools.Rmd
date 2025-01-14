@@ -13,23 +13,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Author: Dimitrios Markou
 
-> In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this tutorial, you will combine and reclassify raster data, calculate summary statistics, and create data summaries and visualizations.
+> In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this chapter, you will combine and reclassify raster data, calculate summary statistics, and create data summaries and visualizations.
 
-**The National Park boundary and NatureCounts data are available for download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. Quick access to the raster data outputs from [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) which are required for this lesson are also available through the Google Drive folder. Once there, download and extract the** *dtm_mask (.zip)* **and** *landcover_mask* *(.zip)* **files to your directory. If you wish to gain experience in how to download, process, and save either of these environmental layers yourself, return to the earlier chapters of this tutorial series.**
+**This Chapter build on the previous, and uses the the National Park boundary and NatureCounts data from downloaded in section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd)**. **Raster data were dowloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) which are also required for this lesson. For quick access, these layers are available for download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. If you wish to gain experience in how to download, process, and save environmental layers yourself, return to the earlier chapters of this tutorial series.**
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
 By the end of **Chapter 7 - Raster Summary Statistics**, users will know how to:
 
--   Transform and combine raster data objects: [7.1 Raster Data Transformations](#7.1RasterDataTransformations)
+-   Transform and combine raster data objects: [Raster Data Transformations](#7.1RasterDataTransformations)
 
--   Reclassify raster data: [7.2 Raster Reclassification](#7.2RasterReclassification)
+-   Reclassify raster data: [Raster Reclassification](#7.2RasterReclassification)
 
--   Perform raster algebra using local, global, and zonal functions: [7.3 Raster Algebra](#7.3RasterAlgebra)
+-   Perform raster algebra using local, global, and zonal functions: [Raster Algebra](#7.3RasterAlgebra)
 
--   Create and visualize NatureCounts data summaries using environmental covariates: [7.4 Summary Tools: Species Abundance](#7.4SummaryTools)
+-   Create and visualize NatureCounts data summaries using environmental covariates: [Summary Tools: Species Abundance](#7.4SummaryTools)
 
-This R tutorial requires the following packages:
+Load the required packages:
 
 ```{r, eval = TRUE, warning = FALSE, message = FALSE}
 library(sf)
@@ -38,15 +38,15 @@ library(tidyverse)
 library(dplyr)
 ```
 
-Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** found in the `data` folder of the project repo, if necessary.
+Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** which your downloaded in [**Chapter 4: Elevation Data**](04-ElevationData.Rmd) or download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) folder and saved to your working directory.
 
 ```{r}
-mauricie_boundary <- sf::st_read("data/mauricie/boundary/mauricie_boundary.shp")
+mauricie_boundary <- sf::st_read("mauricie_boundary.shp")
 ```
 
 # 7.1 Raster Data Transformations {#7.1RasterDataTransformations}
 
-Raster data is stored as a SpatRaster object and can have one or multiple layers. To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`:
+Raster data is stored as a SpatRaster object and can have one or multiple layers. To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`: ###Could we put the in the root folder in Google drive and also in the tutorial. We want to keep this simple \###
 
 ```{r}
 elevation_rast <- rast("path/to/your/dtm_mask.tif")
@@ -64,17 +64,11 @@ In [Chapter 5: Land Cover Data](05-LandcoverData.Rmd), you created a landcover m
 
 ```{r}
 landcover_rast <- rast("path/to/your/landcover_mask.tif")
+names(landcover_rast) <- "landcover_class" # Rename the land cover class layer.}
 landcover_rast
 ```
 
-Rename the land cover class layer.
-
-```{r}
-names(landcover_rast) <- "landcover_class"
-landcover_rast
-```
-
-You'll notice that the resolution, extent, and CRS of the elevation and land cover raster layers do not match which prevents us from computing these layers together. Use the `project()` function from `terra` to transform the coordinate reference system of `elevation_rast` to match that of `landcover_rast` (Canada Atlas Lambert, EPSG: 3979). By default, the "bilinear" method will be used for numeric layers like elevation. Run [help("project")]{.underline} in your **Console** for more details. **This could take about 15 min - stretch break!**.
+You'll notice that the resolution, extent, and CRS of the elevation and land cover raster layers do not match which prevents us from pulling these layers together. Use the `project()` function from `terra` to transform the coordinate reference system of `elevation_rast` to match that of `landcover_rast` (Canada Atlas Lambert, EPSG: 3979). By default, the "bilinear" method will be used for numeric layers like elevation. Run [help("project")]{.underline} in your **Console** for more details. **This could take about 15 min - stretch break!** ###This took much longer than 15 min on my computer. \###
 
 ```{r, eval = true, message = FALSE}
 elevation_rast_proj <- terra::project(elevation_rast, "EPSG:3979", method = "bilinear")
@@ -134,16 +128,16 @@ mauricie_rast
 You can subset a multi-layer SpatRaster with the \$ or [[]] operators.
 
 ```{r}
-mauricie_rast$elevation
+mauricie_rast$elevation ####Error: [subset] invalid name(s)
 
 mauricie_rast[["landcover_class"]]
 ```
 
-# 7.2 Raster Reclassification {# 7.2RasterReclassification}
+# 7.2 Raster Reclassification {#7.2RasterReclassification}
 
 When communicating our data, it might be useful to apply **local** operations such as the reclassification of a range of raster values into a smaller set of classes. In this process, a range of values are binned to a new (categorical) value. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
 
-First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so:
+First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so: ###Could we tell the user what they are reclassifying. That are the meaning of these number?###
 
 ```{r}
 dtm_rcl_matrix <- matrix(c(0, 200, 1,
@@ -157,7 +151,7 @@ Then, apply the `classify()` function using the reclassification matrix:
 elevation_rast_reclass <- classify(elevation_rast_proj, dtm_rcl_matrix)
 ```
 
-Finally, give meaningful labels to each of the classes:
+Finally, give meaningful labels to each of the classes: ###Tell the user what this is doing. We are reclassify elevation to low (0-200m), medium (200-400m) and high (400-1000m)?###
 
 ```{r, eval = TRUE}
 elevation_levels <- data.frame(ID = c(1L, 2L, 3L),
@@ -193,7 +187,7 @@ par(mfrow = c(1, 1))
 
 Map algebra comprises a slew of useful operations that can be used to modify or summarize raster cell values with reference to nearby cells, zones, or statistical functions.
 
-**Local** operations involve all cell by cell operations across single or multi-layer rasters. In Section [7.2 Raster Reclassification], we performed a local operation by reclassifying elevation raster values into distinct groups. Custom functions used to calculate spectral indices (see [Chapter 6: SatelliteImagery](06-SatelliteImagery.Rmd)) are another example of local (pixel by pixel) operations.
+**Local** operations involve all cell by cell operations across single or multi-layer rasters. In the [Raster Reclassification](#7.2RasterReclassification) section, we performed a local operation by reclassifying elevation raster values into distinct groups. Custom functions used to calculate spectral indices (see [Chapter 6: SatelliteImagery](06-SatelliteImagery.Rmd)) are another example of local (pixel by pixel) operations.
 
 **Global** operations can be used to derive descriptive raster statistics and summaries across entire SpatRaster. For example, you can visualize your raster data values using a histogram (`hist()`).
 
@@ -201,14 +195,17 @@ Map algebra comprises a slew of useful operations that can be used to modify or 
 hist(mauricie_rast$elevation, axes = TRUE, 
             main = "Elevation values within La Mauricie National Park",
             xlab = "Elevation (m)",
-            col = "Green")
+            col = "Green") 
+
+####Error in h(simpleError(msg, call)) : 
+#  error in evaluating the argument 'x' in selecting a method for function 'hist': [subset] invalid name(s)####
 ```
 
 You can produce global summary statistics for individual SpatRaster layers using the `global()` function. It helps calculate `min()`, `max()`, `mean()`, and `sd()` by specifying the `fun` argument.
 
 ```{r}
 global_elevation_stats <- global(elevation_rast, fun = c("min", "max", "mean", "sd"), na.rm = TRUE)
-print(elevation_stats)
+print(global_elevation_stats)
 ```
 
 You can also use custom functions to calculate global raster summary statistics. For example, `my_summary_stats` calculates the min, max, mean, and sd of an input numeric object `x` and returns the summary statistics in a vector (**give this a few minutes**):
@@ -233,7 +230,7 @@ zonal_elevation_stats
 
 # 7.4 Summary Tools: Species Abundance {#7.4SummaryTools}
 
-In Chapter 4, Chapter 5, and Chapter 6 you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+In Chapter 4, Chapter 5, and Chapter 6 you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Git repository data folder](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) ###I WONDER IF WE SHOULD JUST STICK WITH THE GOOGLE DRIVE HERE AND ELSEWHERE since the file size for some is too big for Github??#### and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 Let's download all the environmental covariates into R and join them to a common dataframe.
 
@@ -253,7 +250,7 @@ env_covariates_df <- Reduce(function(x, y) left_join(x, y, by = "record_id"), en
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("mauricie_birds_df.csv") 
 ```
 
 Combine the environmental covariates with the NatureCounts data.
@@ -263,15 +260,15 @@ mauricie_data <- mauricie_birds_df %>%
   merge(env_covariates_df, by = "record_id")
 ```
 
-We can summarize the combined NatureCounts and environmental data to explore possible trends in species abundance.
+We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance.
 
 #### EXAMPLE 1: Landscape Association Plots
 
-Calculate the species abundance (number of individuals) for each land cover class relative to the entire National Park population.
+Calculate the species abundance (number of individuals) for each land cover class relative to the entire National Park population. ###SPECIES RICHNESS (distrinct) Might be more useful###
 
 ```{r}
 landcover_summary <- mauricie_data %>%
-  group_by(landcover) %>%
+  group_by(landcover_class) %>% ###LANDCOVER NOT IN DATASET. Should it be? THe names of the landcover class would be more useful than the numeric value. 
   summarize(
     total_individuals = sum(ObservationCount, na.rm = TRUE),
     total_species = n_distinct(scientific_name)
@@ -282,7 +279,7 @@ landcover_summary <- mauricie_data %>%
 Plot the relative abundance per land cover class.
 
 ```{r}
-ggplot(landcover_summary, aes(x = landcover, y = mean_abundance, fill = total_individuals)) +
+ggplot(landcover_summary, aes(x = landcover_class, y = mean_abundance, fill = total_individuals)) +
   geom_bar(stat = "identity", color = "black") +
   geom_text(
     aes(label = paste0("n = ", total_individuals)),
@@ -305,7 +302,7 @@ ggplot(landcover_summary, aes(x = landcover, y = mean_abundance, fill = total_in
 
 #### EXAMPLE 2: Species Rank Plot
 
-Group the NatureCounts data by species and rank them in order of abundance.
+Group the NatureCounts data by species and rank them in order of abundance. ###THIS WON'T WORK. Landcover not in dataset. \###
 
 ```{r}
 # Filter for needleleaf and broadleaf landcover classes, then group and rank
@@ -357,6 +354,8 @@ top_five
 
 #### EXAMPLE 3: Elevation Plot
 
+###COULD WE PROVIDE TEXT HERE?? What is this example going to show the user?###
+
 ```{r}
 # Create elevation classes with labels 
 mauricie_data <- mauricie_data %>%
@@ -401,6 +400,8 @@ ggplot(elevation_summary, aes(x = elevation_class, y = relative_abundance, fill 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+
+###This result assumes that sampling is random with regards to elevation. I suspect it is not.###
 
 #### EXAMPLE 4: NDVI Plots
 
@@ -450,12 +451,12 @@ ggplot(ndvi_summary, aes(x = ndvi_range, y = relative_abundance, fill = total_in
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Plot species richness and minimum NDVI grouped by SiteCode.
+Plot species richness and minimum NDVI grouped by SiteCode. ###THERE IS AN ISSUE WITH SITE CODE IN THIS DATASET. They are not unique to each lat and long###
 
 ```{r}
 # Calculate species richness by SiteCode
 species_richness <- mauricie_data %>%
-  group_by(SiteCode) %>%
+  group_by(SiteCode) %>% ###Prehaps we can used distinct lat and long??###
   summarise(species_richness = n_distinct(scientific_name))
 
 # Calculate minimum NDVI by SiteCode
