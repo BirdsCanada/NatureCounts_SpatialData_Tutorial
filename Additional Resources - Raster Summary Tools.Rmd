@@ -1,0 +1,227 @@
+---
+title: "AdditionalResources - Raster Summary Tools"
+author: "Dimitrios Markou"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Raster Summary Tools 
+
+##### Authors: Dimitrios Markou, Danielle Ethier
+
+This article is a companion to Chapters 4-6 of the Spatial_Data_Tutorial. Here, you will combine and reclassify raster data and perform raster algebra to calculate summary statistics.
+
+**This article expands on Chapters 4-6 of the Spatial Data Tutorial and uses theNational Park boundary and NatureCounts data downloaded in section 4.1 (Data Setup) from [Chapter 4: Elevation Data](04-ElevationData.Rmd). Raster data were downloaded in [Chapter 4: Elevation Data](04-ElevationData.Rmd) and [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) which are also required for this lesson. For quick access, these layers are available for download via the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folders. If you wish to gain experience in how to download, process, and save environmental layers yourself, return to the chapters covered in the Spatial Data series.**
+
+# Learning Objectives
+
+In this article, you will:
+
+-   Transform and combine raster data objects: [Raster Data Transformations](#7.1RasterDataTransformations)
+
+-   Reclassify raster data: [Raster Reclassification](#7.2RasterReclassification)
+
+-   Perform raster algebra using local, global, and zonal functions: [Raster Algebra](#7.3RasterAlgebra)
+
+Load the required packages:
+
+```{r, eval = TRUE, warning = FALSE, message = FALSE}
+library(sf)
+library(terra)
+library(tidyverse)
+library(dplyr)
+```
+
+Use `st_read()` from the `sf` function to bring in the **mauricie_boundary** which your downloaded in [**Chapter 4: Elevation Data**](04-ElevationData.Rmd) or download via the [Git repository](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) or [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) folder and saved to your working directory.
+
+```{r}
+mauricie_boundary <- sf::st_read("mauricie_boundary.shp")
+```
+
+# Part 1 Raster Data Transformations {#7.1RasterDataTransformations}
+
+Raster data is stored as a SpatRaster object and can have one or multiple layers. To open a SpatRaster, we can use the `rast()` function from the `terra` package. In [Chapter 4: Elevation Data](04-ElevationData.Rmd), you created a mask of La Mauricie National Park using single-layer DTM elevation data. Read this file from your directory and call it `elevation_rast`: 
+
+```{r}
+elevation_rast <- rast("path/to/your/dtm_mask.tif")
+elevation_rast
+```
+
+The function `names()` can be used to rename the layer(s) of a SpatRaster.
+
+```{r}
+names(elevation_rast) <- "elevation"
+elevation_rast
+```
+
+In [Chapter 5: Land Cover Data](05-LandcoverData.Rmd), you created a landcover mask of La Mauricie National Park using the [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6) dataset. Read this file from your directory and call it `landcover_rast`:
+
+```{r}
+landcover_rast <- rast("path/to/your/landcover_mask.tif")
+names(landcover_rast) <- "landcover_class" # Rename the land cover class layer.}
+landcover_rast
+```
+
+You'll notice that the resolution, extent, and CRS of the elevation and land cover raster layers do not match which prevents us from pulling these layers together. Use the `project()` function from `terra` to transform the coordinate reference system of `elevation_rast` to match that of `landcover_rast` (Canada Atlas Lambert, EPSG: 3979). By default, the "bilinear" method will be used for numeric layers like elevation. Run [help("project")]{.underline} in your **Console** for more details. **This could take about 15 min - stretch break!**
+
+```{r, eval = true, message = FALSE}
+elevation_rast_proj <- terra::project(elevation_rast, "EPSG:3979", method = "bilinear")
+```
+
+To match the extents of both layers, crop the `landcover_rast` to the extent of the `elevation_rast_proj`.
+
+```{r}
+landcover_rast <- crop(landcover_rast, ext(elevation_rast_proj))
+```
+
+Resample `landcover_rast` to match the resolution of `elevation_rast_proj` using the **"near"** method. This is the default method used for categorical layers like land cover. Run [help("resample")]{.underline} in your **Console** for more details.
+
+```{r}
+landcover_rast_resample <- resample(landcover_rast, elevation_rast_proj, method = "near")
+```
+
+Let's verify that our transformations were successful. The `all()` function will help evaluate a set of conditions and produce a TRUE or FALSE result across all our checks for spatial alignment.
+
+```{r}
+all(
+  crs(landcover_rast_resample) == crs(elevation_rast_proj), # check crs
+  ext(landcover_rast_resample) == ext(elevation_rast_proj), # check extent
+  res(landcover_rast_resample) == res(elevation_rast_proj) # check resolution
+)
+```
+
+Let's test plot the layers side by side.
+
+```{r, eval = TRUE, warning = FALSE}
+# Match the CRS
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(landcover_rast))
+
+# Set up a 1x2 plotting layout
+par(mfrow = c(1, 2))
+
+# Plot elevation
+plot(elevation_rast_proj, axes = TRUE, plg = list(title = ""), main = "Elevation (m)")
+
+# Overlay the Mauricie boundary on the first plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+
+# Plot landcover
+plot(landcover_rast_resample, axes = TRUE, plg = list(title = ""), main = "Land Cover Class")
+
+# Overlay the Mauricie boundary on the second plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+```
+
+Multiple single-layer SpatRaster with the same CRS, extent, and resolution, can be combined into a single multi-layer SpatRaster with the `c()` function.
+
+```{r}
+mauricie_rast <- c(elevation_rast_proj, landcover_rast_resample)
+mauricie_rast
+```
+
+You can subset a multi-layer SpatRaster with the \$ or [[]] operators.
+
+```{r}
+mauricie_rast$elevation
+
+mauricie_rast[["landcover_class"]]
+```
+
+# Part 2 Raster Reclassification {#7.2RasterReclassification}
+
+When communicating our data, it might be useful to apply **local** operations such as the reclassification of a range of raster values into a smaller set of classes. In this process, a range of values are binned to a new (categorical) value. Reclassifying rasters is easily achieved using `terra` and the `classify()` function.
+
+First, provide a reclassification table in the form of a matrix which specifies the range of raster values (columns 1 and 2) and the class ID (column 3) like so: ###Could we tell the user what they are reclassifying. That are the meaning of these number?###
+
+```{r}
+dtm_rcl_matrix <- matrix(c(0, 200, 1,
+                           200, 400, 2,
+                           400, 1000, 3), byrow = TRUE, ncol = 3)
+```
+
+Then, apply the `classify()` function using the reclassification matrix:
+
+```{r}
+elevation_rast_reclass <- classify(elevation_rast_proj, dtm_rcl_matrix)
+```
+
+Finally, give meaningful labels to each of the classes: ###Tell the user what this is doing. We are reclassify elevation to low (0-200m), medium (200-400m) and high (400-1000m)?###
+
+```{r, eval = TRUE}
+elevation_levels <- data.frame(ID = c(1L, 2L, 3L),
+                            category = c("Low",
+                                         "Mid",
+                                         "High"))
+levels(elevation_rast_reclass) <- elevation_levels
+```
+
+Visualize the regional DTM and National Park boundary using the reclassification scheme:
+
+```{r, eval = TRUE, warning = FALSE}
+# Set up a 1x2 plotting layout
+par(mfrow = c(1, 2))  # Set up a 1-row, 2-column plotting layout
+
+# Plot the original DTM mosaic
+plot(elevation_rast_proj, main = "Regional DTM")
+
+# Overlay the Mauricie boundary on the first plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+
+# Plot the reclassified DTM mosaic
+plot(elevation_rast_reclass, main = "Reclassified DTM")
+
+# Overlay the Mauricie boundary on the second plot
+plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
+
+# Reset the plotting layout to the default
+par(mfrow = c(1, 1))
+```
+
+# Part 3 Raster Algebra (Local, Global, and Zonal Operations) {#7.3RasterAlgebra}
+
+Map algebra comprises a slew of useful operations that can be used to modify or summarize raster cell values with reference to nearby cells, zones, or statistical functions.
+
+**Local** operations involve all cell by cell operations across single or multi-layer rasters. In the [Raster Reclassification](#7.2RasterReclassification) section, we performed a local operation by reclassifying elevation raster values into distinct groups. Custom functions used to calculate spectral indices (see [Chapter 6: SatelliteImagery](06-SatelliteImagery.Rmd)) are another example of local (pixel by pixel) operations.
+
+**Global** operations can be used to derive descriptive raster statistics and summaries across entire SpatRaster. For example, you can visualize your raster data values using a histogram (`hist()`).
+
+```{r, warning = FALSE}
+hist(mauricie_rast$elevation, axes = TRUE, 
+            main = "Elevation values within La Mauricie National Park",
+            xlab = "Elevation (m)",
+            col = "Green") 
+
+####Error in h(simpleError(msg, call)) : 
+#  error in evaluating the argument 'x' in selecting a method for function 'hist': [subset] invalid name(s)####
+```
+
+You can produce global summary statistics for individual SpatRaster layers using the `global()` function. It helps calculate `min()`, `max()`, `mean()`, and `sd()` by specifying the `fun` argument.
+
+```{r}
+global_elevation_stats <- global(elevation_rast, fun = c("min", "max", "mean", "sd"), na.rm = TRUE)
+print(global_elevation_stats)
+```
+
+You can also use custom functions to calculate global raster summary statistics. For example, `my_summary_stats` calculates the min, max, mean, and sd of an input numeric object `x` and returns the summary statistics in a vector (**give this a few minutes**):
+
+```{r}
+my_summary_stats <- function(x) {
+  out <- c(min = min(x, na.rm = TRUE),
+           max = max(x, na.rm = TRUE),
+           mean = mean(x, na.rm = TRUE),
+           sd = sd(x, na.rm = TRUE))
+  return(out)
+}
+global(elevation_rast, fun = my_summary_stats) # apply the function
+```
+
+**Zonal** operations apply an aggregation function to multiple raster cells. Typically, a second (categorical) raster defines the zonal filters (or 'zones'). To calculate the mean elevation per individual land cover class, we can apply the `zonal()` function.
+
+```{r}
+zonal_elevation_stats <- zonal(elevation_rast_proj, landcover_rast_resample, fun = "mean", na.rm = TRUE)
+zonal_elevation_stats
+```

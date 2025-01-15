@@ -339,7 +339,7 @@ mauricie_birds_df <- mauricie_birds_df %>%
 
 ------------------------------------------------------------------------
 
-**Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over vector data points. In [Chapter 7](07-RasterSummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
+**Congratulations**! You completed **Chapter 6 - Satellite Imagery**. In this chapter, you successfully 1) downloaded satellite imagery data 2) calculated NDVI and NDWI spectral indices and 3) extracted spectral index values over vector data points. In [Chapter 7](07-SummaryTools.Rmd), you can explore simple functions that will help you reclassify raster objects and calculate raster summary statistics.
 
 # 6.4 Copernicus Data Download {#6.4CopernicusDataDownload}
 
