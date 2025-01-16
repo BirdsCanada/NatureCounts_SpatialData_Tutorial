@@ -67,7 +67,7 @@ mauricie_boundary <- national_parks %>%
 mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 ```
 
-OPTIONAL: To save the boundary as a shapefile to your working directiry, use the `st_write()` function. **The boundary files are used again in subsequent chapters**. We have uploaded them to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+OPTIONAL: To save the boundary as a shapefile to your working directiry, use the `st_write()` function. **The boundary files are used again in subsequent chapters**. We have uploaded them to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -169,7 +169,7 @@ mauricie_birds_df <- mauricie_birds_sf %>%
   rename(longitude = X, latitude = Y)
 ```
 
-OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be required to complete [Chapter 5: Land Cover Data](05-LandcoverData.Rmd) and subsequent chapters**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
@@ -189,12 +189,11 @@ Digital elevation datasets store topographic information like elevation or slope
 
 For quick-access to the elevation data, download the .tif files from their URL using the hyperlinks below. If you wish to gain experience in how-to access LiDAR data yourself, follow the steps [at the end of this Chapter](#4.6LiDAR).
 
-**Click the following hyperlinks to download the LiDAR-derived elevation data for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tit), ###404 - File or directory not found.### respectively and then move them to a folder in your directory.**
+**Click the following hyperlinks to download the LiDAR-derived elevation data for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to a folder in your directory.**
 
 Set the path to your TIF file directory.
 
 ```{r, eval = FALSE}
-
 output_dir <- getwd() # if you want to retrieve the files in your root working directory
 
 output_dir <- "path/to/your/directory/folder" # to specify your directory manually
@@ -211,7 +210,7 @@ dtm_files <- list.files(output_dir, pattern = "\\.tif$", full.names = TRUE)
 dtm_list <- lapply(dtm_files, rast)
 
 # Combine into a single SpatRaster object
-dtm_mosaic <- do.call(mosaic, dtm_list) ###Error: [mosaic] resolution does not match
+dtm_mosaic <- do.call(mosaic, dtm_list)
 
 # Print information about the stack
 print(dtm_mosaic)
@@ -336,7 +335,7 @@ elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
   select(record_id, elevation = Band_1)
 ```
 
-OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) **and the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing)** for your convenience.
+OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
