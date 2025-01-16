@@ -262,7 +262,7 @@ The `landscapemetrics` package can be used to calculate some common metrics that
 
 > A "patch" is an intuitive concept that describes a contiguous group of cells of the same landcover category. Patches can be defined using the 4-neighbour or 8-neighbour rules.
 
-For each point buffer, crop and mask the land cover data and calculate the class-level PLAND and ED within each point buffer. Store the result in a dataframe.
+For each point buffer, crop and mask the land cover data and calculate the class-level PLAND and ED. Store the result in a dataframe.
 
 ```{r}
 lsm <- list()
@@ -306,6 +306,32 @@ lsm_mean <- lsm %>%
 
 # View the resulting dataframe
 print(lsm_mean)
+```
+
+Landscape-level metrics can also be calculated for each point buffer.  
+
+```{r}
+lsm_landscape <- list()
+
+for (i in seq_len(nrow(mauricie_birds_buffer))) {
+  buffer_i <- st_transform(mauricie_birds_buffer[i, ], crs = crs(landcover))  # Match the CRS between the buffer zones and land cover
+  
+  # Crop and mask the landcover data with the buffer areas
+  lsm_landscape[[i]] <- crop(landcover, buffer_i) %>% 
+    mask(buffer_i) %>%  
+    # Calculate landscape metrics
+    calculate_lsm(level = "landscape", metric = c("np", "ed")) %>% 
+    # Add identifying variables
+    mutate(point_id= buffer_i$point_id, 
+           survey_year = buffer_i$survey_year) %>%  
+    select(point_id, level, metric, value)
+}
+
+# Combine results into a single dataframe and convert to wide format
+lsm_landscape <- lsm_landscape %>%
+  bind_rows() %>%
+  pivot_wider(names_from = "metric",
+              values_from = "value")
 ```
 
 Compare the PLAND and ED values across each landcover class.
