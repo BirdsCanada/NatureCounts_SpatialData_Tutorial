@@ -352,7 +352,7 @@ OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.cs
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(elevation_values_df, "data/mauricie/elevation_values_df.csv", row.names = FALSE)
+# write.csv(elevation_values_df, "elevation_values_df.csv", row.names = FALSE)
 ```
 
 Now, let's combine the elevation dataframe with the NatureCounts summary data you previously created in order to assess how elevation influences your metric of species diversity. 
