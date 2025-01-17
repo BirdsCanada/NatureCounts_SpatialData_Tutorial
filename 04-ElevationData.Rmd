@@ -169,6 +169,8 @@ mauricie_birds_df <- mauricie_birds_sf %>%
       as.data.frame()  # Convert the coordinates to a data.frame
   ) %>%
   rename(longitude = X, latitude = Y)
+
+mauricie_birds_df <- mauricie_birds_df %>% select(record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, longitude, latitude) #reduce the dataframe to the columns needed for your analysis
 ```
 
 OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be used again in subsequent chapters**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
@@ -204,6 +206,8 @@ output_dir <- "path/to/your/directory/folder" # to specify your directory manual
 
 Create a mosaic of the adjacent DTM rasters.
 
+**Note: if there are other .tiff files in your working directory they may create an error with this code.**
+
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
 dtm_files <- list.files(output_dir, pattern = "\\.tif$", full.names = TRUE) 
@@ -230,15 +234,19 @@ To reproject the spatial data with the same CRS, we can use the `st_transform()`
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(dtm_mosaic))
 ```
 
-We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park.
+###This plot function is redundant to the one below. Delete. <!-- We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park. -->
 
-```{r regional_dtm, eval = TRUE, warning = FALSE}
-# Plot the DTM mosaic
-plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary")
+<!-- ```{r regional_dtm, eval = TRUE, warning = FALSE} -->
 
-# Overlay the National Park boundary
-plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
-```
+<!-- # Plot the DTM mosaic -->
+
+<!-- plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary") -->
+
+<!-- # Overlay the National Park boundary -->
+
+<!-- plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2) -->
+
+<!-- ``` -->
 
 # 4.3 Spatial Extents: Crop & Mask {#4.3Crop-Mask}
 
@@ -258,7 +266,7 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 dtm_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
 
 > To execute this code chunk, remove the \#
 
@@ -289,37 +297,39 @@ plot(dtm_mask, main = "masked DTM")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-Summarize the NatureCounts data for mapping.
+Summarize the NatureCounts data for mapping. Here we will determine the number of unique species observed at each unique site.
 
 ```{r}
-# Group by SiteCode and summarize total_count
+# Group by SiteCode and summarize mean annual count across all species
 mauricie_site_summary <- mauricie_birds_sf %>%
-  group_by(SiteCode) %>%
-  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
+  group_by(SiteCode, geometry) %>% 
+  summarise(n_species = n_distinct(english_name)) # count the number of unique species
 ```
 
-To map the NatureCounts and DTM data:
+Now we can map the NatureCounts summary output with the and DTM data. 
 
 ```{r}
 # Match the CRS
 mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_mask))
 
 # Plot the dtm_mask raster
-plot(dtm_mask, main = "Mauricie Mask with Site Summary Points")
+plot(dtm_mask, main = "Mauricie Mask with Species Diversity Summary Points")
 
 # Overlay the National Park boundary in red
 plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE, lwd = 2)
 
-# Overlay mauricie_site_summary multipoints
+#scale the n_species column to range from 0-5 for plotting
+mauricie_site_summary$n_species_scale <- scales::rescale(mauricie_site_summary$n_species, to = c(0, 2))
+
+# Overlay mauricie_site_summary points
 plot(st_geometry(mauricie_site_summary), 
      add = TRUE, 
      pch = 19,       # Solid circle
      col = "blue",   # Point color
-     cex = 0.5)      # Point size
+     cex = mauricie_site_summary$n_species_scale)      # Point size based on total count
 ```
 
-Extract elevation values for each bird observation site and append it to `mauricie_birds`.
-
+Extract elevation values for each bird observation record and append it to `mauricie_birds`.
 First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
 ```{r}
@@ -345,12 +355,22 @@ OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.cs
 # write.csv(elevation_values_df, "data/mauricie/elevation_values_df.csv", row.names = FALSE)
 ```
 
-Combine the elevation dataframe with the NatureCounts dataframe.
+Now, let's combine the elevation dataframe with the NatureCounts summary data you previously created in order to assess how elevation influences your metric of species diversity. 
 
 ```{r}
-mauricie_birds_df <- mauricie_birds_df %>%
-  left_join(elevation_values_df, by = "record_id") # Join by record_id
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_mask))
+
+# Extract the elevation values for each site
+elevation_sitesum_sf <- terra::extract(dtm_mask, vect(mauricie_site_summary), bind = TRUE)
+
+# Plot the relationship between elevation and species diversity 
+plot(elevation_sitesum_sf$Band_1, elevation_sitesum_sf$n_species, 
+     xlab = "Elevation (m)", ylab = "Number of Species", 
+     main = "Species Diversity vs. Elevation")
+
 ```
+
+There does not appear to be a clear relationship between species diversity and elevation in La Mauricie National Park.
 
 ------------------------------------------------------------------------
 
