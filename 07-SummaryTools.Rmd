@@ -15,13 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this chapter, you will create data summaries and visualizations using NatureCounts data and environmental covariates.
 
-**This chapter builds on Chapters 4-6 of the Spatial_Data_Tutorial, and uses the National Park boundary and NatureCounts data downloaded in section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd). For quick access, the NatureCounts data linked with environmental covariates are available for download via the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder. If you wish to gain experience in how to download, process, and save the environmental layers yourself, return to the earlier chapters of this tutorial series and explore our Additional Resources.**
+**This chapter uses the data products prepared in Chapters 4-6 of the Spatial_Data_Tutorial, and the National Park boundary and NatureCounts data downloaded in section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd). For quick access, all data are available for download via the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder. If you wish to gain experience in how to download, process, and save the environmental layers yourself, return to the earlier chapters of this tutorial series and explore the Additional Resources articles.**
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
 By the end of **Chapter 7 - Summary Statistics**, users will know how to:
 
--   Create and visualize NatureCounts data summaries using environmental covariates in four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot
+-   Create and visualize NatureCounts and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot
 
 Load the required packages:
 
@@ -52,6 +52,25 @@ Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation
 
 ```{r, warning = FALSE, message = FALSE}
 mauricie_birds_df <- read_csv("mauricie_birds_df.csv") 
+```
+
+Trim the dataframe down by selecting key attribute columns.
+
+```{r}
+mauricie_birds_df <- mauricie_birds_df %>%
+  select(record_id, 
+         species_id, 
+         SiteCode, 
+         Locality, 
+         SamplingEventIdentifier, 
+         RouteIdentifier,
+         survey_year,
+         survey_month,
+         survey_day,
+         english_name,
+         ObservationCount,
+         longitude,
+         latitude)
 ```
 
 Combine the environmental covariates with the NatureCounts data.
