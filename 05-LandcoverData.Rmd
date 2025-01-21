@@ -134,7 +134,7 @@ To execute this code chunk, remove the \# and make sure to specify the file form
 # writeRaster(landcover_mask, output_path, overwrite = TRUE) ##Error: [writeRaster] cannot guess file type from filename
 ```
 
-# 5.2 Land Cover Class Labels {#5.2ClassLabels}
+# 5.2 Class Labels {#5.2ClassLabels}
 
 To assign the appropriate labels to each land cover class, refer to the [Class Index](<https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc>[)](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)) and use the `case_when()` function.
 
@@ -272,7 +272,22 @@ lsm_mean <- lsm %>%
 print(lsm_mean)
 ```
 
-Assess the variability in percent land cover and edge density across locations ##landcover class doesn't make sense to me##
+Compare the mean class-level PLAND and ED values.
+
+```{r}
+# Plot mean PLAND and ED for each landcover class
+ggplot(lsm_mean, aes(x = landcover_name, y = mean_value, color = metric)) +
+  geom_point(size = 4, alpha = 0.8, position = position_dodge(width = 0.4)) +
+  labs(title = "Mean PLAND and ED for Each Landcover Class",
+       x = "Landcover Class",
+       y = "Mean Value",
+       color = "Metric") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_color_manual(values = c("ed" = "red", "pland" = "darkgreen"))
+```
+
+Calculate the landscape-level ED and NP for each point buffer. Store the result in a dataframe.
 
 ```{r}
 lsm_landscape <- list()
@@ -296,23 +311,6 @@ lsm_landscape <- lsm_landscape %>%
   bind_rows() %>%
   pivot_wider(names_from = "metric",
               values_from = "value")
-```
-
-Compare the PLAND and ED values across each landcover class.
-
-```{r}
-ggplot(lsm_mean, aes(x = metric, y = mean_value)) +
-  geom_point(size = 3, alpha = 0.8) +       # Add points
-  labs(
-    title = "Percent Landcover (PLAND) and Edge Density (ED) across Landcover Classes",
-    x = "Metrics",
-    y = "Metric Value",
-     ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1), # Rotate x-axis labels for clarity
-    panel.grid.major.x = element_blank()   # Remove vertical grid lines 
-  )
 ```
 
 **Note**: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results.
@@ -399,7 +397,32 @@ OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `
 # write.csv(landscape_metrics_df , "data/mauricie/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
-###Could we provide a similar example to what I did at the end of the previous chapter.
+Now let's combine the landscape-level metrics you derived from land cover with the NatureCounts summary data to assess how the metrics might influence species diversity.
+
+```{r}
+# Join the landscape metrics with the NatureCounts summary data
+lsm_sitesum_df <- left_join(mauricie_site_summary, landscape_metrics_df, by = "point_id")
+
+# Plot the relationship between species diversity and edge density and the number of patches, respectively
+
+# n_species vs. edge density (ED)
+ggplot(lsm_sitesum_df, aes(x = ed, y = n_species)) +
+  geom_point(color = "blue", alpha = 0.6) +
+  labs(title = "Species Diversity vs. Edge Density",
+       x = "Edge Density (ED)",
+       y = "Number of Species (n_species)") +
+  theme_minimal()
+
+# n_species vs. number of patches (NP)
+ggplot(lsm_sitesum_df, aes(x = np, y = n_species)) +
+  geom_point(color = "green", alpha = 0.6) +
+  labs(title = "Species Diversity vs. Number of Patches",
+       x = "Number of Patches (NP)",
+       y = "Number of Species (n_species)") +
+  theme_minimal()
+```
+
+There does not appear to be a clear relationship between species diversity, edge density, or the number of patches across observation sites in La Mauricie National Park.
 
 ------------------------------------------------------------------------
 
