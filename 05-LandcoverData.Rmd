@@ -26,7 +26,7 @@ knitr::opts_chunk$set(echo = TRUE)
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
 -   Cropping and masking land cover data: [Spatial Extents: Crop and Mask](#5.1Crop-Mask)
--   Assign land cover class labels and create a custom plot: [Land Cover Class Labels](#5.2ClassLabels)
+-   Assign land cover class labels and create a custom plot: [Class Labels](#5.2ClassLabels)
 -   Create buffers around observation sites (points): [Point Buffers](#5.3PointBuffers)
 -   Calculate landscape metrics, including PLAND, NP, and ED: [Landscape Metrics](#5.4LandscapeMetrics)
 -   Combine NatureCounts data with land cover data for analysis: [Map & Extract Land Cover Data](#5.5Map-Extract)
