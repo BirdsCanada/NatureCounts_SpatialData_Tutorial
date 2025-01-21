@@ -26,7 +26,7 @@ knitr::opts_chunk$set(echo = TRUE)
 By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 
 -   Cropping and masking land cover data: [Spatial Extents: Crop and Mask](#5.1Crop-Mask)
--   Load and interpret raster data color maps: [Raster Color Maps](#5.2ColorMaps) ##Needs edited. We should use the default numeric vector to assign colour. \##
+-   Assign land cover class labels and create a custom plot: [Land Cover Class Labels](#5.2ClassLabels)
 -   Create buffers around observation sites (points): [Point Buffers](#5.3PointBuffers)
 -   Calculate landscape metrics, including PLAND, NP, and ED: [Landscape Metrics](#5.4LandscapeMetrics)
 -   Combine NatureCounts data with land cover data for analysis: [Map & Extract Land Cover Data](#5.5Map-Extract)
@@ -134,95 +134,27 @@ To execute this code chunk, remove the \# and make sure to specify the file form
 # writeRaster(landcover_mask, output_path, overwrite = TRUE) ##Error: [writeRaster] cannot guess file type from filename
 ```
 
-# 5.2 Assing Landuse Types & Map {#5.2ColorMaps}
-
-###Section name could be changes. Just need something decriptive. 
-###DELETE BELOW
-
-##This colour map is not very useful to most users. As long as each land cover class had a unique value, we can assign colours. This keeps it simple.
-
-<!-- Color maps are attribute tables that associate a set of pixel values in categorical raster objects with specific colors. The color table is a data frame with up to four columns - red, green, blue, and alpha (opacity) associated to one value. These tables are useful for mapping and can be viewed or set using the `coltab()` function (see [here](https://rspatial.github.io/terra/reference/colors.html)). Saving a raster and its color table to a file will also preserve its color information. -->
-
-<!-- Examine the contents of the masked land cover raster. The `freq()` function describes the pixel count per land cover class represented in the region. -->
-
-<!-- ```{r} -->
-
-<!-- freq(landcover_mask) -->
-
-<!-- ``` -->
-
-<!-- View the color table for the masked land cover raster using the `coltab()` function. Save it to your environment as a dataframe called **landcover_rgb** using the `as.data.frame()` function. -->
-
-<!-- ```{r} -->
-
-<!-- landcover_rgb <- as.data.frame(coltab(landcover_mask)) -->
-
-<!-- landcover_rgb -->
-
-<!-- ``` -->
-
-<!-- Filter the color table to only include those classes represented in the masked land cover raster. To assign the appropriate labels to each land cover class, refer to the [Class Index](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc) and use the `mutate()` function after filtering for the relevant classes and tidying-up the attribute names. -->
-
-<!-- ```{r} -->
-
-<!-- landcover_rgb <- landcover_rgb %>% -->
-
-<!--   rename_with(tolower) %>% # lowercase is more R friendly! -->
-
-<!--   rename(landcover_class = value) %>% -->
-
-<!--   mutate(landcover_class = as.factor(landcover_class)) %>% -->
-
-<!--   filter(landcover_class %in% c(1, 5, 6, 8, 10, 14, 16, 17, 18)) %>% # filter based on the classes represented in the "landcover_crop" -->
-
-<!--   mutate(landcover = c("needleleaf", "broadleaf", "mixed forest", "shrubland", "grassland", "wetland", "barren", "urban", "water")) # assign land cover class labels -->
-
-<!-- ``` -->
-
-<!-- Let's combine the color table with the raster data. -->
-
-<!-- First, convert the cropped landcover raster to a dataframe. -->
-
-<!-- ```{r} -->
-
-<!-- landcover_mask_df <- as.data.frame(landcover_mask, xy = TRUE, cells = TRUE) -->
-
-<!-- ``` -->
-
-<!-- Next, merge the two dataframes by performing a `left_join()`. Ensure that the grouping variable for both dataframe matches. -->
-
-<!-- ```{r} -->
-
-<!-- landcover_mask_df <- landcover_mask_df %>% -->
-
-<!--   rename(landcover_class = Canada2015) %>%  ###Error in code here.  -->
-
-<!--   left_join(landcover_rgb, by = "landcover_class")  -->
-
-<!-- ``` -->
-
-\##### DELETE TO HERE
+# 5.2 Land Cover Class Labels {#5.2ClassLabels}
 
 To assign the appropriate labels to each land cover class, refer to the [Class Index](<https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc>[)](https://open.canada.ca/data/en/dataset/ee1580ab-a23d-4f86-a09b-79763677eb47/resource/b8411562-49b7-4cf6-ac61-dbb893b182cc)) and use the `case_when()` function.
 
 ```{r}
-
 landcover_mask_df <- as.data.frame(landcover_mask, xy = TRUE, cells = TRUE)
 
-list(unique(landcover_mask_df$Canada2015)) #determine unique land cover class values in the cropped dataset
+list(unique(landcover_mask_df$Class)) # determine unique land cover class values in the cropped dataset
 
 land_cover_data <- landcover_mask_df %>%
-  arrange(Canada2015) %>%  # Sort by land_cover_value
+  arrange(Class) %>%  # Sort by land_cover_value
   mutate(landcover_name = case_when(
-    Canada2015 == 1 ~ "needleleaf",
-    Canada2015 == 5 ~ "broadleaf",
-    Canada2015 == 6 ~ "mixed forest",
-    Canada2015 == 8 ~ "shrubland",
-    Canada2015 == 10 ~ "grassland",
-    Canada2015 == 14 ~ "wetland",
-    Canada2015 == 16 ~ "barren",
-    Canada2015 == 17 ~ "urban",
-    Canada2015 == 18 ~ "water",
+    Class == 1 ~ "needleleaf",
+    Class == 5 ~ "broadleaf",
+    Class == 6 ~ "mixed forest",
+    Class == 8 ~ "shrubland",
+    Class == 10 ~ "grassland",
+    Class == 14 ~ "wetland",
+    Class == 16 ~ "barren",
+    Class == 17 ~ "urban",
+    Class == 18 ~ "water",
     TRUE ~ NA_character_  # Handle any unexpected values
   ))
 
@@ -260,10 +192,9 @@ mauricie_birds_local <- mauricie_birds_df %>% filter(survey_year == 2014) %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) 
 ```
 
-Assign a point id identifier to each location based on unique geometry. 
+Assign a point id identifier to each location based on its unique geometry.
 
 ```{r}
-
 mauricie_birds_local <- mauricie_birds_local %>% 
   group_by(SiteCode, geometry) %>%
   mutate(point_id = cur_group_id()) %>% 
@@ -297,7 +228,7 @@ The `landscapemetrics` package can be used to calculate some common metrics that
 
 -   Patch Cohesion Index (COHESION) - area-weighted mean perimeter-area ratio that helps assess connectivity
 
-> A "patch" is an intuitive concept that describes a contiguous group of cells of the same landcover category. Patches can be defined using the 4-neighbour or 8-neighbour rules.
+> A "patch" is an intuitive concept that describes a contiguous group of cells of the same land cover category. Patches can be defined using the 4-neighbour or 8-neighbour rules.
 
 For each point buffer, crop and mask the land cover data and calculate the class-level PLAND and ED. Store the result in a dataframe.
 
@@ -321,13 +252,13 @@ for (i in seq_len(nrow(mauricie_birds_buffer))) {
 lsm <- bind_rows(lsm)
 ```
 
-Add land cover class labels to the dataframe containing the calculated landscape metrics.
+Add land cover class labels to the dataframe containing the calculated landscape metrics. Ensure that both columns are the same data type (factor).
 
 ```{r}
 # Define the land cover class labels 
-lc_classes <- land_cover_data %>% select(Canada2015, landcover_name) %>% distinct()
+lc_classes <- land_cover_data %>% select(Class, landcover_name) %>% distinct()
 
-lsm <- inner_join(lsm, lc_classes, by = c("class" = "Canada2015")) 
+lsm <- inner_join(mutate(lsm, class = as.factor(class)), lc_classes, by = c("class" = "Class"))
 ```
 
 Calculate the mean class-level PLAND and ED across all point buffers.
@@ -386,7 +317,7 @@ ggplot(lsm_mean, aes(x = metric, y = mean_value)) +
 
 **Note**: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results.
 
-# 5.5 Extract Land Cover Data {#5.5Map-Extract}
+# 5.5 Join Land Cover Data {#5.5Map-Extract}
 
 Create a spatial dataframe from the NatureCounts data and join the unique point_id from the buffer geometry to the NatureCounts data by latitude and longitude using `st_join`.
 
@@ -445,60 +376,31 @@ ggplot() +
   coord_sf()
 ```
 
-Extract the land cover class id for each point id and append it to `mauricie_birds_df`.
-
-First, make sure the CRS of both spatial data match and then use `terra::extract()`.
+Convert the NatureCounts data back to a regular dataframe called `landscape_metrics_df`, now labeled by point_id, and append the landscape-level metrics we calculated in the [previous section](#5.4LandscapeMetrics).
 
 ```{r}
-# Match the CRS
-mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(landcover_mask))
+landscape_metrics_df  <- mauricie_birds_sf %>%
+  st_drop_geometry() %>%  # Drops the geometry column
+  bind_cols(
+    st_coordinates(mauricie_birds_sf) %>%  # Extract coordinates
+      as.data.frame()  # Convert the coordinates to a data.frame
+  ) %>%
+  rename(longitude = X, latitude = Y) %>%
+  left_join(lsm_landscape, by = "point_id") # append landscape-level metrics
 
-# Extract the landcover class ID for each observation
-landcover_class_sf <- terra::extract(landcover_mask, vect(mauricie_birds_sf), bind = TRUE)
+landscape_metrics_df  <- landscape_metrics_df  %>% select(point_id, longitude, latitude, record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, ed, np)
 ```
 
-Convert the sf object holding the extracted land cover class ID's to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
-
-
-###Do we need this now that we dropped the rbg section?? Please edits as needed
-```{r}
-landcover_class_df <- terra::as.data.frame(landcover_class_sf) %>%
-  select(point_id, landcover_class = Canada2015) %>%
-  mutate(landcover_class = as.character(landcover_class)) %>%  # Convert to character
-  left_join(
-    landcover_rgb %>% 
-      mutate(landcover_class = as.character(landcover_class)), # Convert to character
-    by = "landcover_class"
-  )
-```
-
-OPTIONAL: To save the land cover data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Git repository data folder**](https://github.com/BirdsCanada/NatureCounts_SpatialData_Tutorial/tree/d83eed714373048c8f9fdb4ea4a17f1fd4bef3f7/Data) and the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(landcover_class_df, "data/mauricie/landcover_class_df.csv", row.names = FALSE)
+# write.csv(landscape_metrics_df , "data/mauricie/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
-
-###Could we provide a similar example to what I did at the end of the previous chapter. 
-Combine the color table and land cover class dataframes with the NatureCounts dataframe.
-
-```{r}
-mauricie_birds_df <- mauricie_birds_df %>%
-  left_join(
-    landcover_class_df %>%
-      mutate(landcover_class = as.character(landcover_class)), # Convert to character
-    by = "record_id" # join by record_id
-  ) %>%
-  left_join(
-    landcover_rgb %>%
-      mutate(landcover_class = as.character(landcover_class)), # Convert to character
-    by = "landcover_class" # join by land cover class
-  )
-
-```
+###Could we provide a similar example to what I did at the end of the previous chapter.
 
 ------------------------------------------------------------------------
 
-**Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data and combined NatureCounts data with land cover class values. In [Chapter 6](06-SatelliteImagery.Rmd), you will explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
+**Congratulations**! You completed **Chapter 5 - Land Cover Data**. In this chapter, you successfully plotted land cover (raster) data and combined NatureCounts data with landscape metrics derived from land cover data. In [Chapter 6](06-SatelliteImagery.Rmd), you will explore how to download satellite imagery and calculate spectral indices to combine with NatureCounts data.
