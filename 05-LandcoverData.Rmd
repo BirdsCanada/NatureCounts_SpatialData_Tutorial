@@ -386,7 +386,7 @@ landscape_metrics_df  <- mauricie_birds_sf %>%
   rename(longitude = X, latitude = Y) %>%
   left_join(lsm_landscape, by = "point_id") # append landscape-level metrics
 
-landscape_metrics_df  <- landscape_metrics_df  %>% select(point_id, longitude, latitude, record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, ed, np)
+landscape_metrics_df  <- landscape_metrics_df  %>% select(record_id, ed, np)
 ```
 
 OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
@@ -394,7 +394,7 @@ OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(landscape_metrics_df , "data/mauricie/landscape_metrics_df.csv", row.names = FALSE)
+# write.csv(landscape_metrics_df , "data/mauricie/env_covariates/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
 Now let's combine the landscape-level metrics you derived from land cover with the NatureCounts summary data to assess how the metrics might influence species diversity.
