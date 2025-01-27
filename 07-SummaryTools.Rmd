@@ -29,7 +29,7 @@ Load the required packages:
 library(tidyverse)
 ```
 
-# 7.1 Summary Tools: Species Abundance {#7.4SummaryTools}
+# 7.1 Data Setup {#7.4SummaryTools}
 
 In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
@@ -77,102 +77,107 @@ Combine the environmental covariates with the NatureCounts data.
 
 ```{r}
 mauricie_data <- mauricie_birds_df %>%
-  merge(env_covariates_df, by = "record_id")
+  merge(env_covariates_df, by = "record_id") %>%
+  group_by(SiteCode) %>%
+  mutate(point_id = cur_group_id()) %>%
+  distinct() %>% 
+  ungroup() %>%
+  select(point_id, everything())
 ```
 
-We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance.
+We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance or richness.
 
-#### EXAMPLE 1: Landscape Association Plots
+# 7.3 Species Rank
 
-Calculate the species abundance (number of individuals) for each land cover class relative to the entire National Park population. ###SPECIES RICHNESS (distrinct) Might be more useful###
-
-```{r}
-landcover_summary <- mauricie_data %>%
-  group_by(landcover_class) %>%
-  summarize(
-    total_individuals = sum(ObservationCount, na.rm = TRUE),
-    total_species = n_distinct(scientific_name)
-  ) %>%
-  mutate(mean_abundance = ((total_individuals / sum(total_individuals))))
-```
-
-Plot the relative abundance per land cover class.
-
-```{r}
-ggplot(landcover_summary, aes(x = landcover_class, y = mean_abundance, fill = total_individuals)) +
-  geom_bar(stat = "identity", color = "black") +
-  geom_text(
-    aes(label = paste0("n = ", total_individuals)),
-    vjust = -0.5, # Position the text above the bars
-    size = 3.5    # Adjust text size
-  ) +
-  scale_fill_gradient(
-    low = "lightblue", high = "darkblue", # Customize colors for the gradient
-    name = "Abundance"                      # Legend title
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Relative Species Abundance by Landcover Class",
-    x = "Landcover Class",
-    y = "Relative Abundance"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
-#### EXAMPLE 2: Species Rank Plot
+Species rank plots show the relative abundance (number of individuals) of a species in a community. The number of individuals of each species are sorted in ascending or descending order. 
 
 Group the NatureCounts data by species and rank them in order of abundance.
 
 ```{r}
-# Filter for needleleaf and broadleaf landcover classes, then group and rank
-species_rank_landcover <- mauricie_data %>%
-  filter(landcover %in% c("needleleaf", "broadleaf")) %>%
-  group_by(landcover, scientific_name) %>%
+species_rank <- mauricie_data %>%
+  filter(!is.na(english_name)) %>%  # Remove rows with NA in english_name
+  group_by(english_name) %>%  # Group by species only
   summarize(total_abundance = sum(ObservationCount, na.rm = TRUE), .groups = "drop") %>%
-  arrange(landcover, desc(total_abundance)) %>%
-  group_by(landcover) %>%
+  arrange(desc(total_abundance)) %>%  # Sort in descending order of abundance
+  slice_max(total_abundance, n = 40) %>%  # Keep only the top 40 species
+  mutate(rank = row_number())  # Assign rank to each species
+```
+
+Plot the abundance of each species and its rank across the entire park.
+
+```{r}
+ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) +
+  geom_line(group = 1, size = 1, color = "black") +
+  geom_point(size = 2, color = "darkgreen") +
+  theme_minimal() +
+  labs(
+    title = "Abundance of High Rank Species across La Mauricie Park",
+    x = "Species",
+    y = "Total Abundance"
+  ) +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 60, hjust = 1)
+  )
+```
+
+Represent Species Rank as a horizontal bar plot.
+
+```{r}
+ggplot(species_rank, aes(y = reorder(english_name, rank), x = total_abundance)) +
+  geom_col(fill = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Abundance of High Rank Species across La Mauricie Park",
+    y = "Species",
+    x = "Total Abundance"
+  ) +
+  theme(axis.text.y = element_text(size = 7))
+
+```
+
+OPTION 2
+
+Group the NatureCounts data by species and point_id and rank them in order of abundance.
+
+```{r}
+species_rank <- mauricie_data %>%
+  filter(!is.na(english_name)) %>%  # Remove rows with NA in english_name
+  group_by(point_id, english_name) %>%
+  summarize(total_abundance = sum(ObservationCount, na.rm = TRUE), .groups = "drop") %>%
+  arrange(point_id, desc(total_abundance)) %>%
+  group_by(point_id) %>%
   mutate(rank = row_number())
 ```
 
-Plot the abundance for each species rank across both land cover classes using the sample.
+Plot the abundance of each species and its rank for each point_id, respectively.
 
 ```{r}
-ggplot(species_rank_landcover, aes(x = as.numeric(rank), y = total_abundance, color = landcover)) +
+ggplot(species_rank, aes(x = as.numeric(rank), y = total_abundance, color = factor(point_id))) +
   geom_line(size = 1) +
   geom_point(size = 2) +
   theme_minimal() +
   labs(
-    title = "Abundance of High Rank Species across Broadleaf and Needleleaf Forests",
+    title = "Abundance of High Rank Species across La Mauricie Park",
     x = "Species Rank",
     y = "Abundance",
-    color = "Landcover"
+    color = "Point ID"
   ) +
-  facet_wrap(~ landcover, scales = "free_x") +  # Separate plots for each landcover
-  scale_color_manual(values = c("needleleaf" = "darkgreen", "broadleaf" = "brown")) +
-  scale_x_continuous(breaks = seq(1, max(species_rank_landcover$rank), by = 4)  # Set breaks at each rank
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels for better readability
-    panel.grid.minor = element_blank()
-  )
-
+  scale_color_manual(values = RColorBrewer::brewer.pal(n = length(unique(species_rank$point_id)), "Set3"))
 ```
 
-List the top 5 species from each land cover type.
+# 7.2 Species Richness
+
+Calculate the species richness (number of species) for each `point_id`.
 
 ```{r}
-# List top 5 species by total abundance for each land cover type
-top_five <- species_rank_landcover %>%
-  group_by(landcover) %>%
-  slice_head(n = 5) %>%  # Select the top 5 species for each landcover
-  arrange(landcover, desc(total_abundance))  # Arrange by abundance within each landcover class
-
-# View the result
-top_five
+mauricie_sp_richness <- mauricie_data %>%
+  group_by(point_id) %>% filter(!is.na(point_id)) %>% # Filter out NA values
+  summarise(n_species = n_distinct(english_name))
 ```
 
-#### EXAMPLE 3: Elevation Plot
+# 7.4 Elevation
+
+This result assumes that sampling is random with regards to elevation. I suspect it is not
 
 ```{r}
 # Create elevation classes with labels 
@@ -219,9 +224,43 @@ ggplot(elevation_summary, aes(x = elevation_class, y = relative_abundance, fill 
 
 ```
 
-### This result assumes that sampling is random with regards to elevation. I suspect it is not.###
+# 7.5 Landscape
 
-#### EXAMPLE 4: NDVI Plots
+```{r}
+landcover_summary <- mauricie_data %>%
+  group_by(landcover_class) %>%
+  summarize(
+    total_individuals = sum(ObservationCount, na.rm = TRUE),
+    total_species = n_distinct(scientific_name)
+  ) %>%
+  mutate(mean_abundance = ((total_individuals / sum(total_individuals))))
+```
+
+Plot the relative abundance per land cover class.
+
+```{r}
+ggplot(landcover_summary, aes(x = landcover_class, y = mean_abundance, fill = total_individuals)) +
+  geom_bar(stat = "identity", color = "black") +
+  geom_text(
+    aes(label = paste0("n = ", total_individuals)),
+    vjust = -0.5, # Position the text above the bars
+    size = 3.5    # Adjust text size
+  ) +
+  scale_fill_gradient(
+    low = "lightblue", high = "darkblue", # Customize colors for the gradient
+    name = "Abundance"                      # Legend title
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Relative Species Abundance by Landcover Class",
+    x = "Landcover Class",
+    y = "Relative Abundance"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+# 7.6  NDVI Plots
 
 Plot the relative species abundance for different NDVI ranges.
 
@@ -269,7 +308,7 @@ ggplot(ndvi_summary, aes(x = ndvi_range, y = relative_abundance, fill = total_in
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Plot species richness and minimum NDVI grouped by SiteCode. 
+Plot species richness and minimum NDVI grouped by SiteCode.
 
 ```{r}
 # Calculate species richness by SiteCode
