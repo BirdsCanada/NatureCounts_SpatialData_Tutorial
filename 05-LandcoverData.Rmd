@@ -182,7 +182,7 @@ Buffers allow us to generate polygons at a specified distance around points, lin
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r}
-mauricie_birds_df <- read.csv("data/mauricie/mauricie_birds_df.csv")
+mauricie_birds_df <- read.csv("mauricie_birds_df.csv")
 ```
 
 Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014). Future tutorials might explore time-series data to accurately represent the land cover dynamics which is outside the scope of this lesson. 
@@ -262,6 +262,22 @@ lc_classes <- land_cover_data %>% select(Class, landcover_name) %>% distinct()
 lsm <- inner_join(mutate(lsm, class = as.factor(class)), lc_classes, by = c("class" = "Class"))
 ```
 
+Create a PLAND column for each land cover type, associated with each `point_id`.
+
+```{r}
+pland_values <- lsm %>%
+  filter(metric == "pland") %>%                      # Filter for 'pland' metric
+  select(point_id, landcover_name, value) %>%        # Keep relevant columns
+  pivot_wider(
+    names_from = landcover_name,                     # Create columns for each landcover class
+    values_from = value,                             # Fill columns with 'pland' values
+    names_prefix = "pland_"                          # Prefix column names with "pland_"
+  )
+```
+
+Note: Not every land cover type is represented within each point buffer, hence why some rows might be populated with NA values.
+
+
 Calculate the mean class-level PLAND and ED across all point buffers.
 
 ```{r}
@@ -288,22 +304,7 @@ ggplot(lsm_mean, aes(x = landcover_name, y = mean_value, color = metric)) +
   scale_color_manual(values = c("ed" = "red", "pland" = "darkgreen"))
 ```
 
-It appears like 'mixed forest' is the dominant land cover type across all point buffers. This class also has the highest edge density. 
-
-Create a PLAND column for each land cover type, associated with each `point_id`.
-
-```{r}
-pland_values <- lsm %>%
-  filter(metric == "pland") %>%                      # Filter for 'pland' metric
-  select(point_id, landcover_name, value) %>%        # Keep relevant columns
-  pivot_wider(
-    names_from = landcover_name,                     # Create columns for each landcover class
-    values_from = value,                             # Fill columns with 'pland' values
-    names_prefix = "pland_"                          # Prefix column names with "pland_"
-  )
-```
-
-Note: Not every land cover type is represented within each point buffer, hence why some rows might be populated with NA values.
+> It appears like 'mixed forest' is the dominant land cover type across all point buffers. This class also has the highest edge density. 
 
 
 Calculate the landscape-level ED and NP for each point buffer. Store the result in a dataframe.
@@ -396,22 +397,30 @@ ggplot() +
 Convert the NatureCounts data back to a regular dataframe called `landscape_metrics_df`, now labeled by point_id, and append the landscape-level metrics we calculated in the [previous section](#5.4LandscapeMetrics).
 
 ```{r}
-landscape_metrics_df  <- mauricie_birds_sf %>%
-  st_drop_geometry() %>%  # Drops the geometry column
-  bind_cols(
-    st_coordinates(mauricie_birds_sf) %>%  # Extract coordinates
-      as.data.frame()  # Convert the coordinates to a data.frame
-  ) %>%
-  rename(longitude = X, latitude = Y) %>%
-  left_join(lsm_landscape, by = "point_id") %>% # append landscape-level metrics (ed, np)
-  left_join(pland_values, by = "point_id") %>% # append class-level pland values
+landscape_metrics_df <- mauricie_birds_sf %>%
+  st_drop_geometry() %>%
+  distinct(point_id, .keep_all = TRUE) %>%  # Ensure no duplicates based on point_id, but keep all columns
+  left_join(lsm_landscape, by = "point_id") %>%
+  select(record_id, point_id, ed, np)  # Keep record_id, point_id, ed, and np columns
 ```
+
+Append the class level PLAND metric values and keep the `point_id` column. 
+
+```{r}
+landscape_metrics_df <- landscape_metrics_df %>%
+  left_join(pland_values, by = "point_id")
+```
+
 
 OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
 ```{r}
+# landscape_metrics_df <- landscape_metrics_df %>%
+  # left_join(pland_values, by = "point_id") %>%
+  # select(-point_id) # drop point_id column
+
 # write.csv(landscape_metrics_df , "data/mauricie/env_covariates/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
