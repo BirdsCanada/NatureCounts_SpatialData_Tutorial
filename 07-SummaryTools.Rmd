@@ -27,6 +27,7 @@ Load the required packages:
 
 ```{r, eval = TRUE, warning = FALSE, message = FALSE}
 library(tidyverse)
+library(sf)
 ```
 
 # 7.1 Data Setup {#7.4SummaryTools}
@@ -51,38 +52,74 @@ env_covariates_df <- Reduce(function(x, y) left_join(x, y, by = "record_id"), en
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds_df <- read_csv("mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
 ```
 
-Trim the dataframe down by selecting key attribute columns.
+Create an `sf` object from the NatureCounts data that represents the unique point count locations.
 
 ```{r}
-mauricie_birds_df <- mauricie_birds_df %>%
-  select(record_id, 
-         species_id, 
-         SiteCode, 
-         Locality, 
-         SamplingEventIdentifier, 
-         RouteIdentifier,
-         survey_year,
-         survey_month,
-         survey_day,
-         english_name,
-         ObservationCount,
-         longitude,
-         latitude)
+mauricie_birds_sf <- mauricie_birds_df %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) 
+```
+
+Trim the `sf` object down by selecting key attribute columns.
+
+```{r}
+mauricie_birds_sf <- mauricie_birds_sf %>%
+  select(record_id, species_id, SiteCode, Locality, SamplingEventIdentifier, RouteIdentifier, survey_year, survey_month, survey_day, english_name, ObservationCount)
 ```
 
 Combine the environmental covariates with the NatureCounts data.
 
 ```{r}
-mauricie_data <- mauricie_birds_df %>%
-  merge(env_covariates_df, by = "record_id") %>%
-  group_by(SiteCode) %>%
+mauricie_data <- mauricie_birds_sf %>%
+  merge(env_covariates_df, by = "record_id")
+```
+
+Assign a point identifier to each location based on its unique geometry.
+
+```{r}
+mauricie_data_summary <- mauricie_data %>%
+  group_by(SiteCode, geometry) %>%
   mutate(point_id = cur_group_id()) %>%
-  distinct() %>% 
   ungroup() %>%
-  select(point_id, everything())
+  distinct()
+```
+
+Convert the `sf` object back to a regular dataframe. 
+
+```{r}
+mauricie_data_summary <- st_drop_geometry(mauricie_data_summary)
+```
+
+Calculate the species richness and abundance at each point.
+
+```{r}
+biodiversity_count <- mauricie_data_summary  %>%
+  group_by(point_id) %>%
+  summarise(n_species = n_distinct(english_name),
+            n_individuals = sum(ObservationCount, na.rm = TRUE), .groups = "drop") # Count unique species
+```
+
+Drop all columns except `point_id`, the environmental variables, and `geometry` and group rows together by location. 
+
+```{r}
+mauricie_data <- mauricie_data_summary %>%
+  select(-record_id, -species_id, -english_name, -ObservationCount, -SiteCode, 
+         -Locality, -SamplingEventIdentifier, -RouteIdentifier, -survey_year, -survey_month, -survey_day) %>%
+  group_by(point_id) %>%
+  summarise(across(everything(), ~ {
+    x <- na.omit(.)
+    if (length(x) == 0) NA else paste(unique(x), collapse = ", ")
+  }, .names = "{.col}"), .groups = "drop") %>%
+  ungroup()
+```
+
+Join the `biodiversity_count` dataframe. 
+
+```{r}
+mauricie_data <- mauricie_data %>%
+  left_join(biodiversity_count, by = "point_id")
 ```
 
 We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance or richness.
@@ -140,7 +177,7 @@ OPTION 2
 Group the NatureCounts data by species and point_id and rank them in order of abundance.
 
 ```{r}
-species_rank <- mauricie_data %>%
+species_rank_pointID <- mauricie_data %>%
   filter(!is.na(english_name)) %>%  # Remove rows with NA in english_name
   group_by(point_id, english_name) %>%
   summarize(total_abundance = sum(ObservationCount, na.rm = TRUE), .groups = "drop") %>%
@@ -152,7 +189,7 @@ species_rank <- mauricie_data %>%
 Plot the abundance of each species and its rank for each point_id, respectively.
 
 ```{r}
-ggplot(species_rank, aes(x = as.numeric(rank), y = total_abundance, color = factor(point_id))) +
+ggplot(species_rank_pointID, aes(x = as.numeric(rank), y = total_abundance, color = factor(point_id))) +
   geom_line(size = 1) +
   geom_point(size = 2) +
   theme_minimal() +
@@ -162,25 +199,14 @@ ggplot(species_rank, aes(x = as.numeric(rank), y = total_abundance, color = fact
     y = "Abundance",
     color = "Point ID"
   ) +
-  scale_color_manual(values = RColorBrewer::brewer.pal(n = length(unique(species_rank$point_id)), "Set3"))
+  scale_color_manual(values = RColorBrewer::brewer.pal(n = length(unique(species_rank_pointID$point_id)), "Set3"))
 ```
-
-# 7.2 Species Richness
-
-Calculate the species richness (number of species) for each `point_id`.
-
-```{r}
-mauricie_sp_richness <- mauricie_data %>%
-  group_by(point_id) %>% filter(!is.na(point_id)) %>% # Filter out NA values
-  summarise(n_species = n_distinct(english_name))
-```
-
 # 7.4 Elevation
 
-This result assumes that sampling is random with regards to elevation. I suspect it is not
+NOTE: This result assumes that sampling is random with regards to elevation, which is unlikely. 
 
 ```{r}
-# Create elevation classes with labels 
+# Create elevation classes with labels
 mauricie_data <- mauricie_data %>%
   mutate(
     elevation_class = case_when(
@@ -191,73 +217,63 @@ mauricie_data <- mauricie_data %>%
     elevation_class = factor(elevation_class, levels = c("Low", "Mid", "High"))  # Set the factor levels
   )
 
-# Calculate relative abundance for each elevation class
+# Calculate species richness for each elevation class
 elevation_summary <- mauricie_data %>%
   group_by(elevation_class) %>%
-  summarize(
-    total_individuals = sum(ObservationCount, na.rm = TRUE),
-    total_species = n_distinct(scientific_name)
-  ) %>%
-  mutate(
-    relative_abundance = total_individuals / sum(total_individuals) 
-  )
+  summarize(n_species = n_distinct(english_name), .groups = "drop")
 
-# Plot relative species abundance per elevation class
-ggplot(elevation_summary, aes(x = elevation_class, y = relative_abundance, fill = total_individuals)) +
-  geom_bar(stat = "identity", color = "black") +
+# Plot species richness per elevation class
+ggplot(elevation_summary, aes(x = elevation_class, y = n_species)) +
+  geom_bar(stat = "identity", color = "black", fill = "steelblue") +
   geom_text(
-    aes(label = paste0("n = ", total_individuals)),
+    aes(label = paste0("n = ", n_species)),
     vjust = -0.5, # Position the text above the bars
     size = 3.5    # Adjust text size
   ) +
-  scale_fill_gradient(
-    low = "pink", high = "darkred", # Customize colors for the gradient
-    name = "Abundance"              # Legend title
-  ) +
   theme_minimal() +
   labs(
-    title = "Relative Species Abundance by Elevation Class",
-    x = "Elevation",
-    y = "Relative Abundance"
+    title = "Species Richness by Elevation Class",
+    x = "Elevation Class",
+    y = "Species Richness"
   ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotate labels if needed
 ```
 
 # 7.5 Landscape
 
+Plot the species richness and mean landscape metrics.
+
 ```{r}
-landcover_summary <- mauricie_data %>%
-  group_by(landcover_class) %>%
+# Summarize species richness, mean ed, and mean np by point_id 
+landscape_summary <- mauricie_data %>%
+  group_by(point_id) %>%
   summarize(
-    total_individuals = sum(ObservationCount, na.rm = TRUE),
-    total_species = n_distinct(scientific_name)
-  ) %>%
-  mutate(mean_abundance = ((total_individuals / sum(total_individuals))))
-```
+    n_species = n_distinct(english_name),  # Species richness
+    mean_ed = mean(ed, na.rm = TRUE),      # Mean edge density
+    mean_np = mean(np, na.rm = TRUE),      # Mean number of patches
+    .groups = "drop"
+  )
 
-Plot the relative abundance per land cover class.
 
-```{r}
-ggplot(landcover_summary, aes(x = landcover_class, y = mean_abundance, fill = total_individuals)) +
-  geom_bar(stat = "identity", color = "black") +
-  geom_text(
-    aes(label = paste0("n = ", total_individuals)),
-    vjust = -0.5, # Position the text above the bars
-    size = 3.5    # Adjust text size
-  ) +
-  scale_fill_gradient(
-    low = "lightblue", high = "darkblue", # Customize colors for the gradient
-    name = "Abundance"                      # Legend title
-  ) +
-  theme_minimal() +
+# Scatterplot: Species richness vs. Mean edge density
+ggplot(landscape_summary, aes(x = mean_ed, y = n_species)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
   labs(
-    title = "Relative Species Abundance by Landcover Class",
-    x = "Landcover Class",
-    y = "Relative Abundance"
+    title = "Species Richness vs. Edge Density",
+    x = "Mean Edge Density",
+    y = "Species Richness"
   ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal()
 
+# Scatterplot: Species richness vs. Mean number of patches
+ggplot(landscape_summary, aes(x = mean_np, y = n_species)) +
+  geom_point(color = "green", size = 3, alpha = 0.7) +
+  labs(
+    title = "Species Richness vs. Number of Patches",
+    x = "Mean Number of Patches",
+    y = "Species Richness"
+  ) +
+  theme_minimal()
 ```
 
 # 7.6  NDVI Plots
