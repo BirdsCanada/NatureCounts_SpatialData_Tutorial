@@ -104,7 +104,7 @@ biodiversity_count <- mauricie_data_summary  %>%
 Drop all columns except `point_id`, the environmental variables, and `geometry` and group rows together by location. 
 
 ```{r}
-mauricie_data <- mauricie_data_summary %>%
+enviro_data_df <- mauricie_data_summary %>%
   select(-record_id, -species_id, -english_name, -ObservationCount, -SiteCode, 
          -Locality, -SamplingEventIdentifier, -RouteIdentifier, -survey_year, -survey_month, -survey_day) %>%
   group_by(point_id) %>%
@@ -118,7 +118,7 @@ mauricie_data <- mauricie_data_summary %>%
 Join the `biodiversity_count` dataframe. 
 
 ```{r}
-mauricie_data <- mauricie_data %>%
+enviro_data_df <- enviro_data_df %>%
   left_join(biodiversity_count, by = "point_id")
 ```
 
