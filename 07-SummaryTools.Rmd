@@ -28,6 +28,10 @@ Load the required packages:
 ```{r, eval = TRUE, warning = FALSE, message = FALSE}
 library(tidyverse)
 library(sf)
+library(MASS)
+library(corrr)
+library(ggcorrplot)
+library(FactoMineR)
 ```
 
 # 7.1 Data Setup {#7.4SummaryTools}
@@ -62,11 +66,11 @@ mauricie_birds_sf <- mauricie_birds_df %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) 
 ```
 
-Trim the `sf` object down by selecting key attribute columns.
-
+Trim the `sf` object down by selecting key attribute columns for better readability. Explicitly call the `dplyr` function to avoid namespace clashes. 
 ```{r}
-mauricie_birds_sf <- mauricie_birds_sf %>%
-  select(record_id, species_id, SiteCode, Locality, SamplingEventIdentifier, RouteIdentifier, survey_year, survey_month, survey_day, english_name, ObservationCount)
+mauricie_birds_sf <- mauricie_birds_sf %>% 
+  dplyr::select(record_id, species_id, SiteCode, Locality, SamplingEventIdentifier, RouteIdentifier, 
+         survey_year, survey_month, survey_day, english_name, ObservationCount, geometry)
 ```
 
 Combine the environmental covariates with the NatureCounts data.
@@ -86,7 +90,7 @@ mauricie_data_summary <- mauricie_data %>%
   distinct()
 ```
 
-Convert the `sf` object back to a regular dataframe. 
+Convert the summary `sf` object back to a regular dataframe using the `st_drop_geometry()` function.
 
 ```{r}
 mauricie_data_summary <- st_drop_geometry(mauricie_data_summary)
@@ -101,32 +105,116 @@ biodiversity_count <- mauricie_data_summary  %>%
             n_individuals = sum(ObservationCount, na.rm = TRUE), .groups = "drop") # Count unique species
 ```
 
-Drop all columns except `point_id`, the environmental variables, and `geometry` and group rows together by location. 
+Drop all columns except the `point_id` and environmental variables and group all rows together by location.
 
 ```{r}
 enviro_data_df <- mauricie_data_summary %>%
-  select(-record_id, -species_id, -english_name, -ObservationCount, -SiteCode, 
+  dplyr::select(-record_id, -species_id, -english_name, -ObservationCount, -SiteCode, 
          -Locality, -SamplingEventIdentifier, -RouteIdentifier, -survey_year, -survey_month, -survey_day) %>%
   group_by(point_id) %>%
-  summarise(across(everything(), ~ {
-    x <- na.omit(.)
-    if (length(x) == 0) NA else paste(unique(x), collapse = ", ")
-  }, .names = "{.col}"), .groups = "drop") %>%
+  summarise(across(everything(), ~ first(na.omit(.), default = NA)), .groups = "drop") %>%
   ungroup()
 ```
 
-Join the `biodiversity_count` dataframe. 
+Join the `biodiversity_count` dataframe. Cleanup variable names.
 
 ```{r}
 enviro_data_df <- enviro_data_df %>%
-  left_join(biodiversity_count, by = "point_id")
+  left_join(biodiversity_count, by = "point_id") %>%
+  rename(pland_mixed_forest = `pland_mixed forest`) %>%  # Rename column
+  mutate(across(-point_id, as.numeric))  # Ensure all other columns are numeric
 ```
 
-We can summarize the combined NatureCounts and environmental data to explore possible patterns in species abundance or richness.
 
-# 7.3 Species Rank
+# 7.2 Diagnostic Plots
 
-Species rank plots show the relative abundance (number of individuals) of a species in a community. The number of individuals of each species are sorted in ascending or descending order. 
+Retrieve basic summary info for the environmental data.
+
+```{r}
+summary(enviro_data_df)
+```
+
+Create a scatterplot matrix to select meaningful variables for modeling. 
+
+```{r}
+pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + ndvi, data=enviro_data_df, 
+      main="Scatterplot Matrix of environmental variables")
+```
+
+Inspect the distribution and 'skewness' of the environmental data using a histogram plot.
+
+```{r}
+# Select variables and pivot longer for faceting
+hist_data <- enviro_data_df %>%
+  dplyr::select(n_species, elevation, ed, pland_mixed_forest, ndvi) %>%
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "value")
+
+# Create faceted histogram plot
+ggplot(hist_data, aes(x = value)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  facet_wrap(~ variable, scales = "free") +  # Separate histograms for each variable
+  theme_minimal() +
+  labs(title = "Multipanel Histogram of Environmental Variables",
+       x = "Value",
+       y = "Frequency")
+```
+
+Create Q-Q plots for each variable to visually assess if the data is normally distributed.  
+
+```{r}
+par(mfrow=c(2,3))  # set layout for multiple plots
+
+qqnorm(enviro_data_df$n_species, main = "Q-Q Plot: n_species")
+qqline(enviro_data_df$n_species, col = "red")
+
+qqnorm(enviro_data_df$n_individuals, main = "Q-Q Plot: n_individuals")
+qqline(enviro_data_df$n_individuals, col = "red")
+
+qqnorm(enviro_data_df$elevation, main = "Q-Q Plot: elevation")
+qqline(enviro_data_df$elevation, col = "red")
+
+qqnorm(enviro_data_df$np, main = "Q-Q Plot: np")
+qqline(enviro_data_df$np, col = "red")
+
+qqnorm(enviro_data_df$ed, main = "Q-Q Plot: ed")
+qqline(enviro_data_df$ed, col = "red")
+
+qqnorm(enviro_data_df$pland_mixed_forest, main = "Q-Q Plot: pland_mixed_forest")
+qqline(enviro_data_df$pland_mixed_forest, col = "red")
+
+qqnorm(enviro_data_df$ndvi, main = "Q-Q Plot: ndvi")
+qqline(enviro_data_df$ndvi, col = "red")
+```
+
+Create a model to describe species richness using elevation, ed, and ndvi.
+
+```{r}
+model <- lm(n_species ~  elevation + ed + ndvi , data=enviro_data_df)
+
+summary(model)
+anova(model)
+```
+Create diagnostic plots to evaluate the strength of the model.
+
+```{r}
+enviro_data_df$yhat.1 <- fitted(model)  
+enviro_data_df$resid.1 <- resid(model) 
+enviro_data_df$stdresid.1 <- resid(model)/summary(model)$sigma 
+
+plot(yhat.1 ~ n_species, data=enviro_data_df, xlab="Observed n_species", 
+     ylab="Predicted n_species", main="Predicted vs. observed n_species",
+     pch=19)
+abline(a=0,b=1,col="red")   # plot a reference line 
+
+
+plot(resid.1 ~ yhat.1, data = enviro_data_df, xlab="Predicted n_species", 
+     ylab="Residuals",main="Residual Plot",pch=19)
+abline(a=0,b=0,col="red")
+```
+
+# 7.2 Species Rank Plots
+
+Species rank plots show the relative abundance (number of individuals) of a species in a community. The number of individuals of each species are sorted in ascending or descending order.
 
 Group the NatureCounts data by species and rank them in order of abundance.
 
@@ -157,57 +245,43 @@ ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) 
   )
 ```
 
-Represent Species Rank as a horizontal bar plot.
+# 7.4 Data Summary Plots
+
+Create scatter plots with regression lines to explore the relationship of species richness with each environmental variable. 
 
 ```{r}
-ggplot(species_rank, aes(y = reorder(english_name, rank), x = total_abundance)) +
-  geom_col(fill = "steelblue") +
-  theme_minimal() +
-  labs(
-    title = "Abundance of High Rank Species across La Mauricie Park",
-    y = "Species",
-    x = "Total Abundance"
-  ) +
-  theme(axis.text.y = element_text(size = 7))
+# Elevation vs. n_species
+ggplot(enviro_data_df, aes(x = elevation, y = n_species)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Relationship between Elevation and n_species")
 
+# PLAND vs. n_species
+ggplot(enviro_data_df, aes(x = pland_mixed_forest, y = n_species)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Relationship between PLAND and n_species")
+
+# Edge Density vs. n_species
+ggplot(enviro_data_df, aes(x = ed, y = n_species)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Relationship between Edge Density and n_species")
+
+# NDVI vs. n_species
+ggplot(enviro_data_df, aes(x = ndvi, y = n_species)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Relationship between NDVI and n_species")
 ```
 
-OPTION 2
+**Conclusion**: There is no clear relationship between species richness and elevation, ED, or NDVI within La Mauricie National Park. **Note**: These results assume that sampling is random with regards to elevation, which is unlikely.
 
-Group the NatureCounts data by species and point_id and rank them in order of abundance.
-
-```{r}
-species_rank_pointID <- mauricie_data %>%
-  filter(!is.na(english_name)) %>%  # Remove rows with NA in english_name
-  group_by(point_id, english_name) %>%
-  summarize(total_abundance = sum(ObservationCount, na.rm = TRUE), .groups = "drop") %>%
-  arrange(point_id, desc(total_abundance)) %>%
-  group_by(point_id) %>%
-  mutate(rank = row_number())
-```
-
-Plot the abundance of each species and its rank for each point_id, respectively.
-
-```{r}
-ggplot(species_rank_pointID, aes(x = as.numeric(rank), y = total_abundance, color = factor(point_id))) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
-  theme_minimal() +
-  labs(
-    title = "Abundance of High Rank Species across La Mauricie Park",
-    x = "Species Rank",
-    y = "Abundance",
-    color = "Point ID"
-  ) +
-  scale_color_manual(values = RColorBrewer::brewer.pal(n = length(unique(species_rank_pointID$point_id)), "Set3"))
-```
-# 7.4 Elevation
-
-NOTE: This result assumes that sampling is random with regards to elevation, which is unlikely. 
+Create a bar plot that represent species richness in binned elevation categories: Low, Mid, and High
 
 ```{r}
 # Create elevation classes with labels
-mauricie_data <- mauricie_data %>%
+enviro_data_df <- enviro_data_df %>%
   mutate(
     elevation_class = case_when(
       elevation < 200 ~ "Low",
@@ -217,16 +291,16 @@ mauricie_data <- mauricie_data %>%
     elevation_class = factor(elevation_class, levels = c("Low", "Mid", "High"))  # Set the factor levels
   )
 
-# Calculate species richness for each elevation class
-elevation_summary <- mauricie_data %>%
+# Summarize species richness per elevation class
+elevation_summary <- enviro_data_df %>%
   group_by(elevation_class) %>%
-  summarize(n_species = n_distinct(english_name), .groups = "drop")
+  summarize(spec_richness = sum(n_species, na.rm = TRUE), .groups = "drop")
 
 # Plot species richness per elevation class
-ggplot(elevation_summary, aes(x = elevation_class, y = n_species)) +
+ggplot(elevation_summary, aes(x = elevation_class, y = spec_richness)) +
   geom_bar(stat = "identity", color = "black", fill = "steelblue") +
   geom_text(
-    aes(label = paste0("n = ", n_species)),
+    aes(label = paste0("n = ", spec_richness)),
     vjust = -0.5, # Position the text above the bars
     size = 3.5    # Adjust text size
   ) +
@@ -239,114 +313,82 @@ ggplot(elevation_summary, aes(x = elevation_class, y = n_species)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotate labels if needed
 ```
 
-# 7.5 Landscape
+# 7.5 Principal Component Analysis
 
-Plot the species richness and mean landscape metrics.
+Null values can bias the result of PCA. In `enviro_data_df`, PLAND null values represent land cover types not represented at a given observation site. Replace the NA's with zeros. 
 
 ```{r}
-# Summarize species richness, mean ed, and mean np by point_id 
-landscape_summary <- mauricie_data %>%
-  group_by(point_id) %>%
-  summarize(
-    n_species = n_distinct(english_name),  # Species richness
-    mean_ed = mean(ed, na.rm = TRUE),      # Mean edge density
-    mean_np = mean(np, na.rm = TRUE),      # Mean number of patches
-    .groups = "drop"
-  )
-
-
-# Scatterplot: Species richness vs. Mean edge density
-ggplot(landscape_summary, aes(x = mean_ed, y = n_species)) +
-  geom_point(color = "blue", size = 3, alpha = 0.7) +
-  labs(
-    title = "Species Richness vs. Edge Density",
-    x = "Mean Edge Density",
-    y = "Species Richness"
-  ) +
-  theme_minimal()
-
-# Scatterplot: Species richness vs. Mean number of patches
-ggplot(landscape_summary, aes(x = mean_np, y = n_species)) +
-  geom_point(color = "green", size = 3, alpha = 0.7) +
-  labs(
-    title = "Species Richness vs. Number of Patches",
-    x = "Mean Number of Patches",
-    y = "Species Richness"
-  ) +
-  theme_minimal()
+pland_data <- enviro_data_df %>%
+  dplyr::select(starts_with("pland_")) %>% # filter for pland variables
+  mutate(across(everything(), ~ replace_na(., 0))) %>% # replace NA's withe zero
+  scale() # normalize the data 
 ```
 
-# 7.6  NDVI Plots
-
-Plot the relative species abundance for different NDVI ranges.
+Compute the PCA using the `princomp()` and display the result using `summary()`.
 
 ```{r}
-# Create NDVI classes with numeric labels
-mauricie_data <- mauricie_data %>%
-  mutate(
-    ndvi_range = case_when(
-      ndvi > 0 & ndvi <= 0.2 ~ "0 to 0.2",
-      ndvi > 0.2 & ndvi <= 0.4 ~ "0.2 to 0.4",
-      ndvi > 0.4 & ndvi <= 0.6 ~ "0.4 to 0.6",
-      ndvi > 0.6 & ndvi <= 0.8 ~ "0.6 to 0.8",
-    )
-  )
+pland_data_pca <- princomp(pland_data)
+summary(pland_data_pca)
+```
+Use a scree plot to visualize the importance of each PC.
 
-# Calculate species abundance for each NDVI class
-ndvi_summary <- mauricie_data %>%
-  group_by(ndvi_range) %>%
-  summarize(
-    total_individuals = sum(ObservationCount, na.rm = TRUE),
-    total_species = n_distinct(scientific_name)
-  ) %>%
-  mutate(
-    relative_abundance = total_individuals / sum(total_individuals)
-  )
-
-# Plot relative species abundance per NDVI class
-ggplot(ndvi_summary, aes(x = ndvi_range, y = relative_abundance, fill = total_individuals)) +
-  geom_bar(stat = "identity", color = "black") +
-  geom_text(
-    aes(label = paste0("n = ", total_individuals)),
-    vjust = -0.5, # Position the text above the bars
-    size = 3.5    # Adjust text size
-  ) +
-  scale_fill_gradient(
-    low = "lightgreen", high = "darkgreen", # Customize colors for the gradient
-    name = "Abundance"                      # Legend title
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Relative Species Abundance According to NDVI Distribution",
-    x = "NDVI",
-    y = "Relative Abundance"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```{r}
+fviz_eig(pland_data_pca, addlabels = TRUE)
 ```
 
-Plot species richness and minimum NDVI grouped by SiteCode.
+The first three PC's explain over 70% of the variance. Explore the loadings matrix of the first three principal components. 
 
 ```{r}
-# Calculate species richness by SiteCode
-species_richness <- mauricie_data %>%
-  group_by(SiteCode) %>% ###Prehaps we can used distinct lat and long??###
-  summarise(species_richness = n_distinct(scientific_name))
+pland_data_pca$loadings[, 1:3]
+```
+Create a biplot of the the PLAND variables.
 
-# Calculate minimum NDVI by SiteCode
-min_ndvi <- mauricie_data %>%
-  group_by(SiteCode) %>%
-  summarise(min_ndvi = min(ndvi, na.rm = TRUE))
+```{r}
+fviz_pca_var(pland_data_pca, col.var = "black")
+```
 
-# Merge species richness and mean NDVI by SiteCode
-species_ndvi_data <- left_join(species_richness, min_ndvi, by = "SiteCode")
+```{r}
+fviz_cos2(pland_data_pca, choice = "var", axes = 1:2)
+```
+```{r}
+fviz_pca_var(pland_data_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "green"),
+            repel = TRUE)
+```
 
-# Plot species richness and minimum NDVI
-ggplot(species_ndvi_data, aes(x = min_ndvi, y = species_richness)) +
-  geom_point() +
-  labs(title = "Species Richness and Minimum NDVI at Each Observation Site",
-       x = "Min NDVI",
-       y = "Bird Species Richness") +
+# 7.6  K-Means Clustering
+
+```{r}
+# Determine the optimal number of clusters using the elbow method
+wss <- sapply(1:10, function(k) kmeans(pland_data, centers = k, nstart = 25)$tot.withinss)
+
+# Plot Elbow Method
+plot(1:10, wss, type = "b", pch = 19, frame = FALSE, 
+     xlab = "Number of clusters", ylab = "Total Within-Cluster Sum of Squares")
+
+# Choose optimal k
+set.seed(123)
+kmeans_result <- kmeans(pland_data, centers = 3, nstart = 25)
+
+# Add cluster assignments to the original dataframe
+enviro_data_df$cluster <- factor(kmeans_result$cluster)
+
+# **Dimensionality Reduction for Visualization (PCA)**
+pca_result <- prcomp(pland_data, center = TRUE, scale. = TRUE)
+df_pca <- as.data.frame(pca_result$x[, 1:2])  # Extract first 2 PCs
+df_pca$cluster <- enviro_data_df$cluster  # Add cluster info
+
+# Plot clusters in PCA space
+ggplot(df_pca, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(size = 3) +
+  labs(title = "K-Means Clustering of Species Richness and PLAND metrics",
+       x = "Principal Component 1", y = "Principal Component 2") +
   theme_minimal()
+```
+```{r}
+ggplot(enviro_data_df, aes(x = cluster, y = pland_mixed_forest, fill = cluster)) +
+  geom_boxplot() +
+  labs(title = "Forest Cover (%) Across Clusters", y = "PLAND (mixed forest)")
 ```
 
 ------------------------------------------------------------------------
