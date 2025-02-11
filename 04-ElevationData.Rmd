@@ -134,7 +134,7 @@ mauricie_birds_sf <- mauricie_birds_sf %>%
   left_join(species_names, by = "species_id")
 ```
 
-Tidyverse functions can help us summarize our data in a variety of ways. For example, here we determine the annual total count of birds for each year across all sites. To do this we use the `group_by()` function to group the observations by year, and `summarise()` to calculate and create the **annual_count** column.
+Tidyverse functions can help us summarize our data in a variety of ways. For example, we can determine the annual total count of birds for each year across all sites. To do this we use the `group_by()` function to group the observations by year, and `summarise()` to calculate and create the **annual_count** column.
 
 ```{r}
 mauricie_birds_summary <- mauricie_birds_sf %>%
@@ -159,7 +159,7 @@ mauricie_species_summary <- mauricie_birds_sf %>%
 View(mauricie_species_summary)
 ```
 
-Drop the geometry column and convert the filtered NatureCounts data back to a regular dataframe. Select key attributes to compress the dataframe.
+Drop the geometry column and convert the filtered NatureCounts data back to a regular dataframe. Select key attributes to reduce the dataframe.
 
 ```{r}
 mauricie_birds_df <- mauricie_birds_sf %>%
@@ -170,7 +170,7 @@ mauricie_birds_df <- mauricie_birds_sf %>%
   ) %>%
   rename(longitude = X, latitude = Y)
 
-mauricie_birds_df <- mauricie_birds_df %>% select(record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, longitude, latitude) #reduce the dataframe to the columns needed for your analysis
+mauricie_birds_df <- mauricie_birds_df %>% select(record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, longitude, latitude) # reduce the dataframe to the columns needed for your analysis
 ```
 
 OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be used again in subsequent chapters**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
@@ -206,7 +206,7 @@ output_dir <- "path/to/your/directory/folder" # to specify your directory manual
 
 Create a mosaic of the adjacent DTM rasters.
 
-**Note: if there are other .tiff files in your working directory they may create an error with this code.**
+**Note: You should store the DTM's in their own folder after download. The code below will produce an error if there are other .tiff files in your working directory.**
 
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
@@ -234,20 +234,6 @@ To reproject the spatial data with the same CRS, we can use the `st_transform()`
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(dtm_mosaic))
 ```
 
-###This plot function is redundant to the one below. Delete. <!-- We can then use the base `plot()` function to visualize the terrain and boundary of La Mauricie National Park. -->
-
-<!-- ```{r regional_dtm, eval = TRUE, warning = FALSE} -->
-
-<!-- # Plot the DTM mosaic -->
-
-<!-- plot(dtm_mosaic, main = "DTM Mosaic with La Mauricie Boundary") -->
-
-<!-- # Overlay the National Park boundary -->
-
-<!-- plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2) -->
-
-<!-- ``` -->
-
 # 4.3 Spatial Extents: Crop & Mask {#4.3Crop-Mask}
 
 **Cropping** reduces the extent of a raster to the extent of another raster or vector.
@@ -265,6 +251,7 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 ```{r, warning = FALSE}
 dtm_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
+
 OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
 
 > To execute this code chunk, remove the \#
@@ -305,7 +292,7 @@ mauricie_site_summary <- mauricie_birds_sf %>%
   summarise(n_species = n_distinct(english_name)) # count the number of unique species
 ```
 
-Now we can map the NatureCounts summary output with the and DTM data. 
+Now we can map the NatureCounts summary output with the DTM data.
 
 ```{r}
 # Match the CRS
@@ -328,8 +315,7 @@ plot(st_geometry(mauricie_site_summary),
      cex = mauricie_site_summary$n_species_scale)      # Point size based on total count
 ```
 
-Extract elevation values for each bird observation record and append it to `mauricie_birds`.
-First, make sure the CRS of both spatial data match and then use `terra::extract()`.
+Extract elevation values for each bird observation record and append it to `mauricie_birds`. First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
 ```{r}
 # Match the CRS
@@ -354,7 +340,7 @@ OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.cs
 # write.csv(elevation_values_df, "elevation_values_df.csv", row.names = FALSE)
 ```
 
-Now, let's combine the elevation dataframe with the NatureCounts summary data you previously created in order to assess how elevation influences your metric of species diversity. 
+Now, let's combine the elevation dataframe with the NatureCounts summary data you previously created in order to assess how elevation influences your metric of species diversity.
 
 ```{r}
 mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_mask))
