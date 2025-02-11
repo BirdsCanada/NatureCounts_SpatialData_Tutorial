@@ -65,7 +65,7 @@ More resources, including an `sf` package **cheatsheat** can be found [here](htt
 
 # 1.3 Spatio-temporal Mapping
 
-#### *Example 1* - You would like to visualize the spatio-temporal distribution of Cedar Waxwing observations in June of each survey year using data from the Maritimes Breeding Bird Atlas (2006-2010). ###You don't set up the other chapters with "Example". Could we keep the format consistent###
+In this example, we will visualize the spatio-temporal distribution of Cedar Waxwing observations in June of each survey year using data from the Maritimes Breeding Bird Atlas (2006-2010). ###You don't set up the other chapters with "Example". Could we keep the format consistent###
 
 Let's fetch the NatureCounts data.
 
