@@ -56,7 +56,7 @@ Geoprocessing functions allow us to manipulate or compute spatial objects based 
 
 | `st_transform()` - transforms the Coodinate Reference System (CRS) of a specified CRS object
 | `st_drop_geometry()` - removes the geometry column of a sf object
-| `st_intersection(x, y)` - computes the geometric intersection of two or more geometries. The results is a new geometry that represents the area where the input overlap. 
+| `st_intersection(x, y)` - computes the geometric intersection of two or more geometries. The results is a new geometry that represents the area where the input overlap.
 | `st_crop(x, y, ..., xmin, ymin, xmax, ymax)` - creates geometry of x that intersects a specified range ###Could you made this definition a little more explicit.###
 | `st_difference(x, y)` - creates geometry from x that does not intersect with y ###Same###
 | `st_area`, `st_length`, and `st_distance` can also be used to compute geometric measurements
