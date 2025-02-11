@@ -15,12 +15,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 | In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research applications. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
 
-# 2.0 Learning Objectives
+# 2.0 Learning Objectives ###Same comment as previous Chapter. These need to be links
 
 By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
--   Import and map polygon boundary files based on attributes
--   Reproject NatureCounts data to the coordinate reference system of your spatial layer
+-   Import and map polygon boundary files based on attributes ###Same comments as previous. Please link to learning objectives as we have done in other chapters###
+-   Reproject NatureCounts data to the coordinate reference system (CRS) of your spatial layer
 -   Spatially filter and map NatureCounts data for an area of interest
 -   Read, process, and visualize spatial vector data within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
 
@@ -43,9 +43,9 @@ library(leaflet)
 library(leaflet.extras)
 ```
 
-# 2.1 Key Biodiversity Areas
+# 2.1 Key Biodiversity Areas (KBA)
 
-#### *Example 2a* - You are interested in assessing the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the KBAs found within the province of Ontario.
+In this examples, we will assess the spatial distribution of Wood Ducks found in the Ontario Breeding Bird Atlas dataset across the KBAs found within the province of Ontario.
 
 Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example.
 
@@ -98,13 +98,13 @@ leaflet(width = "100%") %>%
   addLegend(colors = c("red"),labels = c("Ontario KBAs"),position = "bottomright")
 ```
 
-Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes like so:
+Similarly, the package `mapview` (based on leaflet) can also be used to make interactive plots. We can represent specific attributes using the following code.
 
 ```{r}
 mapview::mapview(ontario_kba, zcol = "PercentProtected")
 ```
 
-In this example, were interested in all the KBA polygons of Ontario. However, if you were working with a larger data set, it is possible to filter your dataframe to retrieve only specific polygons that meet certain criteria relevant to your research. To do so, we can apply filters based on a variable condition. For example, say we only wanted KBA's greater than 100km\^2 in size:
+In this example, were interested in all the KBA polygons of Ontario. However, if you were working with a larger data set, it is possible to filter your dataframe to retrieve only specific polygons that meet certain criteria relevant to your research. To do so, we can apply filters based on a variable condition. For example, say we only wanted KBA's greater than 100km\^2 in size.
 
 > To execute this code chunk, remove the \#
 
@@ -171,8 +171,9 @@ wood_ducks_kba <- sf::st_intersection(ontario_kba, atlas_on_sf)
 
 You will get a `warning` message, which you can safely ignore.
 
+Now we transform your spatial data back to EPSG:4326 to visualize with leaflet
+
 ```{r}
-# If need be, transform your spatial data back to EPSG:4326 to visualize with leaflet
 ontario_kba <- st_transform(ontario_kba, crs = 4326)
 wood_ducks_kba <- st_transform(wood_ducks_kba, crs = 4326)
 ```
@@ -200,7 +201,7 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 
 # 2.2 Priority Places
 
-#### *Example 2b* - You want to assess the spatial distribution of Wood Ducks (Ontario Breeding Bird Atlas data) across the Long Point Walsingham Forest Priority Place.
+In this example, we will assess the spatial distribution of Wood Ducks from the Ontario Breeding Bird Atlas dataset across the Long Point Walsingham Forest Priority Place.
 
 Navigate to [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). Scroll down to the **Data and Resources** section and select the Priority Places file labeled `English`, `dataset`, and `FGDB/GDB`.
 
@@ -270,4 +271,4 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 # st_write(wood_ducks_longpoint,"wood_ducks_longpoint.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-**Congratulations**! You completed **Chapter 2 - Spatial Subsetting: KBA's and Priority Places**. Here, you spatially filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you can explore more spatial data visualization while linking climate data to NatureCounts observations.
+**Congratulations**! You completed **Chapter 2 - Spatial Subsetting: KBA's and Priority Places**. Here, you spatially filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you will explore more spatial data visualization, while linking climate data to NatureCounts observations.
