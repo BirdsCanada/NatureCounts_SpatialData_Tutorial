@@ -84,7 +84,7 @@ Grouping the NatureCounts data might provide more meaningful insight on species 
 
 ```{r}
 species_occurrence_summary <- whooping_crane_data %>%
-  formate_dates() %>% 
+  format_dates() %>% 
   group_by(SiteCode, survey_year, longitude, latitude) %>%
   summarise(total_count = sum(as.numeric(ObservationCount), na.rm = TRUE)) %>%
   ungroup()
@@ -104,7 +104,7 @@ cranes_summary
 
 # 3.2 Weathercan (Vector) Data
 
-`weathercan` is an R package designed to help access historical weather data from ECCC. Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
+`weathercan` is an R package designed to help access historical weather data from Environment and Climate Change Canada (ECCC). Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
 First, let's take a look at the built in **stations** dataset:
 
@@ -113,7 +113,7 @@ stations <- weathercan::stations()
 head(stations)
 ```
 
-You are ready to download weather data! For the purpose of this tutorial, let's perform a smaller weather data download by specifying specific station IDs. The weather stations closest to Wood Buffalo National Park are BIRCH MOUNTAIN LO (station_id = 2481) and BUCKTON LO (station_id = 2486). These stations were identified using the the ECCC [search option](https://climate.weather.gc.ca/historical_data/search_historic_data_stations_e.html?searchType=stnProx&timeframe=1&txtRadius=25&selCity=&optProxType=park&selPark=57%7C39%7C112%7C0%7CWood+Buffalo+National+Park&txtCentralLatDeg=&txtCentralLatMin=&txtCentralLatSec=&txtCentralLongDeg=&txtCentralLongMin=&txtCentralLongSec=&txtLatDecDeg=&txtLongDecDeg=&optLimit=yearRange&StartYear=1840&EndYear=2024&Year=2024&Month=10&Day=1&selRowPerPage=25) which helps you search for historical weather data based on proximity to a city, coordinate, or National Park.
+For the purpose of this tutorial, let's perform a smaller weather data download by specifying specific station IDs. The weather stations closest to Wood Buffalo National Park are BIRCH MOUNTAIN LO (station_id = 2481) and BUCKTON LO (station_id = 2486). These stations were identified using the the ECCC [search option](https://climate.weather.gc.ca/historical_data/search_historic_data_stations_e.html?searchType=stnProx&timeframe=1&txtRadius=25&selCity=&optProxType=park&selPark=57%7C39%7C112%7C0%7CWood+Buffalo+National+Park&txtCentralLatDeg=&txtCentralLatMin=&txtCentralLatSec=&txtCentralLongDeg=&txtCentralLongMin=&txtCentralLongSec=&txtLatDecDeg=&txtLongDecDeg=&optLimit=yearRange&StartYear=1840&EndYear=2024&Year=2024&Month=10&Day=1&selRowPerPage=25) which helps you search for historical weather data based on proximity to a city, coordinate, or National Park.
 
 ```{r message = FALSE}
 birch_station <- stations_search(name = "BIRCH MOUNTAIN LO", interval = "day")
@@ -208,7 +208,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 # 3.3 WorldClim (Raster) Data
 
-[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global weather and climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
+[WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
 
 Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
 
@@ -271,8 +271,7 @@ Filter the data to only include observations made post 1970 to match the tempora
 
 ```{r}
 bioclim_data <- bioclim_data %>%
-  mutate(date = as.Date(date)) %>%
-  filter(year(date) >= "1970")
+  filter(survey_year >= "1970")
 summary(bioclim_data)
 ```
 
@@ -325,4 +324,4 @@ leaflet(bioclim_data) %>%
   addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial = FALSE))
 ```
 
-**Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data in R. In [Chapter 4](04-ElevationData.Rmd) you can explore how-to link NatureCounts observations with elevation data.
+**Congratulations**! You've completed **Chapter 3 - Climate Data**. Here, you successfully combined NatureCounts data with vector and raster climate data. In [Chapter 4](04-ElevationData.Rmd) you will explore how-to link NatureCounts observations with elevation data.
