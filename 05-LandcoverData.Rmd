@@ -28,8 +28,8 @@ By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 -   Cropping and masking land cover data: [Spatial Extents: Crop and Mask](#5.1Crop-Mask)
 -   Assign land cover class labels and create a custom plot: [Class Labels](#5.2ClassLabels)
 -   Create buffers around observation sites (points): [Point Buffers](#5.3PointBuffers)
--   Calculate landscape metrics, including PLAND, NP, and ED: [Landscape Metrics](#5.4LandscapeMetrics)
--   Combine NatureCounts data with land cover data for analysis: [Map & Extract Land Cover Data](#5.5Map-Extract)
+-   Calculate landscape metrics, including PLAND, NP, and ED ###Please specific what these acronyms mean###: [Landscape Metrics](#5.4LandscapeMetrics)
+-   Combine NatureCounts data with land cover data for analysis: [Spatial Join](#5.5Map-Extract)
 
 Load the required packages:
 
@@ -124,14 +124,14 @@ plot(st_geometry(mauricie_boundary), col = NA, border ="purple", lwd = 2, add = 
 par(mfrow = c(1, 1))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
+OPTIONAL: To write the masked raster to your disk, you can use the writeRaster() function from terra. **This raster will be used in [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
 
 To execute this code chunk, remove the \# and make sure to specify the file format (.tif) in the output path
 
 ```{r}
-# output_path <- getwd()
+# output_dir <- getwd()
 
-# writeRaster(landcover_mask, output_path, overwrite = TRUE) ##Error: [writeRaster] cannot guess file type from filename
+# writeRaster(landcover_mask, output_dir, overwrite = TRUE) #####Error: [writeRaster] cannot guess file type from filename
 ```
 
 # 5.2 Class Labels {#5.2ClassLabels}
@@ -141,20 +141,20 @@ To assign the appropriate labels to each land cover class, refer to the [Class I
 ```{r}
 landcover_mask_df <- as.data.frame(landcover_mask, xy = TRUE, cells = TRUE)
 
-list(unique(landcover_mask_df$Class)) # determine unique land cover class values in the cropped dataset
+list(unique(landcover_mask_df$Canada2015)) # determine unique land cover class values in the cropped dataset
 
 land_cover_data <- landcover_mask_df %>%
-  arrange(Class) %>%  # Sort by land_cover_value
+  arrange(Canada2015) %>%  # Sort by land_cover_value
   mutate(landcover_name = case_when(
-    Class == 1 ~ "needleleaf",
-    Class == 5 ~ "broadleaf",
-    Class == 6 ~ "mixed forest",
-    Class == 8 ~ "shrubland",
-    Class == 10 ~ "grassland",
-    Class == 14 ~ "wetland",
-    Class == 16 ~ "barren",
-    Class == 17 ~ "urban",
-    Class == 18 ~ "water",
+    Canada2015 == 1 ~ "needleleaf",
+    Canada2015 == 5 ~ "broadleaf",
+    Canada2015 == 6 ~ "mixed forest",
+    Canada2015 == 8 ~ "shrubland",
+    Canada2015 == 10 ~ "grassland",
+    Canada2015 == 14 ~ "wetland",
+    Canada2015 == 16 ~ "barren",
+    Canada2015 == 17 ~ "urban",
+    Canada2015 == 18 ~ "water",
     TRUE ~ NA_character_  # Handle any unexpected values
   ))
 
@@ -179,13 +179,13 @@ ggplot() +
 
 Buffers allow us to generate polygons at a specified distance around points, lines or other polygons. Because birds use their habitat at the landscape-level and not at a single observation point, buffers allow us to summarize land cover and habitat information within the local neighborhood.
 
-Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+Read in the NatureCounts data you saved from [Chapter 4: Elevation Data](04-ElevationData.Rmd) or downloaded from the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing).
 
 ```{r}
 mauricie_birds_df <- read.csv("mauricie_birds_df.csv")
 ```
 
-Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014). Future tutorials might explore time-series data to accurately represent the land cover dynamics which is outside the scope of this lesson. 
+Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014). 
 
 Create an `sf` object from the NatureCounts data that represents the unique point count locations.
 
@@ -202,9 +202,12 @@ mauricie_birds_local <- mauricie_birds_local %>%
   mutate(point_id = cur_group_id()) %>% 
   select(geometry, point_id) %>% 
   distinct() %>% ungroup()
+
+#Note that usually the SiteCode is the unique identifier for each observation site. However, this was not the case for the Quebec Breeding Bird Atlas data. We therefore use the geometry to create a unique identifier for each point.
+
 ```
 
-Use the `st_buffer` function to generate 3 km diameter circular neighborhoods centered at each observation location.
+Use the `st_buffer` function to generate 3 km diameter circular neighborhoods (or 1.5 km radius) centered at each observation location.
 
 ```{r}
 mauricie_birds_buffer <- mauricie_birds_local %>%
@@ -227,11 +230,11 @@ The `landscapemetrics` package can be used to calculate some common metrics that
 
 -   Mean core area index (CAI_MN) - percent of the patch that is comprised of core area which is a compound measure of shape, area, and edge depth.
 
--   Patch Cohesion Index (COHESION) - area-weighted mean perimeter-area ratio that helps assess connectivity
+-   Patch cohesion index (COHESION) - area-weighted mean perimeter-area ratio that helps assess connectivity
 
 > A "patch" is an intuitive concept that describes a contiguous group of cells of the same land cover category. Patches can be defined using the 4-neighbour or 8-neighbour rules.
 
-For each point buffer, crop and mask the land cover data and calculate the class-level PLAND and ED. Store the result in a dataframe.
+For each point buffer, crop and mask the land cover data and calculate the class-level PLAND and ED. We will do this using a `for` loop and store the result in a dataframe.
 
 ```{r}
 lsm <- list()
@@ -257,9 +260,12 @@ Add land cover class labels to the dataframe containing the calculated landscape
 
 ```{r}
 # Define the land cover class labels 
-lc_classes <- land_cover_data %>% select(Class, landcover_name) %>% distinct()
+lc_classes <- land_cover_data %>% select(Canada2015, landcover_name) %>% distinct()
 
-lsm <- inner_join(mutate(lsm, class = as.factor(class)), lc_classes, by = c("class" = "Class"))
+lc_classes <-lc_classes %>% mutate(class = as.factor(Canada2015))
+lsm<-lsm %>% mutate(class = as.factor(class))
+
+lsm <- inner_join(lc_classes, lsm, by = "class")
 ```
 
 Create a PLAND column for each land cover type, associated with each `point_id`.
@@ -335,7 +341,7 @@ lsm_landscape <- lsm_landscape %>%
 
 **Note**: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results.
 
-# 5.5 Join Land Cover Data {#5.5Map-Extract}
+# 5.5 Spatial Join {#5.5Map-Extract}
 
 Create a spatial dataframe from the NatureCounts data and join the unique point_id from the buffer geometry to the NatureCounts data by latitude and longitude using `st_join`.
 
@@ -352,7 +358,7 @@ Transform the CRS of the National Park boundary to match the NatureCounts data.
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
 ```
 
-Summarize the NatureCounts data for mapping. Here we will determine the number of unique species observed at each unique site.
+Summarize the NatureCounts data for mapping. Here we will determine the number of species observed at each site.
 
 ```{r}
 # Group by point_id and summarize total_count
@@ -412,23 +418,22 @@ landscape_metrics_df <- landscape_metrics_df %>%
 ```
 
 
-OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be used to complete [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
 ```{r}
 # landscape_metrics_df <- landscape_metrics_df %>%
-  # left_join(pland_values, by = "point_id") %>%
-  # select(-point_id) # drop point_id column
+# left_join(pland_values, by = "point_id") 
 
 # write.csv(landscape_metrics_df , "data/mauricie/env_covariates/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
-Now let's combine the landscape-level metrics you derived from land cover with the NatureCounts summary data to assess how the metrics might influence species diversity.
+Now let's combine the landscape-level metrics you derived with the NatureCounts summary data to assess how the landscape composition and configuration might influence species diversity.
 
 ```{r}
 # Join the landscape metrics with the NatureCounts summary data
-lsm_sitesum_df <- left_join(mauricie_site_summary, landscape_metrics_df, by = "point_id")
+lsm_sitesum_df <- left_join(mauricie_site_summary, landscape_metrics_df, by = "point_id") ###You dropped the point ID when saving above. This breaks the code. Please test all code to ensure it works.###
 
 # Plot the relationship between species diversity and edge density and the number of patches, respectively
 
@@ -437,7 +442,7 @@ ggplot(lsm_sitesum_df, aes(x = ed, y = n_species)) +
   geom_point(color = "blue", alpha = 0.6) +
   labs(title = "Species Diversity vs. Edge Density",
        x = "Edge Density (ED)",
-       y = "Number of Species (n_species)") +
+       y = "Number of Species") +
   theme_minimal()
 
 # n_species vs. number of patches (NP)
@@ -445,7 +450,7 @@ ggplot(lsm_sitesum_df, aes(x = np, y = n_species)) +
   geom_point(color = "green", alpha = 0.6) +
   labs(title = "Species Diversity vs. Number of Patches",
        x = "Number of Patches (NP)",
-       y = "Number of Species (n_species)") +
+       y = "Number of Species") +
   theme_minimal()
 ```
 
