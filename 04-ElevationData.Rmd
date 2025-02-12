@@ -47,7 +47,7 @@ This tutorial uses the following spatial data.
 
 # 4.1 Data Setup {#4.1DataSetup}
 
-To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click download, and extract the file to your directory before applying the `st_read()` function.
+To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click "Go to Resource" to download. Then extract the file to your directory before applying the `st_read()` function.
 
 ```{r eval = FALSE}
 # if the layers are in your working directory
@@ -79,7 +79,7 @@ OPTIONAL: To save the boundary as a shapefile to your working directory, use the
 # st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
 ```
 
-To assess the species distribution within the National Park, download data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is part of a 5 year census that collects data on the distribution and abundance of all species breeding in the province.
+To assess the species distribution within the National Park, download data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is a 5 year census that collects data on the distribution and abundance of all species breeding in the province.
 
 Don't forget to replace `testuser` with your NatureCounts username. You will be prompted for your password.
 
@@ -92,6 +92,8 @@ quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", in
 eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
 
 > To execute this code chunk, remove the \#
+
+###I have not worked through the tutorial with the ebird data. Could you please do this and check that it works here and in other chapters. Or remove reference to ebird here. For example, summarize total count for each species at each Atlas Block. Does this work??###
 
 ```{r, eval = FALSE}
 # quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
@@ -170,7 +172,7 @@ mauricie_birds_df <- mauricie_birds_sf %>%
   ) %>%
   rename(longitude = X, latitude = Y)
 
-mauricie_birds_df <- mauricie_birds_df %>% select(record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, longitude, latitude) # reduce the dataframe to the columns needed for your analysis
+mauricie_birds_df <- mauricie_birds_df %>% dplyr::select(record_id, species_id, english_name, SiteCode, survey_year, survey_month, survey_day, ObservationCount, longitude, latitude) # reduce the dataframe to the columns needed for your analysis
 ```
 
 OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The filtered NatureCounts dataset will be used again in subsequent chapters**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
@@ -183,7 +185,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 
 # 4.2 Elevation Models {#4.2ElevationModels}
 
-Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e. Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
+Digital elevation datasets store topographic information like elevation or slope and are often used in landscape ecology. These datasets, i.e., Digital Elevation Models (DEMs), Digital Surface Models (DSMs), and Digital Terrain Models (DTMs) are derived through a variety of remote sensing and spatial interpolation techniques and all help describe land features.
 
 **Digital Elevation Model** - represents the bare-Earth surface and [excludes]{.underline} all terrain vector features (i.e., streams, breaklines, and ridges), and all ground objects (power lines, buildings, trees, and vegetation).
 
@@ -206,7 +208,7 @@ output_dir <- "path/to/your/directory/folder" # to specify your directory manual
 
 Create a mosaic of the adjacent DTM rasters.
 
-**Note: You should store the DTM's in their own folder after download. The code below will produce an error if there are other .tiff files in your working directory.**
+**Note: You should store the DTM's in their own folder after download. The code below will produce an error if there are other .tiff files in your working directory (like the ones you downloaded in Chapter 3).**
 
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
@@ -257,12 +259,14 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_path <- "path/to/your/folder/dtm_mask.tif"  
+# output_dir <- getwd() ###KLeep this consistent with the above###
 
-# writeRaster(dtm_mask, output_path, overwrite = TRUE)
+# output_dir <- "path/to/your/folder/dtm_mask.tif"  
+
+# writeRaster(dtm_mask, output_dir, overwrite = TRUE) ###Error: [writeRaster] cannot guess file type from filename###
 ```
 
-# 4.4 Map & Extract Digital Elevation Data {#4.4Map-Extract}
+# 4.4 Map Digital Elevation Data {#4.4Map-Extract}###Is extract the correct term??
 
 Visualize the regional and masked DTM's with a two-panel plot.
 
@@ -283,7 +287,7 @@ plot(dtm_mask, main = "masked DTM")
 plot(mauricie_boundary, add = TRUE, border = "red", col = NA, lwd = 2)
 ```
 
-Summarize the NatureCounts data for mapping. Here we will determine the number of unique species observed at each unique site.
+Summarize the NatureCounts data for mapping. Here we will determine the number of species observed at each site.
 
 ```{r}
 # Group by SiteCode and summarize mean annual count across all species
@@ -312,7 +316,7 @@ plot(st_geometry(mauricie_site_summary),
      add = TRUE, 
      pch = 19,       # Solid circle
      col = "blue",   # Point color
-     cex = mauricie_site_summary$n_species_scale)      # Point size based on total count
+     cex = mauricie_site_summary$n_species_scale)      # Point size based on total  ###Can we add a legend of the point size scale###
 ```
 
 Extract elevation values for each bird observation record and append it to `mauricie_birds`. First, make sure the CRS of both spatial data match and then use `terra::extract()`.
@@ -332,7 +336,9 @@ elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
   select(record_id, elevation = Band_1)
 ```
 
-OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+
+###Ensure that in each chapter the RasterSummaryTools.Rmd is referenced correctly as SummarytTools.Rmd###
 
 > To execute this code chunk, remove the \#
 
@@ -359,7 +365,7 @@ There does not appear to be a clear relationship between species diversity and e
 
 ------------------------------------------------------------------------
 
-Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over vector data points. In [Chapter 5](05-LandcoverData.Rmd), you can explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
+Congratulations! You completed **Chapter 4 - Digital Elevation Data**. In this chapter, you successfully 1) processed raster DTM's 2) performed cropping and masking procedures and 3) extracted elevation data over vector data points. In [Chapter 5](05-LandcoverData.Rmd), you will explore how to extract unique pixel values from landcover data and link it to NatureCounts data.
 
 Below are some additional resources you may find useful to further your understanding of LiDAR data.
 
@@ -431,7 +437,7 @@ This will open a webpage directory displaying a list of spatial data files avail
 knitr::include_graphics("images/spatdata10.PNG")
 ```
 
-Save these files in your R project working directory for easy access during this tutorial.
+Save these files in your working directory for easy access during this tutorial.
 
 ```{r evel=FALSE}
 getwd()
