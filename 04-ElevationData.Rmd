@@ -266,7 +266,7 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 # writeRaster(dtm_mask, output_dir, overwrite = TRUE) ###Error: [writeRaster] cannot guess file type from filename###
 ```
 
-# 4.4 Map Digital Elevation Data {#4.4Map-Extract}###Is extract the correct term??
+# 4.4 Map and Extract Digital Elevation Data {#4.4Map-Extract}
 
 Visualize the regional and masked DTM's with a two-panel plot.
 
