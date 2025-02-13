@@ -15,13 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 > In Chapter 6, you downloaded satellite imagery from the Copernicus SENTINEL-2 mission and calculated spectral indices (NDWI, NDVI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) to combine with NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr). In this chapter, you will create data summaries and visualizations using NatureCounts data and environmental covariates.
 
-**This chapter uses the data products prepared in Chapters 4-6 of the Spatial_Data_Tutorial, and the National Park boundary and NatureCounts data downloaded in section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd). For quick access, all data are available for download via the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder. If you wish to gain experience in how to download, process, and save the environmental layers yourself, return to the earlier chapters of this tutorial series and explore the Additional Resources articles.**
+**This chapter uses the data products prepared in Chapters 4-6, and the National Park boundary and NatureCounts data downloaded in section 4.1 Data Setup from [Chapter 4: Elevation Data](04-ElevationData.Rmd). For quick access, all data are available for download via the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder. If you wish to gain experience in how to download, process, and save the environmental layers yourself, return to the earlier chapters of this tutorial series and explore the Additional Resources articles.**
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
-By the end of **Chapter 7 - Summary Statistics**, users will know how to:
+By the end of **Chapter 7 - Summary Statistics ###Is this the title of is the title "Summary Tools? Please correct here and in previous chapters if needed###**, users will know how to:
 
--   Create and visualize NatureCounts and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot
+-   Create and visualize NatureCounts data and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot ##Please make the learning objective structure similar to the others once finalized, with associated links###
 
 Load the required packages:
 
@@ -36,15 +36,17 @@ library(FactoMineR)
 
 # 7.1 Data Setup {#7.4SummaryTools}
 
-In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively over bird observation sites across La Mauricie National Park. These data were uploaded to the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively, at surveys sites across La Mauricie National Park. These data were uploaded to the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
-Let's download all the environmental covariates into R and join them to a common dataframe.
+Let's download all the environmental covariates and join them to a common dataframe.
 
 ```{r, message = FALSE}
 # List the dataframes
-env_covariates <- list.files(path = "data/mauricie/env_covariates", 
+env_covariates <- list.files(path = "data/mauricie/env_covariates", ###we had users save these to thier working directory. Could you please provide the code that is compatible with this###
                              pattern = "\\.csv$", 
                              full.names = TRUE)
+
+###There is an issue with your landscape data file in the maurice data folder. Please run all code to check that it works.###
 
 # Read each CSV into a list of dataframes
 env_covariates_list <- lapply(env_covariates, read_csv)
@@ -66,14 +68,15 @@ mauricie_birds_sf <- mauricie_birds_df %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) 
 ```
 
-Trim the `sf` object down by selecting key attribute columns for better readability. Explicitly call the `dplyr` function to avoid namespace clashes. 
+Select attribute columns for better readability. Explicitly call the `dplyr` function to avoid namespace clashes.
+
 ```{r}
 mauricie_birds_sf <- mauricie_birds_sf %>% 
   dplyr::select(record_id, species_id, SiteCode, Locality, SamplingEventIdentifier, RouteIdentifier, 
          survey_year, survey_month, survey_day, english_name, ObservationCount, geometry)
 ```
 
-Combine the environmental covariates with the NatureCounts data.
+Combine the environmental covariates with the NatureCounts data. ###Why do we combine the NatureCounts data with the covarites here, and then pull them apart, and then put them back together gain. Please fix. \###
 
 ```{r}
 mauricie_data <- mauricie_birds_sf %>%
@@ -96,7 +99,7 @@ Convert the summary `sf` object back to a regular dataframe using the `st_drop_g
 mauricie_data_summary <- st_drop_geometry(mauricie_data_summary)
 ```
 
-Calculate the species richness and abundance at each point.
+Calculate the species diversity and abundance at each point.
 
 ```{r}
 biodiversity_count <- mauricie_data_summary  %>%
@@ -105,7 +108,7 @@ biodiversity_count <- mauricie_data_summary  %>%
             n_individuals = sum(ObservationCount, na.rm = TRUE), .groups = "drop") # Count unique species
 ```
 
-Drop all columns except the `point_id` and environmental variables and group all rows together by location.
+Drop all columns except the `point_id` and environmental variables and group all rows together by point_id.
 
 ```{r}
 enviro_data_df <- mauricie_data_summary %>%
@@ -116,7 +119,9 @@ enviro_data_df <- mauricie_data_summary %>%
   ungroup()
 ```
 
-Join the `biodiversity_count` dataframe. Cleanup variable names.
+Join the `biodiversity_count` dataframe. Cleanup variable names. ###You joined these above. Do we need to do this again here.###
+
+##This code breaks because there are duplicates in the landscape_metric_df.csv. Please check all code below to ensure it works \###
 
 ```{r}
 enviro_data_df <- enviro_data_df %>%
@@ -124,7 +129,6 @@ enviro_data_df <- enviro_data_df %>%
   rename(pland_mixed_forest = `pland_mixed forest`) %>%  # Rename column
   mutate(across(-point_id, as.numeric))  # Ensure all other columns are numeric
 ```
-
 
 # 7.2 Diagnostic Plots
 
@@ -134,7 +138,7 @@ Retrieve basic summary info for the environmental data.
 summary(enviro_data_df)
 ```
 
-Create a scatterplot matrix to select meaningful variables for modeling. 
+Create a scatterplot matrix to select meaningful variables for modeling.
 
 ```{r}
 pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + ndvi, data=enviro_data_df, 
@@ -159,7 +163,7 @@ ggplot(hist_data, aes(x = value)) +
        y = "Frequency")
 ```
 
-Create Q-Q plots for each variable to visually assess if the data is normally distributed.  
+Create Q-Q plots for each variable to visually assess if the data is normally distributed.
 
 ```{r}
 par(mfrow=c(2,3))  # set layout for multiple plots
@@ -194,6 +198,7 @@ model <- lm(n_species ~  elevation + ed + ndvi , data=enviro_data_df)
 summary(model)
 anova(model)
 ```
+
 Create diagnostic plots to evaluate the strength of the model.
 
 ```{r}
@@ -247,7 +252,7 @@ ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) 
 
 # 7.4 Data Summary Plots
 
-Create scatter plots with regression lines to explore the relationship of species richness with each environmental variable. 
+Create scatter plots with regression lines to explore the relationship of species richness with each environmental variable.
 
 ```{r}
 # Elevation vs. n_species
@@ -315,7 +320,7 @@ ggplot(elevation_summary, aes(x = elevation_class, y = spec_richness)) +
 
 # 7.5 Principal Component Analysis
 
-Null values can bias the result of PCA. In `enviro_data_df`, PLAND null values represent land cover types not represented at a given observation site. Replace the NA's with zeros. 
+Null values can bias the result of PCA. In `enviro_data_df`, PLAND null values represent land cover types not represented at a given observation site. Replace the NA's with zeros.
 
 ```{r}
 pland_data <- enviro_data_df %>%
@@ -330,17 +335,19 @@ Compute the PCA using the `princomp()` and display the result using `summary()`.
 pland_data_pca <- princomp(pland_data)
 summary(pland_data_pca)
 ```
+
 Use a scree plot to visualize the importance of each PC.
 
 ```{r}
 fviz_eig(pland_data_pca, addlabels = TRUE)
 ```
 
-The first three PC's explain over 70% of the variance. Explore the loadings matrix of the first three principal components. 
+The first three PC's explain over 70% of the variance. Explore the loadings matrix of the first three principal components.
 
 ```{r}
 pland_data_pca$loadings[, 1:3]
 ```
+
 Create a biplot of the the PLAND variables.
 
 ```{r}
@@ -350,13 +357,14 @@ fviz_pca_var(pland_data_pca, col.var = "black")
 ```{r}
 fviz_cos2(pland_data_pca, choice = "var", axes = 1:2)
 ```
+
 ```{r}
 fviz_pca_var(pland_data_pca, col.var = "cos2",
             gradient.cols = c("black", "orange", "green"),
             repel = TRUE)
 ```
 
-# 7.6  K-Means Clustering
+# 7.6 K-Means Clustering
 
 ```{r}
 # Determine the optimal number of clusters using the elbow method
@@ -385,6 +393,7 @@ ggplot(df_pca, aes(x = PC1, y = PC2, color = cluster)) +
        x = "Principal Component 1", y = "Principal Component 2") +
   theme_minimal()
 ```
+
 ```{r}
 ggplot(enviro_data_df, aes(x = cluster, y = pland_mixed_forest, fill = cluster)) +
   geom_boxplot() +
