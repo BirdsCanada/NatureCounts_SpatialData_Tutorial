@@ -185,7 +185,7 @@ Read in the NatureCounts data you saved from [Chapter 4: Elevation Data](04-Elev
 mauricie_birds_df <- read.csv("mauricie_birds_df.csv")
 ```
 
-Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014). 
+Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014).
 
 Create an `sf` object from the NatureCounts data that represents the unique point count locations.
 
@@ -283,7 +283,6 @@ pland_values <- lsm %>%
 
 Note: Not every land cover type is represented within each point buffer, hence why some rows might be populated with NA values.
 
-
 Calculate the mean class-level PLAND and ED across all point buffers.
 
 ```{r}
@@ -310,8 +309,7 @@ ggplot(lsm_mean, aes(x = landcover_name, y = mean_value, color = metric)) +
   scale_color_manual(values = c("ed" = "red", "pland" = "darkgreen"))
 ```
 
-> It appears like 'mixed forest' is the dominant land cover type across all point buffers. This class also has the highest edge density. 
-
+> It appears like 'mixed forest' is the dominant land cover type across all point buffers. This class also has the highest edge density.
 
 Calculate the landscape-level ED and NP for each point buffer. Store the result in a dataframe.
 
@@ -410,13 +408,12 @@ landscape_metrics_df <- mauricie_birds_sf %>%
   select(record_id, point_id, ed, np)  # Keep record_id, point_id, ed, and np columns
 ```
 
-Append the class level PLAND metric values and keep the `point_id` column. 
+Append the class level PLAND metric values and keep the `point_id` column.
 
 ```{r}
 landscape_metrics_df <- landscape_metrics_df %>%
   left_join(pland_values, by = "point_id")
 ```
-
 
 OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .*csv* file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted landcover values will be used to complete [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
