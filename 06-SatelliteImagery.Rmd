@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 6: Calculating NDWI and NDVI using SENTINEL2 imagery ####Can we shorten this title. "Satellite Imagery" is more in line with the other chapter titles.
+# Chapter 6: Satellite Imagery
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
@@ -115,7 +115,7 @@ plot(st_geometry(mauricie_boundary), col = NA, border ="green", add = TRUE)
 
 The Normalized Difference Vegetation Index (NDVI; [Huang et al., 2021](https://link.springer.com/article/10.1007/s11676-020-01155-1)) is a common proxy for primary productivity collected using remote sensing. It is a measure of vegetation health that describes the greenness and the density of vegetation captured in a satellite image. Healthy vegetation will absorb most visible light and reflect most near-infrared light, depending on its structural integrity and the amount of chlorophyll found in its biomass.
 
-The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. To avoid the effect of water when analyzing spectral indices like NDVI we can apply a water mask.
+The Normalized Difference Water Index (NDWI; [McFeeters, 1996](https://www.tandfonline.com/doi/abs/10.1080/01431169608948714)) is a spectral index that can be used to detect water bodies from multispectral imagery. **NDWI** can be used to create a water mask which will help minimize the effect of water and avoid skewed vegetation index values by removing water values from an image. In other words, this will help make the calculation of NDVI more accurate. Applying a **mode** filter to a water mask creates more uniformity across the water by eliminating areas that might be confused for other land cover types.
 
 Annual cumulative NDVI has a strong positive relationship with species richness and bird diversity over time, making it a useful covariate to describe trends in NatureCounts data. In this section, we will calculate two spectral indices: 1) NDWI to create a water mask and 2) NDVI as a measure of vegetation health.
 
@@ -134,7 +134,6 @@ mauricie_sl_ndwi <- calc_ndwi(mauricie_sl$green, mauricie_sl$nir)
 
 # Create water mask
 water_mask <- mauricie_sl_ndwi >= 0
-
 ```
 
 Plot NDWI and the water mask.
@@ -158,8 +157,6 @@ plot(st_geometry(mauricie_boundary), col = NA, border ="red", add = TRUE)
 # Reset plotting layout to default
 par(mfrow = c(1, 1))
 ```
-
-###The next several steps are unclear why we are doing them? Why do we need the water mask and water mode? Are any of these steps redundant? Can some of them be removed. Otherwise, it needs to be made clear why they are needed###
 
 Use the function `focal()` to apply a convolution filter returning the **mode** of each pixel of `water_mask` in a 3 x 3 windows of equal weights (argument `w = 3`). Name the output raster `water_mask_mode`. The *mode* of a vector `x` is the value that appears the most often in `x`.
 
@@ -197,7 +194,7 @@ names(water_mask_combined) <- c("water mask", "water mask mode")
 plot(water_mask_combined)
 ```
 
-Apply the water ####mode?? mask to `mauricie_sl`.
+Apply the `water_mask_mode` to `mauricie_sl`.
 
 ```{r}
 mauricie_sl_water_mask <- mask(mauricie_sl, water_mask_mode, maskvalues = 1)
