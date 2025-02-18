@@ -271,32 +271,59 @@ mauricie_birds_sf <- sf::st_as_sf(mauricie_birds_df,
 mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
 ```
 
-Summarize the NatureCounts data for mapping. ###Could we make this species diversity like the previous examples and map the dot sizes based on this###
+Transform the CRS of the National Park boundary to match the NatureCounts data.
 
 ```{r}
-# Group by SiteCode and summarize total_count
-mauricie_site_summary <- mauricie_birds_sf %>%
-  group_by(SiteCode) %>%
-  summarize(total_count = sum(ObservationCount, na.rm = TRUE))
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(mauricie_birds_sf)) # match the CRS
 ```
 
-To map ###species diversity and NDVI data:
+Summarize the NatureCounts data for mapping. Here we will determine the number of species observed at each site like we did in [Chapter 4](04-ElevationData.Rmd) and [Chapter 5](05-LandcoverData.Rmd).
 
 ```{r}
-mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_sl_ndvi)) # Match the CRS
+# Group by SiteCode and summarize mean annual count across all species
+mauricie_site_summary <- mauricie_birds_sf %>%
+  group_by(SiteCode, geometry) %>% 
+  summarise(n_species = n_distinct(english_name)) # count the number of unique species
+```
 
-# Plot NDVI raster for La Mauricie National Park
-plot(mauricie_sl_ndvi, main = "NDVI values across La Mauricie National Park")
+To map NatureCounts species richness and NDVI data:
+
+```{r}
+# Match the CRS
+mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(mauricie_sl_ndvi))
+
+# Plot the dtm_mask raster
+plot(mauricie_sl_ndvi, main = "NDVI with Species Diversity Summary Points across La Mauricie")
 
 # Overlay the National Park boundary in red
-plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE)
+plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE, lwd = 2)
 
-# Overlay the multipoints from the site summary in blue
+#scale the n_species column to range from 0-5 for plotting
+mauricie_site_summary$n_species_scale <- scales::rescale(mauricie_site_summary$n_species, to = c(0, 2))
+
+# Overlay mauricie_site_summary points
 plot(st_geometry(mauricie_site_summary), 
      add = TRUE, 
-     pch = 19,      # Solid circle
-     col = "blue",  # Point color
-     cex = 0.5)     # Point size
+     pch = 19,       # Solid circle
+     col = "black",   # Point color
+     cex = mauricie_site_summary$n_species_scale)      # Point size based on total
+
+# Define legend values for the point size scale
+legend_values <- c(min(mauricie_site_summary$n_species, na.rm = TRUE), 
+                   median(mauricie_site_summary$n_species, na.rm = TRUE), 
+                   max(mauricie_site_summary$n_species, na.rm = TRUE))
+legend_sizes <- scales::rescale(legend_values, to = c(0.5, 2))
+
+# Add legend for the point size scale beside NDVI scale
+legend("topright",                     # Position
+       inset = c(-0.12, 0),            # Moves the legend outside the map extent
+       legend = legend_values, 
+       pch = 19, col = "black", 
+       pt.cex = legend_sizes, 
+       title = "Species Richness",
+       title.cex = 0.6,                # Adjust legend title size
+       bty = "y",                      # Place box around legend
+       xpd = TRUE)                     # Allows placing legend outside the plot
 
 ```
 
