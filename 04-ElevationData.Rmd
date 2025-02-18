@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-> In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatio-temporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
+> In [Chapter 3](03-ClimateData.Rmd), you processed vector and raster climate data, combined them with NatureCounts observations, and visualized them using plots and spatiotemporal maps. In this tutorial, you will process **LiDAR**-derived Digital Terrain Models, apply cropping and masking procedures, and extract elevation values to combine with NatureCounts data. Your focus will be on the NatureCounts and spatial data within [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature).
 
 La Mauricie National Park is situated in the Laurentian mountains and covers 536 km2 within the Eastern Canadian Temperate-Boreal Forest transition ecoregion. The environment is characterized by mixed forests, lakes, rivers, and hills that range from from 150 m to over 500 m in elevation. The park provides suitable habitat for a variety of wildlife including at least 215 bird species.
 
@@ -87,16 +87,6 @@ Download NatureCounts data:
 
 ```{r}
 quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
-```
-
-eBird has the greatest number of provincial bird records, however, this collection comprise data of Access Level 4. If you wish to access this collection you must sign up for a free account and [make a data request](https://naturecounts.ca/nc/default/explore.jsp#download). Otherwise, you can carry forward with the tutorial without these data and skip this code chunk.
-
-> To execute this code chunk, remove the \#
-
-###I have not worked through the tutorial with the ebird data. Could you please do this and check that it works here and in other chapters. Or remove reference to ebird here. For example, summarize total count for each species at each Atlas Block. Does this work??###
-
-```{r, eval = FALSE}
-# quebec_atlas <- nc_data_dl(collections = c("QCATLAS2PC", "EBIRD-CA-QC"), username = "testuser", info = "spatial_data_tutorial")
 ```
 
 Read in the list of species names from NatureCounts which can be linked to the species id:
@@ -337,8 +327,6 @@ elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
 ```
 
 OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
-
-###Ensure that in each chapter the RasterSummaryTools.Rmd is referenced correctly as SummarytTools.Rmd###
 
 > To execute this code chunk, remove the \#
 
