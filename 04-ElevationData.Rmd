@@ -308,7 +308,24 @@ plot(st_geometry(mauricie_site_summary),
      add = TRUE, 
      pch = 19,       # Solid circle
      col = "blue",   # Point color
-     cex = mauricie_site_summary$n_species_scale)      # Point size based on total  ###Can we add a legend of the point size scale###
+     cex = mauricie_site_summary$n_species_scale)      # Point size based on total
+
+# Define legend values for the point size scale
+legend_values <- c(min(mauricie_site_summary$n_species, na.rm = TRUE), 
+                   median(mauricie_site_summary$n_species, na.rm = TRUE), 
+                   max(mauricie_site_summary$n_species, na.rm = TRUE))
+legend_sizes <- scales::rescale(legend_values, to = c(0.5, 2))
+
+# Add legend for the point size scale beside elevation scale
+legend("topright",                     # Position
+       inset = c(-0.10, 0),            # Moves the legend outside the map extent
+       legend = legend_values, 
+       pch = 19, col = "blue", 
+       pt.cex = legend_sizes, 
+       title = "Species Richness",
+       title.cex = 0.7,                # Adjust legend title size
+       bty = "y",                      # Place box around legend
+       xpd = TRUE)                     # Allows placing legend outside the plot
 ```
 
 Extract elevation values for each bird observation record and append it to `mauricie_birds`. First, make sure the CRS of both spatial data match and then use `terra::extract()`.
