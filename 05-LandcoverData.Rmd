@@ -28,7 +28,7 @@ By the end of **Chapter 5 - Land Cover Data**, users will know how to:
 -   Cropping and masking land cover data: [Spatial Extents: Crop and Mask](#5.1Crop-Mask)
 -   Assign land cover class labels and create a custom plot: [Class Labels](#5.2ClassLabels)
 -   Create buffers around observation sites (points): [Point Buffers](#5.3PointBuffers)
--   Calculate landscape metrics, including PLAND, NP, and ED ###Please specific what these acronyms mean###: [Landscape Metrics](#5.4LandscapeMetrics)
+-   Calculate landscape metrics, including Percent Land Cover (PLAND), Number of Patches (NP), and Edge Density (ED): [Landscape Metrics](#5.4LandscapeMetrics)
 -   Combine NatureCounts data with land cover data for analysis: [Spatial Join](#5.5Map-Extract)
 
 Load the required packages:
@@ -64,7 +64,7 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 mauricie_boundary <- st_read("mauricie_boundary.shp")
 ```
 
-To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select the TIFF file to download. Extract the data download and save the file to your directory before applying `terra::rast()`.
+To read in the land cover dataset, navigate to [2015 Land Cover of Canada](https://open.canada.ca/data/en/dataset/4e615eae-b90c-420b-adee-2ca35896caf6), scroll down to **Data and Resources** and select the TIFF file to download by clicking "Go to resource". Extract the data download and save the file to your directory before applying `terra::rast()`.
 
 ```{r}
 # if the data are in your working directory
@@ -131,8 +131,12 @@ To execute this code chunk, remove the \# and make sure to specify the file form
 ```{r}
 # output_dir <- getwd()
 
-# writeRaster(landcover_mask, output_dir, overwrite = TRUE) #####Error: [writeRaster] cannot guess file type from filename
+# output_dir <- "path/to/your/folder/landcover_mask.tif" # include the masked raster name and '.tif' argument 
+
+# writeRaster(landcover_mask, output_dir, overwrite = TRUE)
 ```
+
+Note: Make sure to include the '.tif' argument when specifying the output_dir and name of your masked raster file. This specifies the file type while using writeRaster() which will, otherwise, produce an error.
 
 # 5.2 Class Labels {#5.2ClassLabels}
 
@@ -185,7 +189,7 @@ Read in the NatureCounts data you saved from [Chapter 4: Elevation Data](04-Elev
 mauricie_birds_df <- read.csv("mauricie_birds_df.csv")
 ```
 
-Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014).
+**Note: The land cover data (2015) represents a static environmental variable in this scenario. Here, we assume that land cover within the National Park did not change drastically across the survey years (2011 - 2014).**
 
 Create an `sf` object from the NatureCounts data that represents the unique point count locations.
 
@@ -204,7 +208,6 @@ mauricie_birds_local <- mauricie_birds_local %>%
   distinct() %>% ungroup()
 
 #Note that usually the SiteCode is the unique identifier for each observation site. However, this was not the case for the Quebec Breeding Bird Atlas data. We therefore use the geometry to create a unique identifier for each point.
-
 ```
 
 Use the `st_buffer` function to generate 3 km diameter circular neighborhoods (or 1.5 km radius) centered at each observation location.
@@ -281,7 +284,7 @@ pland_values <- lsm %>%
   )
 ```
 
-Note: Not every land cover type is represented within each point buffer, hence why some rows might be populated with NA values.
+**Note: Not every land cover type is represented within each point buffer, hence why some rows might be populated with NA values.**
 
 Calculate the mean class-level PLAND and ED across all point buffers.
 
@@ -337,7 +340,7 @@ lsm_landscape <- lsm_landscape %>%
               values_from = "value")
 ```
 
-**Note**: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results.
+**Note: Landscape pattern analysis requires careful consideration for the classification scheme, spatial extent, and choice of landscape metric - all of which should depend on the objectives of your study. How you group values also matters as it will influence how you interpret results.**
 
 # 5.5 Spatial Join {#5.5Map-Extract}
 
@@ -420,9 +423,6 @@ OPTIONAL: To save the landscape metrics data as a *.csv* to your disk, use the `
 > To execute this code chunk, remove the \#
 
 ```{r}
-# landscape_metrics_df <- landscape_metrics_df %>%
-# left_join(pland_values, by = "point_id") 
-
 # write.csv(landscape_metrics_df , "data/mauricie/env_covariates/landscape_metrics_df.csv", row.names = FALSE)
 ```
 
@@ -430,7 +430,7 @@ Now let's combine the landscape-level metrics you derived with the NatureCounts 
 
 ```{r}
 # Join the landscape metrics with the NatureCounts summary data
-lsm_sitesum_df <- left_join(mauricie_site_summary, landscape_metrics_df, by = "point_id") ###You dropped the point ID when saving above. This breaks the code. Please test all code to ensure it works.###
+lsm_sitesum_df <- left_join(mauricie_site_summary, landscape_metrics_df, by = "point_id")
 
 # Plot the relationship between species diversity and edge density and the number of patches, respectively
 
