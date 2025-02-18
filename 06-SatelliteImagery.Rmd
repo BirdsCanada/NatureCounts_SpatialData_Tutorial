@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
-> In [Chapter 5](05-LandcoverData.Rmd), you processed land cover (raster) data, extracted unique pixel values, and combined them with NatureCounts data. In this tutorial, you will use satellite imagery from the Copernicus Sentinel-2 mission to calculate spectral index values (NDVI, NDWI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
+> In [Chapter 5](05-LandcoverData.Rmd), you processed land cover (raster) data, calculated landscape metrics derived from land cover, and combined them with NatureCounts data. In this tutorial, you will use satellite imagery from the Copernicus Sentinel-2 mission to calculate spectral index values (NDVI, NDWI) over [La Mauricie National Park](https://parks.canada.ca/pn-np/qc/mauricie/nature) and combine these values to NatureCounts data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr).
 
 The Copernicus Sentinel-2 mission comprises twin satellites flying in polar sun-synchronous orbit phased at 180° to each other. The satellites carry multispectral sensors with 13 spectral bands and have a revisit frequency of 5 days and orbital swath width of 290 km. Their high resolution products support a variety of services and applications including land management, agriculture, forestry, disaster control, humanitarian relief operations, risk mapping, and security concerns.
 
@@ -62,7 +62,6 @@ These interactions also mean that we can represent multispectral imagery through
 Specify the path to your folder containing the satellite images in the code chunk below. Each image represents a distinct band. If you downloaded the data by following [Section 6.3](#6.3CopernicusDataDownload), look for the folder labeled S2A_MSIL2A. Copy the file path to S2A_MSIL2A... \> GRANULE \> L2A... \> IMG_DATA \> R10m which contains the satellite images we will use here.
 
 ```{r}
-
 getwd()
 
 bands <- list.files(path = "path/to/your/folder/R10m", 
@@ -87,6 +86,12 @@ Read in the National Park boundary you saved or downloaded from [Chapter 4: Elev
 
 ```{r}
 mauricie_boundary <- st_read("mauricie_boundary.shp")
+```
+
+Transform the coordinate reference system (CRS) of the National Park boundary to match that of the `sentinel_imagery` SpatRaster.
+
+```{r}
+mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(sentinel_imagery))
 ```
 
 Crop `sentinel_imagery` to the extent of `mauricie_boundary` then plot the cropped image in true color.
