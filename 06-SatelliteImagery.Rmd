@@ -199,6 +199,8 @@ names(water_mask_combined) <- c("water mask", "water mask mode")
 plot(water_mask_combined)
 ```
 
+> Look very closely at the side-by-side depictions of the water mask and water mask mode above. Notice how some tiny yellow areas previously identified as water in the water mask extent are now absent from the water mask mode extent?
+
 Apply the `water_mask_mode` to `mauricie_sl`.
 
 ```{r}
