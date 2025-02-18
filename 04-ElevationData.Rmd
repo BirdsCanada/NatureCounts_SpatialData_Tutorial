@@ -295,7 +295,7 @@ Now we can map the NatureCounts summary output with the DTM data.
 mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_mask))
 
 # Plot the dtm_mask raster
-plot(dtm_mask, main = "Mauricie Mask with Species Diversity Summary Points")
+plot(dtm_mask, main = "Elevation with Species Diversity Summary Points across La Mauricie")
 
 # Overlay the National Park boundary in red
 plot(st_geometry(mauricie_boundary), col = NA, border = "red", add = TRUE, lwd = 2)
@@ -307,7 +307,7 @@ mauricie_site_summary$n_species_scale <- scales::rescale(mauricie_site_summary$n
 plot(st_geometry(mauricie_site_summary), 
      add = TRUE, 
      pch = 19,       # Solid circle
-     col = "blue",   # Point color
+     col = "black",   # Point color
      cex = mauricie_site_summary$n_species_scale)      # Point size based on total
 
 # Define legend values for the point size scale
@@ -320,7 +320,7 @@ legend_sizes <- scales::rescale(legend_values, to = c(0.5, 2))
 legend("topright",                     # Position
        inset = c(-0.10, 0),            # Moves the legend outside the map extent
        legend = legend_values, 
-       pch = 19, col = "blue", 
+       pch = 19, col = "black", 
        pt.cex = legend_sizes, 
        title = "Species Richness",
        title.cex = 0.7,                # Adjust legend title size
