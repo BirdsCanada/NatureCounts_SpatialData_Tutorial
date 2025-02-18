@@ -104,7 +104,7 @@ quebec_atlas <- quebec_atlas %>%
   filter(!is.na(longitude) & !is.na(latitude))  # remove rows with missing coordinates
 ```
 
-To convert the NatureCounts data to a spatial object and transform its coordinate reference system (crs) to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
+To convert the NatureCounts data to a spatial object and transform its coordinate reference system (CRS) to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
 
 ```{r}
 quebec_atlas_sf <- sf::st_as_sf(quebec_atlas,
@@ -236,7 +236,7 @@ To crop a raster we can apply the `crop()` function from the `terra` package whi
 dtm_crop <- crop(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-**Masking** assigns NA values to cells of a raster not covered by a vector.
+**Masking** assigns NA values to cells of a raster not covered by a vector extent.
 
 To mask a raster to a vector extent we can apply the `mask()` function from the `terra` package which also uses the SpatVector format.
 
@@ -249,12 +249,14 @@ OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster(
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_dir <- getwd() ###KLeep this consistent with the above###
+# output_dir <- getwd()
 
-# output_dir <- "path/to/your/folder/dtm_mask.tif"  
+# output_dir <- "path/to/your/folder/dtm_mask.tif" # include the masked raster name and '.tif' argument 
 
-# writeRaster(dtm_mask, output_dir, overwrite = TRUE) ###Error: [writeRaster] cannot guess file type from filename###
+# writeRaster(dtm_mask, output_dir, overwrite = TRUE)
 ```
+
+**Note: Make sure to include the '.tif' argument when specifying the `output_dir` and name of your masked raster file. This specifies the file type while using `writeRaster()` which will, otherwise, produce an error.**
 
 # 4.4 Map and Extract Digital Elevation Data {#4.4Map-Extract}
 
