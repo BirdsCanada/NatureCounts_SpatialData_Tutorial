@@ -24,12 +24,29 @@ By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
     -   [Priority Places for Species at Risk](#2.2_PP)
 
-The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory. ###If this is now the `data` director, please correct####
+The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to a new folder (subdirectory) called `data` to keep things tidy.
 
 To view your working directory.
 
 ```{r}
 getwd()
+```
+
+To set your working directory, if necessary.
+
+```{r}
+setwd("path/to/your/directory")
+```
+
+To create the `data` subdirectory.
+
+```{r}
+if (!dir.exists("data")) { # checks if "data" subdirectory exists
+  print("Directory does not exist. Creating now...")
+  dir.create("data") # creates "data" subdirectory
+} else {
+  print("Directory already exists.")
+}
 ```
 
 This R tutorial requires the following **packages**:
