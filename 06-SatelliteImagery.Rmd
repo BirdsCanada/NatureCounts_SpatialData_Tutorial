@@ -349,7 +349,7 @@ OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` 
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(ndvi_values_df, "data/mauricie/ndvi_values_df.csv", row.names = FALSE)
+# write.csv(ndvi_values_df, "data/mauricie/env_covariates/ndvi_values_df.csv", row.names = FALSE)
 ```
 
 Now, let's combine the NDVI dataframe with the NatureCounts summary data you previously created in order to assess how NDVI influences your metric of species diversity.
