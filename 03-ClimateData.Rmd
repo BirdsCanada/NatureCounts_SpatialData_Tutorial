@@ -15,18 +15,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 | In [Chapter 2](02-SpatialSubsets.Rmd), you applied geoprocessing functions to spatial (vector) objects, and filtered and visualized NatureCounts data within KBAs and Priority Places. Now you are ready to explore your NatureCounts data in relation to environmental covariates. In this tutorial, you will use NatureCounts and climate data to explore possible patterns in Whooping Crane observations, annual mean temperature, and annual mean precipitation within the Wood Buffalo National Park, the province of Alberta, and beyond.
 
-# 3.0 Learning Objectives
+# 3.0 Learning Objectives {#3.1_Learn}
 
 By the end of **Chapter 3 - Climate Data**, users will know how to:
 
--   Download and preprocess vector and raster climate data
--   Combine NatureCounts observations with climate data
--   Visualize NatureCounts and climate data using plots and spatio-temporal maps
+-   Download, process, and visualize NatureCounts data with:
+    -   Vector climate data: [Weathercan](#3.2_WCAN)
+    -   Raster climate data: [WorldClim](#3.3_WClim)
 
 This tutorial utilizes the following bird occurrence, spatial, and climate data sources:
 
 | Data | Description |
-|------------------------------------|------------------------------------|
+|----|----|
 | [eBird Canada (Prairies)](https://naturecounts.ca/nc/default/datasets.jsp?code=EBIRD-CA-PR) | NatureCounts, EBIRD-CA-PR (1800-2024) |
 | Alberta Breeding Bird Atlas | NatureCounts, ABATLAS1 ([1987-1992](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS1)) and ABATLAS2 ([2000-2005](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS2)) |
 | [Alberta Bird Records](https://naturecounts.ca/nc/default/datasets.jsp?code=ABBIRDRECS) | NatureCounts, ABIRDRECS (1941-2006) |
@@ -54,7 +54,7 @@ library(leaflet)
 library(weathercan)
 ```
 
-# 3.1 Data Setup
+# 3.1 Data Setup {#3.1_Data}
 
 ```{r}
 collections <- meta_collections() 
@@ -102,7 +102,7 @@ cranes_summary <- species_occurrence_summary %>%
 cranes_summary
 ```
 
-# 3.2 Weathercan (Vector) Data
+# 3.2 Weathercan (Vector) Data {#3.2_WCAN}
 
 `weathercan` is an R package designed to help access historical weather data from Environment and Climate Change Canada (ECCC). Steffi LaZerte's online tutorial, [Integrating data from weathercan](https://ropensci.org/blog/2018/03/06/weathercan/), provides more details on how to download, filter, and visualize weather data in R.
 
@@ -206,7 +206,7 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
 
-# 3.3 WorldClim (Raster) Data
+# 3.3 WorldClim (Raster) Data {#3.3_WClim}
 
 [WorldClim](https://www.worldclim.org/data/index.html) provides high spatial resolution global climate data. Their data is in raster GeoTiff (.tif) file format and comprises a variety of variables including 19 [bioclimatic](https://www.worldclim.org/data/bioclim.html) variables representing annual trends, seasonality, and extreme environmental factors.
 
