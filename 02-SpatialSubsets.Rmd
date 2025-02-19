@@ -15,16 +15,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 | In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research applications. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
 
-# 2.0 Learning Objectives ###Same comment as previous Chapter. These need to be links
+# 2.0 Learning Objectives
 
 By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
--   Import and map polygon boundary files based on attributes ###Same comments as previous. Please link to learning objectives as we have done in other chapters###
--   Reproject NatureCounts data to the coordinate reference system (CRS) of your spatial layer
--   Spatially filter and map NatureCounts data for an area of interest
--   Read, process, and visualize spatial vector data within areas of significant conservation potential: [Key Biodiversity Areas (KBAs)](https://kbacanada.org/about/) and [Priority Places for Species at Risk](https://environmental-maps.canada.ca/CWS_Storylines/index-ca-en.html#/en/priority_places-lieux_prioritaires).
+-   Import, reproject, and visualize spatial vector data within:
+    -   [Key Biodiversity Areas (KBAs)](#2.1_KBA)
 
-The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory.
+    -   [Priority Places for Species at Risk](#2.2_PP)
+
+The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory. ###If this is now the `data` director, please correct####
 
 To view your working directory.
 
@@ -43,7 +43,7 @@ library(leaflet)
 library(leaflet.extras)
 ```
 
-# 2.1 Key Biodiversity Areas (KBA)
+# 2.1 Key Biodiversity Areas (KBA) {#2.1_KBA}
 
 In this examples, we will assess the spatial distribution of Wood Ducks found in the Ontario Breeding Bird Atlas dataset across the KBAs found within the province of Ontario.
 
@@ -199,7 +199,7 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 # st_write(wood_ducks_kba,"wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
-# 2.2 Priority Places
+# 2.2 Priority Places {#2.2_PP}
 
 In this example, we will assess the spatial distribution of Wood Ducks from the Ontario Breeding Bird Atlas dataset across the Long Point Walsingham Forest Priority Place.
 
