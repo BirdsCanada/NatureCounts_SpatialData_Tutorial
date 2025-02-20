@@ -26,7 +26,7 @@ By the end of **Chapter 3 - Climate Data**, users will know how to:
 This tutorial utilizes the following bird occurrence, spatial, and climate data sources:
 
 | Data | Description |
-|----|----|
+|------------------------------------|------------------------------------|
 | [eBird Canada (Prairies)](https://naturecounts.ca/nc/default/datasets.jsp?code=EBIRD-CA-PR) | NatureCounts, EBIRD-CA-PR (1800-2024) |
 | Alberta Breeding Bird Atlas | NatureCounts, ABATLAS1 ([1987-1992](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS1)) and ABATLAS2 ([2000-2005](https://naturecounts.ca/nc/default/datasets.jsp?code=ABATLAS2)) |
 | [Alberta Bird Records](https://naturecounts.ca/nc/default/datasets.jsp?code=ABBIRDRECS) | NatureCounts, ABIRDRECS (1941-2006) |
@@ -212,18 +212,18 @@ ggplot(cranes_climate_summary, aes(x = yearly_avg_precip, y = annual_count)) +
 
 Download the bioclimatic data on [this webpage](https://www.worldclim.org/data/worldclim21.html). The data are available at the four spatial resolutions, between 30 seconds (\~1 km2) to 10 minutes (\~340 km2). Each download is a "zip" file containing 19 GeoTiff (.tif) files, one for each month of the variables. For this tutorial, we recommend you download the 10 minute resolution.
 
-After dowloading the WorldClim data to your working directory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function.
-
-This code will get the path to your working directory.
+Create a subdirectory called `worldclim` to neatly store the raster data. Move the rasters from your Downloads to the subdirectory.
 
 ```{r}
-getwd()
+dir.create("data/worldclim", recursive = TRUE)
 ```
+
+After dowloading the WorldClim data to your subdirectory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function.
 
 Now point the `list.file` to this directory using the sample code below.
 
 ```{r}
-worldclim_list <- list.files(path = "C:/YOUR/PATH/HERE", pattern = "\\.tif$", full.names = TRUE)
+worldclim_list <- list.files(path = "path/to/your/subdirectory/data/wordclim", pattern = "\\.tif$", full.names = TRUE)
 
 # Read and stack the raster files
 worldclim_stack <- rast(worldclim_list)
