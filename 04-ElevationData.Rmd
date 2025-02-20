@@ -47,14 +47,19 @@ This tutorial uses the following spatial data.
 
 # 4.1 Data Setup {#4.1DataSetup}
 
-To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click "Go to Resource" to download. Then extract the file to your directory before applying the `st_read()` function.
+To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click "Go to Resource" to download.
+
+Create a subdirectory called `nationalparks` to neatly store the parks spatial data.
+
+```{r}
+dir.create("data/nationalparks", recursive = TRUE)
+```
+
+Move the files from your Downloads to the `nationalparks` subdirectory before applying the `st_read()` function.
 
 ```{r eval = FALSE}
-# if the layers are in your working directory
-national_parks <- st_read("vw_Places_Public_lieux_public_APCA.shp")
-
-# else, specify the directory
-national_parks <- st_read("path/to/your/shp")
+# specify the path to your shapefile
+national_parks <- st_read("path/to/your/data/nationalparks/shp")
 ```
 
 Filter the **national_parks** dataset for La Mauricie National Park.
@@ -71,12 +76,18 @@ mauricie_boundary <- st_zm(mauricie_boundary, drop = TRUE, what = "ZM")
 
 OPTIONAL: To save the boundary as a shapefile to your working directory, use the `st_write()` function. **The boundary files are used again in subsequent chapters**. We have uploaded them to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
+Create a subdirectory called `boundary` to neatly store the boundary files.
+
+```{r}
+dir.create("data/boundary", recursive = TRUE)
+```
+
 > To execute this code chunk, remove the \#
 
 ```{r, eval=FALSE, message=FALSE}
-# st_write(mauricie_boundary, "mauricie_boundary.shp")
+# st_write(mauricie_boundary, "data/boundary/mauricie_boundary.shp") 
 
-# st_write(mauricie_boundary, "mauricie_boundary.kml", driver="KML")
+# st_write(mauricie_boundary, "data/boundary/mauricie_boundary.kml", driver="KML")
 ```
 
 To assess the species distribution within the National Park, download data from the [Quebec Breeding Bird Atlas (2010 - 2014)](https://naturecounts.ca/nc/default/datasets.jsp?code=QCATLAS2PC&sec=bmdr) which is a 5 year census that collects data on the distribution and abundance of all species breeding in the province.
@@ -170,7 +181,7 @@ OPTIONAL: To save the NatureCounts data as a *.csv* to your disk, use the `write
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(mauricie_birds_df, "data/mauricie/mauricie_birds_df.csv", row.names = FALSE)
+# write.csv(mauricie_birds_df, "data/mauricie_birds_df.csv", row.names = FALSE)
 ```
 
 # 4.2 Elevation Models {#4.2ElevationModels}
@@ -185,20 +196,23 @@ Digital elevation datasets store topographic information like elevation or slope
 
 For quick-access to the elevation data, download the .tif files from their URL using the hyperlinks below. If you wish to gain experience in how-to access LiDAR data yourself, follow the steps [at the end of this Chapter](#4.6LiDAR).
 
-**Click the following hyperlinks to download the LiDAR-derived elevation data for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to their own folder in your directory.**
+**Click the following hyperlinks to download the LiDAR-derived elevation data for tiles [31I14NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14NE/MNT_31I14NE.tif), [31I15NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15NO/MNT_31I15NO.tif), [31I14SE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I14SE/MNT_31I14SE.tif), [31I15SO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I15SO/MNT_31I15SO.tif), [31I11NE](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I11NE/MNT_31I11NE.tif), and [31I10NO](https://diffusion.mffp.gouv.qc.ca/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/31I/31I10NO/MNT_31I10NO.tif), respectively and then move them to their own folder named `dtm` stored in your `data` subdirectory.**
 
-Set the path to your TIF file directory.
+Create a subdirectory called `dtm` to neatly store your downloaded TIF files. Move them from your Downloads to the `dtm` folder.
+
+```{r}
+dir.create("data/dtm", recursive = TRUE)
+```
+
+Set the path to your TIF file subdirectory.
 
 ```{r, eval = FALSE}
-output_dir <- getwd() # if you want to retrieve the files in your root working directory
-
-output_dir <- "path/to/your/directory/folder" # to specify your directory manually
-
+output_dir <- "path/to/your/subdirectory/data/dtm" # to specify your subdirectory path
 ```
 
 Create a mosaic of the adjacent DTM rasters.
 
-**Note: You should store the DTM's in their own folder after download. The code below will produce an error if there are other .tiff files in your working directory (like the ones you downloaded in Chapter 3).**
+**Reminder: You should store the DTM's in their own folder after download. The code below will produce an error if there are other .tif files in your subdirectory (like the ones you downloaded in Chapter 3).**
 
 ```{r, eval = TRUE}
 # list all the TIFF files in your directory
@@ -244,14 +258,12 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 dtm_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience in the subfolder labeled **mauricie**.
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
 ```{r}
-# output_dir <- getwd()
-
-# output_dir <- "path/to/your/folder/dtm_mask.tif" # include the masked raster name and '.tif' argument 
+# output_dir <- "path/to/your/subdirectory/data/dtm_mask.tif" # include the masked raster name and '.tif' argument 
 
 # writeRaster(dtm_mask, output_dir, overwrite = TRUE)
 ```
@@ -328,6 +340,12 @@ legend("topright",                     # Position
        xpd = TRUE)                     # Allows placing legend outside the plot
 ```
 
+Rename the elevation raster layer.
+
+```{r}
+names(dtm_mask) <- "elevation"
+```
+
 Extract elevation values for each bird observation record and append it to `mauricie_birds`. First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
 ```{r}
@@ -335,22 +353,46 @@ Extract elevation values for each bird observation record and append it to `maur
 mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(dtm_mask))
 
 # Extract the elevation values for each site
-elevation_values_sf <- terra::extract(dtm_mask, vect(mauricie_birds_sf), bind = TRUE)
+elevation_values_sv <- terra::extract(dtm_mask, vect(mauricie_birds_sf), bind = TRUE)
 ```
 
-Convert the sf object holding the extracted elevation values to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
+Convert the SpatVector containing the elevation values to an `sf` object.
 
 ```{r}
-elevation_values_df <- terra::as.data.frame(elevation_values_sf) %>%
-  select(record_id, elevation = Band_1)
+elevation_values_sf <- elevation_values_sv %>%
+  st_as_sf() %>% # converts to sf object
+  dplyr::select(SiteCode, elevation, geometry) # select relevant columns
+  
+```
+
+Assign a point id identifier to each location based on its unique geometry and return the result as a dataframe.
+
+```{r}
+elevation_values_df <- elevation_values_sf %>% 
+  group_by(SiteCode, geometry) %>%
+  mutate(point_id = cur_group_id()) %>% 
+  select(point_id, elevation) %>% 
+  distinct() %>%
+  ungroup() %>%
+  sf::st_drop_geometry() %>%  # drop the geometry column
+  as.data.frame()  # convert to a regular dataframe
+
+
+# Note that usually the SiteCode is the unique identifier for each observation site. However, this was not the case for the Quebec Breeding Bird Atlas data. We therefore use the geometry to create a unique identifier for each point.
 ```
 
 OPTIONAL: To save the elevation data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted elevation values will be required to complete [Chapter 7: Summary Tools](07-SummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
+Create a subdirectory called `env_covariates` to neatly store the output environmental data.
+
+```{r}
+dir.create("data/env_covariates", recursive = TRUE)
+```
+
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(elevation_values_df, "data/mauricie/env_covariates/elevation_values_df.csv", row.names = FALSE)
+# write.csv(elevation_values_df, "data/env_covariates/elevation_values_df.csv", row.names = FALSE)
 ```
 
 Now, let's combine the elevation dataframe with the NatureCounts summary data you previously created in order to assess how elevation influences your metric of species diversity.
@@ -362,7 +404,7 @@ mauricie_site_summary <- st_transform(mauricie_site_summary, crs = st_crs(dtm_ma
 elevation_sitesum_sf <- terra::extract(dtm_mask, vect(mauricie_site_summary), bind = TRUE)
 
 # Plot the relationship between elevation and species diversity 
-plot(elevation_sitesum_sf$Band_1, elevation_sitesum_sf$n_species, 
+plot(elevation_sitesum_sf$elevation, elevation_sitesum_sf$n_species, 
      xlab = "Elevation (m)", ylab = "Number of Species", 
      main = "Species Diversity vs. Elevation")
 
