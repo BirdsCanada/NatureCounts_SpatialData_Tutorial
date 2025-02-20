@@ -47,7 +47,7 @@ This tutorial uses the following spatial data.
 
 # 4.1 Data Setup {#4.1DataSetup}
 
-To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click "Go to Resource" to download.
+To read the National Park polygons into R, navigate to [Places administered by Parks Canada](https://open.canada.ca/data/en/dataset/e1f0c975-f40c-4313-9be2-beb951e35f4e/resource/0744186a-449b-4f1f-9f1e-952a94c6d5ca), click "Go to Resource" to download. If you haven't already, return to the [Chapter 2](02-SpatialSubsets) Learning Objectives to view (`getwd()`) and set (`setwd()`) your working directory and create a folder within this directory called `data`. This is where you will store all data used in this tutorial series.
 
 Create a subdirectory called `nationalparks` to neatly store the parks spatial data.
 
