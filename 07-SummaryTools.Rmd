@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
-By the end of **Chapter 7 - Summary Statistics ###Is this the title of is the title "Summary Tools? Please correct here and in previous chapters if needed###**, users will know how to:
+By the end of **Chapter 7 - Summary Tools**, users will know how to:
 
 -   Create and visualize NatureCounts data and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot ##Please make the learning objective structure similar to the others once finalized, with associated links###
 
@@ -32,33 +32,43 @@ library(MASS)
 library(corrr)
 library(ggcorrplot)
 library(FactoMineR)
+library(factoextra)
 ```
 
 # 7.1 Data Setup {#7.4SummaryTools}
 
-In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively, at surveys sites across La Mauricie National Park. These data were uploaded to the [Google Drive data folder](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively, at surveys sites across La Mauricie National Park. These data were uploaded to the [Google Drive](https://drive.google.com/drive/folders/1j6PHoUJaFDucWe8V5xXNzdGD00WJu0hq?usp=drive_link) for your convenience. These data should be neatly stored in your `env_covariates` subdirectory.
 
-Let's download all the environmental covariates and join them to a common dataframe.
+Run the code chunk below to create your subdirectory, if necessary.
+
+```{r}
+if (!dir.exists("data/env_covariates")) { # checks if "env_covariates" subdirectory exists
+  print("Subdirectory does not exist. Creating now...")
+  dir.create("data/env_covariates", recursive = TRUE) # if not, creates subdirectory
+} else {
+  print("Subdirectory already exists.")
+}
+```
+
+Let's download all the environmental covariates and join them to a common dataframe.  
 
 ```{r, message = FALSE}
 # List the dataframes
-env_covariates <- list.files(path = "data/mauricie/env_covariates", ###we had users save these to thier working directory. Could you please provide the code that is compatible with this###
+env_covariates <- list.files(path = "data/env_covariates",
                              pattern = "\\.csv$", 
                              full.names = TRUE)
-
-###There is an issue with your landscape data file in the maurice data folder. Please run all code to check that it works.###
 
 # Read each CSV into a list of dataframes
 env_covariates_list <- lapply(env_covariates, read_csv)
 
 # Combine NatureCounts and environmental covariates 
-env_covariates_df <- Reduce(function(x, y) left_join(x, y, by = "record_id"), env_covariates_list)
+env_covariates_df <- Reduce(function(x, y) left_join(x, y, by = "point_id"), env_covariates_list)
 ```
 
-Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
+Read in the NatureCounts data you downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd) or the [Google Drive](https://drive.google.com/file/d/1ZDo4OUaxqtHuaM1CaGD7BfFGMg1JzOqv/view?usp=drive_link). This file should be in your `data` folder.
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds_df <- read_csv("data/mauricie/mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("data/mauricie_birds_df.csv") 
 ```
 
 Create an `sf` object from the NatureCounts data that represents the unique point count locations.
@@ -72,59 +82,33 @@ Select attribute columns for better readability. Explicitly call the `dplyr` fun
 
 ```{r}
 mauricie_birds_sf <- mauricie_birds_sf %>% 
-  dplyr::select(record_id, species_id, SiteCode, Locality, SamplingEventIdentifier, RouteIdentifier, 
-         survey_year, survey_month, survey_day, english_name, ObservationCount, geometry)
-```
-
-Combine the environmental covariates with the NatureCounts data. ###Why do we combine the NatureCounts data with the covarites here, and then pull them apart, and then put them back together gain. Please fix. \###
-
-```{r}
-mauricie_data <- mauricie_birds_sf %>%
-  merge(env_covariates_df, by = "record_id")
+  dplyr::select(SiteCode, survey_year, survey_month, survey_day, english_name, ObservationCount, geometry)
 ```
 
 Assign a point identifier to each location based on its unique geometry.
 
 ```{r}
-mauricie_data_summary <- mauricie_data %>%
+mauricie_birds_summary <- mauricie_birds_sf %>%
   group_by(SiteCode, geometry) %>%
   mutate(point_id = cur_group_id()) %>%
   ungroup() %>%
-  distinct()
-```
-
-Convert the summary `sf` object back to a regular dataframe using the `st_drop_geometry()` function.
-
-```{r}
-mauricie_data_summary <- st_drop_geometry(mauricie_data_summary)
+  distinct() %>%
+  st_drop_geometry(mauricie_birds_summary) # drops geometry and converts to regular dataframe
 ```
 
 Calculate the species diversity and abundance at each point.
 
 ```{r}
-biodiversity_count <- mauricie_data_summary  %>%
+biodiversity_count <- mauricie_birds_summary  %>%
   group_by(point_id) %>%
   summarise(n_species = n_distinct(english_name),
             n_individuals = sum(ObservationCount, na.rm = TRUE), .groups = "drop") # Count unique species
 ```
 
-Drop all columns except the `point_id` and environmental variables and group all rows together by point_id.
+Join the `env_covariates_df` and `biodiversity_count` dataframes. Cleanup variable names.
 
 ```{r}
-enviro_data_df <- mauricie_data_summary %>%
-  dplyr::select(-record_id, -species_id, -english_name, -ObservationCount, -SiteCode, 
-         -Locality, -SamplingEventIdentifier, -RouteIdentifier, -survey_year, -survey_month, -survey_day) %>%
-  group_by(point_id) %>%
-  summarise(across(everything(), ~ first(na.omit(.), default = NA)), .groups = "drop") %>%
-  ungroup()
-```
-
-Join the `biodiversity_count` dataframe. Cleanup variable names. ###You joined these above. Do we need to do this again here.###
-
-##This code breaks because there are duplicates in the landscape_metric_df.csv. Please check all code below to ensure it works \###
-
-```{r}
-enviro_data_df <- enviro_data_df %>%
+enviro_data_df <- env_covariates_df %>%
   left_join(biodiversity_count, by = "point_id") %>%
   rename(pland_mixed_forest = `pland_mixed forest`) %>%  # Rename column
   mutate(across(-point_id, as.numeric))  # Ensure all other columns are numeric
@@ -224,7 +208,7 @@ Species rank plots show the relative abundance (number of individuals) of a spec
 Group the NatureCounts data by species and rank them in order of abundance.
 
 ```{r}
-species_rank <- mauricie_data %>%
+species_rank <- mauricie_birds_summary %>%
   filter(!is.na(english_name)) %>%  # Remove rows with NA in english_name
   group_by(english_name) %>%  # Group by species only
   summarize(total_abundance = sum(ObservationCount, na.rm = TRUE), .groups = "drop") %>%
@@ -402,4 +386,4 @@ ggplot(enviro_data_df, aes(x = cluster, y = pland_mixed_forest, fill = cluster))
 
 ------------------------------------------------------------------------
 
-Congratulations! You completed Chapter 7 - Raster Summary Tools. In this chapter, you successfully transformed and combined raster data, performed raster algebra operations, and created summary plot for NatureCounts data using environmental covariates.
+Congratulations! You completed Chapter 7 - Summary Tools. In this chapter, you successfully transformed and created diagnostic and summary plots for NatureCounts data using environmental covariates. If you'd like to explore our Additional Resources, the Raster Tools article is available to you [here](Additional Resources - Raster Tools.Rmd).
