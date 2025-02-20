@@ -64,7 +64,7 @@ Specify the path to your folder containing the satellite images in the code chun
 ```{r}
 getwd()
 
-bands <- list.files(path = "path/to/your/folder/R10m", 
+bands <- list.files(path = "path/to/your/folder/data/R10m", 
                     pattern = "\\.jp2$", full.names = TRUE)
 
 # Read all the bands into a raster stack 
@@ -85,13 +85,16 @@ ext(sentinel_imagery)
 Read in the National Park boundary you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd).
 
 ```{r}
-mauricie_boundary <- st_read("mauricie_boundary.shp")
+mauricie_boundary <- st_read("data/boundary/mauricie_boundary.shp")
 ```
 
 Transform the coordinate reference system (CRS) of the National Park boundary to match that of the `sentinel_imagery` SpatRaster.
 
 ```{r}
-mauricie_boundary <- st_transform(mauricie_boundary, crs = st_crs(sentinel_imagery))
+mauricie_boundary <- mauricie_boundary %>%
+  sf::st_make_valid() %>% # fix performance issues with layer + faster computation
+  st_transform(crs = st_crs(sentinel_imagery))
+
 ```
 
 Crop `sentinel_imagery` to the extent of `mauricie_boundary` then plot the cropped image in true color.
@@ -259,7 +262,7 @@ names(mauricie_sl_ndvi) <- "ndvi"
 Read in the NatureCounts data you saved or downloaded from [Chapter 4: Elevation Data](04-ElevationData.Rmd) or the [Google Drive](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) data folder.
 
 ```{r, warning = FALSE, message = FALSE}
-mauricie_birds_df <- read_csv("mauricie_birds_df.csv") 
+mauricie_birds_df <- read_csv("data/mauricie_birds_df.csv") 
 ```
 
 To convert the NatureCounts data to a spatial object and transform its CRS to match the National Park boundary we can use the `st_as_sf()` and `st_transform()` functions, respectively.
@@ -327,21 +330,36 @@ legend("topright",                     # Position
 
 ```
 
-Extract NDVI values for each survey site and append it to `mauricie_birds`.
-
-First, make sure the CRS of both spatial data match and then use `terra::extract()`.
+Extract NDVI values for each survey site and append it to `mauricie_birds`. First, make sure the CRS of both spatial data match and then use `terra::extract()`.
 
 ```{r}
 mauricie_birds_sf <- st_transform(mauricie_birds_sf, crs = st_crs(mauricie_sl_ndvi)) # Match the CRS
 
-ndvi_values_sf <- terra::extract(mauricie_sl_ndvi, vect(mauricie_birds_sf), bind = TRUE) # Extracts the NDVI values for each point
+ndvi_values_sv <- terra::extract(mauricie_sl_ndvi, vect(mauricie_birds_sf), bind = TRUE) # Extracts the NDVI values for each point
 ```
 
-Convert the sf object holding the extracted NDVI values to a dataframe. Use `terra::as.data.frame()` explicitly when calling the function to avoid error.
+Convert the SpatVector containing the elevation values to an `sf` object.
 
 ```{r}
-ndvi_values_df <- terra::as.data.frame(ndvi_values_sf) %>% 
- select(record_id, ndvi) 
+ndvi_values_sf <- ndvi_values_sv %>%
+  st_as_sf() %>% # converts to sf object
+  dplyr::select(SiteCode, ndvi, geometry) # select relevant columns
+```
+
+Assign a point id identifier to each location based on its unique geometry and return the result as a dataframe.
+
+```{r}
+ndvi_values_df <- ndvi_values_sf %>% 
+  group_by(SiteCode, geometry) %>%
+  mutate(point_id = cur_group_id()) %>% 
+  select(point_id, ndvi) %>% 
+  distinct() %>%
+  ungroup() %>%
+  sf::st_drop_geometry() %>%  # drop the geometry column
+  as.data.frame()  # convert to a regular dataframe
+
+
+# Note that usually the SiteCode is the unique identifier for each observation site. However, this was not the case for the Quebec Breeding Bird Atlas data. We therefore use the geometry to create a unique identifier for each point.
 ```
 
 OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` function, specify the name of your .csv file, and use the row.names = FALSE argument to exclude row numbers from the output. **The extracted NDVI values will be used in [Chapter 7: Summary Tools](07-SummaryTools.Rmd)** We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
@@ -349,7 +367,7 @@ OPTIONAL: To save the NDVI data as a *.csv* to your disk, use the `write.csv()` 
 > To execute this code chunk, remove the \#
 
 ```{r}
-# write.csv(ndvi_values_df, "data/mauricie/env_covariates/ndvi_values_df.csv", row.names = FALSE)
+# write.csv(ndvi_values_df, "data/env_covariates/ndvi_values_df.csv", row.names = FALSE)
 ```
 
 Now, let's combine the NDVI dataframe with the NatureCounts summary data you previously created in order to assess how NDVI influences your metric of species diversity.
