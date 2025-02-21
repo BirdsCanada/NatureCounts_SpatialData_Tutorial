@@ -32,12 +32,6 @@ To view your working directory.
 getwd()
 ```
 
-To set your working directory, if necessary.
-
-```{r}
-setwd("path/to/your/directory")
-```
-
 To create the `data` subdirectory. This is where you will store all data used in this tutorial series.
 
 ```{r}

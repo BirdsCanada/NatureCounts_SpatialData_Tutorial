@@ -218,7 +218,7 @@ Create a subdirectory called `worldclim` to neatly store the raster data. Move t
 dir.create("data/worldclim", recursive = TRUE)
 ```
 
-After dowloading the WorldClim data to your subdirectory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function.
+After downloading the WorldClim data to your subdirectory, list all the files in the raster stack by specifying the path to your folder (use `list.files` function) and read them into R using the `rast` function.
 
 Now point the `list.file` to this directory using the sample code below.
 
