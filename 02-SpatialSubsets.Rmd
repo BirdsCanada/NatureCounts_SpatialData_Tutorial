@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 | In [**Chapter 1: Spatial Data Exploration**](01-SpatialDataExploration.Rmd), you distinguished between spatial data types (vector and raster) and explored NatureCounts data using a spatio-temporal map. Now you are ready to focus your data exploration to a specific geographic area. Analyzing NatureCounts data within specific boundaries is relevant to many research applications. Here we use Key Biodiversity Areas (KBA) and Priority Places as examples of research areas of interest.
 
-# 2.0 Learning Objectives {#2.0_Lean}
+# 2.0 Learning Objectives {#2.0LearningObjectives}
 
 By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
@@ -24,12 +24,30 @@ By the end of **Chapter 2 - Spatial Subsetting**, users will know how to:
 
     -   [Priority Places for Species at Risk](#2.2_PP)
 
-The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to your working directory. ###If this is now the `data` director, please correct####
+The data used in this tutorial are downloaded from NatureCounts, the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/), and the [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). You will save the downloaded shapefiles to a new folder (subdirectory) called `data` to keep things tidy.
 
 To view your working directory.
 
 ```{r}
 getwd()
+```
+
+To create the `data` subdirectory. This is where you will store all data used in this tutorial series.
+
+```{r}
+if (!dir.exists("data")) { # checks if "data" subdirectory exists
+  print("Directory does not exist. Creating now...")
+  dir.create("data") # creates "data" subdirectory
+} else {
+  print("Directory already exists.")
+}
+```
+
+Create two additional subdirectories: one for the KBA data and the other for the Priority Places data.
+
+```{r}
+dir.create("data/kba", recursive = TRUE)
+dir.create("data/priority_places", recursive = TRUE)
 ```
 
 This R tutorial requires the following **packages**:
@@ -47,12 +65,12 @@ library(leaflet.extras)
 
 In this examples, we will assess the spatial distribution of Wood Ducks found in the Ontario Breeding Bird Atlas dataset across the KBAs found within the province of Ontario.
 
-Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example.
+Navigate the the [KBA Canada Map Viewer](https://kbacanada.org/explore/map-viewer/) and filter the data for Ontario using the left hand `Province/Territory` filter. Then select 'Download'. You will want to select both `csv` and `shp` for this example. Move these files to your `kba` subdirectory.
 
-We can read in our KBA polygons using the `sf` package once it is in your working directory. The downloaded files was renamed for this example so you will need to change the code to match your file name.
+We can read in our KBA polygons using the `sf` package once it is in your subdirectory. The downloaded files were renamed for this example so you will need to change the code to match your file name.
 
 ```{r}
-ontario_kba <- sf::st_read("ontario_kba.shp")
+ontario_kba <- sf::st_read("data/kba/ontario_kba.shp")
 ```
 
 `sf` objects are stored in R as a spatial dataframe which contains the attribute table of the vector along with the geometry type. When we examine the dataframe, it looks like there are many duplicate entries including duplicate geometries (vertices). To clean this up, we can apply the `st_make_valid()` and `distinct()` functions to our spatial dataframe:
@@ -64,7 +82,7 @@ ontario_kba <- ontario_kba %>% st_make_valid() %>% distinct()
 Our spatial data is also accompanied by a CSV file that contains additional useful attributes (landcover, species, etc) concerning our KBAs. Let's read in the accompanying CSV file for our KBA layer.
 
 ```{r}
-kba_attributes <- read.csv("ontario_kba.csv")
+kba_attributes <- read.csv("data/kba/ontario_kba.csv")
 ```
 
 Great! We can now join these dataframes using the handy `tidyverse` package. However, we'll want to select for specific columns first to avoid redundancies before performing our join:
@@ -196,19 +214,19 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 > To execute this code chunk, remove the \#
 
 ```{r}
-# st_write(wood_ducks_kba,"wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
+# st_write(wood_ducks_kba,"data/kba/wood_ducks_kba.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
 # 2.2 Priority Places {#2.2_PP}
 
 In this example, we will assess the spatial distribution of Wood Ducks from the Ontario Breeding Bird Atlas dataset across the Long Point Walsingham Forest Priority Place.
 
-Navigate to [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). Scroll down to the **Data and Resources** section and select the Priority Places file labeled `English`, `dataset`, and `FGDB/GDB`.
+Navigate to [Priority Places - Open Government Portal](https://open.canada.ca/data/en/dataset/91219d24-e877-4c8a-8bd2-b2b662e573e0). Scroll down to the **Data and Resources** section and select the Priority Places file labeled `English`, `dataset`, and `FGDB/GDB` to download it. Move this file to your `priority_places` subdirectory.
 
 First, lets create a path to our downloaded Priority Place file.
 
 ```{r}
-gdb_path <- "PriorityPlaces.gdb"
+gdb_path <- "data/priority_places/PriorityPlaces.gdb"
 ```
 
 Then, let's inspect the spatial data.
@@ -268,7 +286,7 @@ After geoprocessing our data, we can write out any sf objects to Shapefiles on a
 > To execute this code chunk, remove the \#
 
 ```{r}
-# st_write(wood_ducks_longpoint,"wood_ducks_longpoint.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
+# st_write(wood_ducks_longpoint,"data/priority_places/wood_ducks_longpoint.shp", driver = "ESRI Shapefile", delete_layer = TRUE)
 ```
 
 **Congratulations**! You completed **Chapter 2 - Spatial Subsetting: KBA's and Priority Places**. Here, you spatially filtered and visualized NatureCounts data. In [Chapter 3](03-ClimateData.Rmd), you will explore more spatial data visualization, while linking climate data to NatureCounts observations.

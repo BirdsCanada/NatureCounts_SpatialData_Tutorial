@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 | Exploring your data in a visual way is an important first step to any analysis. This chapter will give you a foundational understanding of how to work with your NatureCounts data spatially. This chapter assumes that you have a basic understanding of how to access your data from NatureCounts. The [NatureCounts Introductory R Tutorial](https://github.com/BirdsCanada/NatureCounts_IntroTutorial.git) is where you should start if you're new to the `naturecounts` R package. It explains how to access, view, filter, manipulate, and visualize NatureCounts data. We recommend reviewing this tutorial before proceeding.
 
-# 1.0 Learning Objectives {#1.0_Objectives}
+# 1.0 Learning Objectives {#1.0LearningObjectives}
 
 By the end of **Chapter 1 - Spatial Data Exploration**, users will know how to:
 
@@ -57,7 +57,7 @@ Geoprocessing functions allow us to manipulate or compute spatial objects based 
 | `st_transform()` - transforms the Coodinate Reference System (CRS) of a specified CRS object.
 | `st_drop_geometry()` - removes the geometry column of a sf object.
 | `st_intersection(x, y)` - computes the geometric intersection of two or more geometries. The result is a new geometry that represents the area where the input overlap.
-| `st_crop(x, y, ..., xmin, ymin, xmax, ymax)` - creates geometry of `x` that intersects a specified shape. This function reduces the extent of an `sf` object `x` to the extent of another object `y`.  Setting arguments **`xmin`**, **`ymin`**, **`xmax`** and **`ymax`** implies that argument **`y`** gets ignored.
+| `st_crop(x, y, ..., xmin, ymin, xmax, ymax)` - creates geometry of `x` that intersects a specified shape. This function reduces the extent of an `sf` object `x` to the extent of another object `y`. Setting arguments **`xmin`**, **`ymin`**, **`xmax`** and **`ymax`** implies that argument **`y`** gets ignored.
 | `st_difference(x, y)` - creates geometry from `x` that does not intersect with `y`. In the new geometry, overlapping areas are erased and areas of `x` not contained within `y` are returned.
 | `st_area`, `st_length`, and `st_distance` can also be used to compute geometric measurements.
 
