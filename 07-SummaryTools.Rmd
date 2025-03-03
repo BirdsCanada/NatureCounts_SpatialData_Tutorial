@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 7: Spatail Summary Tools
+# Chapter 7: Summary Tools
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
-By the end of **Chapter 7 - Spatial Summary Tools**, users will know how to:
+By the end of **Chapter 7 - Summary Tools**, users will know how to:
 
 -   Create and visualize NatureCounts data and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot ##Please make the learning objective structure similar to the others once finalized, with associated links###
 
@@ -253,7 +253,7 @@ ggplot(enviro_data_df, aes(x = elevation, y = n_species)) +
 ggplot(enviro_data_df, aes(x = pland_mixed_forest, y = n_species)) +
   geom_point() +
   geom_smooth(method = "lm", col = "blue") +
-  labs(title = "Relationship between PLAND and Species Richness")
+  labs(title = "Relationship between % Mixed Forest and Species Richness") 
 
 # Edge Density vs. n_species
 ggplot(enviro_data_df, aes(x = ed, y = n_species)) +
@@ -270,7 +270,8 @@ ggplot(enviro_data_df, aes(x = ndvi, y = n_species)) +
 
 **Conclusion**: There is no clear relationship between species richness and elevation, ED, or NDVI within La Mauricie National Park. **Note**: These results assume that sampling is random with regards to elevation, which is unlikely.
 
-Create a bar plot that represent species richness in binned elevation categories: Low, Mid, and High
+Create a bar plot that represent species richness in binned elevation categories: Low, Mid, and High 
+##Might remove this example since the results don't make sense bioogically. Can't sum the species richness##
 
 ```{r}
 # Create elevation classes with labels
@@ -287,7 +288,7 @@ enviro_data_df <- enviro_data_df %>%
 # Summarize species richness per elevation class
 elevation_summary <- enviro_data_df %>%
   group_by(elevation_class) %>%
-  summarize(spec_richness = sum(n_species, na.rm = TRUE), .groups = "drop")
+  summarize(spec_richness = sum(n_species, na.rm = TRUE), .groups = "drop")  ###You can't sum the species richness or you are double counting the species. You should count the number of unique species in each elevation class###
 
 # Plot species richness per elevation class
 ggplot(elevation_summary, aes(x = elevation_class, y = spec_richness)) +
@@ -336,7 +337,7 @@ The first three PC's explain over 70% of the variance. Explore the loadings matr
 pland_data_pca$loadings[, 1:3]
 ```
 
-Create a biplot of the the PLAND variables.
+Create a biplot of the the percent land class variables.
 
 ```{r}
 fviz_pca_var(pland_data_pca, col.var = "black")
@@ -377,7 +378,7 @@ df_pca$cluster <- enviro_data_df$cluster  # Add cluster info
 # Plot clusters in PCA space
 ggplot(df_pca, aes(x = PC1, y = PC2, color = cluster)) +
   geom_point(size = 3) +
-  labs(title = "K-Means Clustering of Species Richness and PLAND metrics",
+  labs(title = "K-Means Clustering of Species Richness and % land class metrics",
        x = "Principal Component 1", y = "Principal Component 2") +
   theme_minimal()
 ```
