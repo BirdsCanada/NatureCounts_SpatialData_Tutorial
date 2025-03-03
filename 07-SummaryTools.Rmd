@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 7: Summary Tools
+# Chapter 7: Spatail Summary Tools
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 7.0 Learning Objectives {#7.0LearningObjectives}
 
-By the end of **Chapter 7 - Summary Tools**, users will know how to:
+By the end of **Chapter 7 - Spatial Summary Tools**, users will know how to:
 
 -   Create and visualize NatureCounts data and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot ##Please make the learning objective structure similar to the others once finalized, with associated links###
 
@@ -122,7 +122,9 @@ Retrieve basic summary info for the environmental data.
 summary(enviro_data_df)
 ```
 
-Create a scatterplot matrix to select meaningful variables for modeling.
+Create a scatterplot matrix to assess collinearity of variables.
+
+###Here or somewhere we should redefine what these variables are: elevation, np, ed, plan_mixed_forest, and ndvi###
 
 ```{r}
 pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + ndvi, data=enviro_data_df, 
@@ -130,6 +132,8 @@ pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + n
 ```
 
 Inspect the distribution and 'skewness' of the environmental data using a histogram plot.
+
+###I notice gaps in the n_species histogram. Is this because of binning###
 
 ```{r}
 # Select variables and pivot longer for faceting
@@ -174,7 +178,7 @@ qqnorm(enviro_data_df$ndvi, main = "Q-Q Plot: ndvi")
 qqline(enviro_data_df$ndvi, col = "red")
 ```
 
-Create a model to describe species richness using elevation, ed, and ndvi.
+Create a model to describe species richness using elevation, edge denity, and ndvi.
 
 ```{r}
 model <- lm(n_species ~  elevation + ed + ndvi , data=enviro_data_df)
@@ -243,25 +247,25 @@ Create scatter plots with regression lines to explore the relationship of specie
 ggplot(enviro_data_df, aes(x = elevation, y = n_species)) +
   geom_point() +
   geom_smooth(method = "lm", col = "blue") +
-  labs(title = "Relationship between Elevation and n_species")
+  labs(title = "Relationship between Elevation and Species Richness")
 
 # PLAND vs. n_species
 ggplot(enviro_data_df, aes(x = pland_mixed_forest, y = n_species)) +
   geom_point() +
   geom_smooth(method = "lm", col = "blue") +
-  labs(title = "Relationship between PLAND and n_species")
+  labs(title = "Relationship between PLAND and Species Richness")
 
 # Edge Density vs. n_species
 ggplot(enviro_data_df, aes(x = ed, y = n_species)) +
   geom_point() +
   geom_smooth(method = "lm", col = "blue") +
-  labs(title = "Relationship between Edge Density and n_species")
+  labs(title = "Relationship between Edge Density and Species Richness")
 
 # NDVI vs. n_species
 ggplot(enviro_data_df, aes(x = ndvi, y = n_species)) +
   geom_point() +
   geom_smooth(method = "lm", col = "blue") +
-  labs(title = "Relationship between NDVI and n_species")
+  labs(title = "Relationship between NDVI and Species Richness")
 ```
 
 **Conclusion**: There is no clear relationship between species richness and elevation, ED, or NDVI within La Mauricie National Park. **Note**: These results assume that sampling is random with regards to elevation, which is unlikely.
