@@ -40,7 +40,7 @@ Spatial data is any type of vector or raster data that represents a feature or p
 
 | **Vector data** is used to represent features with points, lines and polygons. This may include individual bird observations, rivers, or conservation area boundaries.
 
-| **Raster data** is used to represent spatially continuous data with a grid, where each cell has one value. This may include types of environmental data like temperature, elevation or land use.
+| **Raster data** is used to represent spatially continuous data with a grid, where each cell has one value. This may include types of environmental data like temperature, elevation or land cover.
 
 The most common format used to store vector data in a file on disk is the **ESRI Shapefile** format *(.shp)*. Shapefiles are always accompanied by files with *.dbf*, *.shx,* and *.prj* extensions.
 
