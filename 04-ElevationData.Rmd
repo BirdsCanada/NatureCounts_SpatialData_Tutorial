@@ -97,7 +97,7 @@ Don't forget to replace `testuser` with your NatureCounts username. You will be 
 Download NatureCounts data:
 
 ```{r}
-quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 500)
+quebec_atlas <- nc_data_dl(collections = "QCATLAS2PC", username = "testuser", info = "spatial_data_tutorial", timeout = 1000)
 ```
 
 Read in the list of species names from NatureCounts which can be linked to the species id:
@@ -258,7 +258,7 @@ To mask a raster to a vector extent we can apply the `mask()` function from the 
 dtm_mask <- mask(dtm_mosaic, vect(mauricie_boundary))
 ```
 
-OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in [Chapter 7: Raster Summary Tools](07-RasterSummaryTools.Rmd)**. We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
+OPTIONAL: To write the masked raster to your disk, you can use the `writeRaster()` function from `terra`. **This raster will be used in** [Chapter 7: Summary Tools](07-SummaryTools.Rmd). We have uploaded this file to the [**Google Drive data folder**](https://drive.google.com/drive/folders/1gLUC6fROl4kNBvTGselhZif-arPexZbY?usp=sharing) for your convenience.
 
 > To execute this code chunk, remove the \#
 
