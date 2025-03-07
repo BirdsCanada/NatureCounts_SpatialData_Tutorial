@@ -325,7 +325,7 @@ for (i in seq_len(nrow(mauricie_birds_buffer))) {
     # Add identifying variables
     mutate(point_id= buffer_i$point_id, 
            survey_year = buffer_i$survey_year) %>%  
-    select(point_id, level, metric, value)
+    dplyr::select(point_id, level, metric, value)
 }
 
 # Combine results into a single dataframe and convert to wide format
