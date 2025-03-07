@@ -199,7 +199,7 @@ Assign a point id identifier to each location based on its unique geometry.
 mauricie_birds_local <- mauricie_birds_local %>% 
   group_by(SiteCode, geometry) %>%
   mutate(point_id = cur_group_id()) %>% 
-  select(geometry, point_id) %>% 
+  dplyr::select(geometry, point_id) %>% 
   distinct() %>% ungroup()
 
 #Note that usually the SiteCode is the unique identifier for each observation site. However, this was not the case for the Quebec Breeding Bird Atlas data. We therefore use the geometry to create a unique identifier for each point.
@@ -247,7 +247,7 @@ for (i in seq_len(nrow(mauricie_birds_buffer))) {
     calculate_lsm(level = "class", metric = c("pland", "ed")) %>% 
     # Add identifying variables
     mutate(point_id= buffer_i$point_id) %>%  
-    select(point_id, level, class, metric, value)
+    dplyr::select(point_id, level, class, metric, value)
 }
 
 # Combine results into a single dataframe
@@ -258,7 +258,7 @@ Add land cover class labels to the dataframe containing the calculated landscape
 
 ```{r}
 # Define the land cover class labels 
-lc_classes <- land_cover_data %>% select(Canada2015, landcover_name) %>% distinct()
+lc_classes <- land_cover_data %>% dplyr::select(Canada2015, landcover_name) %>% distinct()
 
 lc_classes <-lc_classes %>% mutate(class = as.factor(Canada2015))
 lsm<-lsm %>% mutate(class = as.factor(class))
@@ -271,7 +271,7 @@ Create a PLAND column for each land cover type, associated with each `point_id`.
 ```{r}
 pland_values <- lsm %>%
   filter(metric == "pland") %>%                      # Filter for 'pland' metric
-  select(point_id, landcover_name, value) %>%        # Keep relevant columns
+  dplyr::select(point_id, landcover_name, value) %>%        # Keep relevant columns
   pivot_wider(
     names_from = landcover_name,                     # Create columns for each landcover class
     values_from = value,                             # Fill columns with 'pland' values
