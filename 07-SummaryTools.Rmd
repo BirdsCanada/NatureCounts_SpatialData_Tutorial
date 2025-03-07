@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Chapter 7: Spatail Summary Tools
+# Chapter 7: Spatial Summary Tools
 
 ##### Authors: Dimitrios Markou, Danielle Ethier
 
@@ -133,8 +133,6 @@ pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + n
 
 Inspect the distribution and 'skewness' of the environmental data using a histogram plot.
 
-###I notice gaps in the n_species histogram. Is this because of binning###
-
 ```{r}
 # Select variables and pivot longer for faceting
 hist_data <- enviro_data_df %>%
@@ -143,7 +141,7 @@ hist_data <- enviro_data_df %>%
 
 # Create faceted histogram plot
 ggplot(hist_data, aes(x = value)) +
-  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  geom_histogram(bins = 10, fill = "skyblue", color = "black") +
   facet_wrap(~ variable, scales = "free") +  # Separate histograms for each variable
   theme_minimal() +
   labs(title = "Multipanel Histogram of Environmental Variables",
