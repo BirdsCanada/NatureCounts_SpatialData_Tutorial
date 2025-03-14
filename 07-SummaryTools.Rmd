@@ -21,7 +21,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 By the end of **Chapter 7 - Spatial Summary Tools**, users will know how to:
 
--   Create and visualize NatureCounts data and environmental data summaries using four key examples: Landscape Association Plot, Species Rank Plot, Elevation Plot, and NDVI Plot ##Please make the learning objective structure similar to the others once finalized, with associated links###
+-   Explore variable relationships and data distribution: [Diagnostics Plots](#7.2DiagnosticPlots)
+-   Show the relative abundance (number of individuals) of a species in a community: [Species Rank Plots](#7.3SpeciesRank)
+-   Explore the relationship of species richness with each environmental variable: [Regression Plots](#7.4Regression)
+-   Visualize species-specific distributions: [Presence/Absence Plots](#7.5PresenceAbsence)
 
 Load the required packages:
 
@@ -33,9 +36,20 @@ library(corrr)
 library(ggcorrplot)
 library(FactoMineR)
 library(factoextra)
+library(ggplot2)
+library(naturecounts)
+library(tidyr)
 ```
 
-# 7.1 Data Setup {#7.4SummaryTools}
+This tutorial uses environmental data extracted or calculated from previous chapters of the Spatial Data Tutorial. In [Chapter 5: Land Cover Data](05-LandcoverData), the `landscapemetrics` package was used to calculate some common metrics that help quantify habitat composition and configuration:
+
+-   Percent landcover (PLAND) - percent of landscape of a given class
+-   Edge density (ED) - total boundary length of all patches of a given class per unit area
+-   Number of patches (NP) - number of unique contiguous units
+
+In [Chapter 6: Satellite Imagery](06-SatelliteImagery.Rmd), the Normalized Difference Vegetation Index (NDVI) was calculated using Sentinel-2 imagery and custom functions .
+
+# 7.1 Data Setup {#7.1DataSetup}
 
 In [Chapter 4](04-ElevationData.Rmd), [Chapter 5](05-LandcoverData.Rmd), and [Chapter 6](06-SatelliteImagery.Rmd) you extracted elevation, land cover, and NDVI values, respectively, at surveys sites across La Mauricie National Park. These data were uploaded to the [Google Drive](https://drive.google.com/drive/folders/1j6PHoUJaFDucWe8V5xXNzdGD00WJu0hq?usp=drive_link) for your convenience. These data should be neatly stored in your `env_covariates` subdirectory.
 
@@ -50,7 +64,7 @@ if (!dir.exists("data/env_covariates")) { # checks if "env_covariates" subdirect
 }
 ```
 
-Let's download all the environmental covariates and join them to a common dataframe.  
+Let's download all the environmental covariates and join them to a common dataframe.
 
 ```{r, message = FALSE}
 # List the dataframes
@@ -114,7 +128,9 @@ enviro_data_df <- env_covariates_df %>%
   mutate(across(-point_id, as.numeric))  # Ensure all other columns are numeric
 ```
 
-# 7.2 Diagnostic Plots
+# 7.2 Diagnostic Plots {#7.2DiagnosticPlots}
+
+Diagnostic plots like summaries, scatterplot matrices, and histograms are essential for evaluating variable relationships, detecting collinearity, and understanding data distributions. They help you understand your data by identifying patterns, outliers, and multicollinearity, ensure accurate model assumptions, and improve data-driven decision-making in future statistical analyses.
 
 Retrieve basic summary info for the environmental data.
 
@@ -122,13 +138,11 @@ Retrieve basic summary info for the environmental data.
 summary(enviro_data_df)
 ```
 
-Create a scatterplot matrix to assess collinearity of variables.
-
-###Here or somewhere we should redefine what these variables are: elevation, np, ed, plan_mixed_forest, and ndvi###
+Create a scatterplot matrix to assess the collinearity of the variables.
 
 ```{r}
 pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + ndvi, data=enviro_data_df, 
-      main="Scatterplot Matrix of environmental variables")
+      main="Scatterplot Matrix of Environmental Variables")
 ```
 
 Inspect the distribution and 'skewness' of the environmental data using a histogram plot.
@@ -185,7 +199,7 @@ summary(model)
 anova(model)
 ```
 
-Create diagnostic plots to evaluate the strength of the model.
+Create more diagnostic plots to evaluate the strength of the model.
 
 ```{r}
 enviro_data_df$yhat.1 <- fitted(model)  
@@ -203,7 +217,7 @@ plot(resid.1 ~ yhat.1, data = enviro_data_df, xlab="Predicted n_species",
 abline(a=0,b=0,col="red")
 ```
 
-# 7.2 Species Rank Plots
+# 7.3 Species Rank Plots {#7.3SpeciesRank}
 
 Species rank plots show the relative abundance (number of individuals) of a species in a community. The number of individuals of each species are sorted in ascending or descending order.
 
@@ -236,7 +250,7 @@ ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) 
   )
 ```
 
-# 7.4 Data Summary Plots
+# 7.4 Regression Plots {#7.4Regression}
 
 Create scatter plots with regression lines to explore the relationship of species richness with each environmental variable.
 
@@ -268,124 +282,136 @@ ggplot(enviro_data_df, aes(x = ndvi, y = n_species)) +
 
 **Conclusion**: There is no clear relationship between species richness and elevation, ED, or NDVI within La Mauricie National Park. **Note**: These results assume that sampling is random with regards to elevation, which is unlikely.
 
-Create a bar plot that represent species richness in binned elevation categories: Low, Mid, and High
+# 7.5 Presence/Absence Plots {#7.5PresenceAbsence}
+
+Create an events matrix containing the geometry for each unique survey event location.
 
 ```{r}
-# Create elevation classes with labels
-enviro_data_df <- enviro_data_df %>%
-  mutate(
-    elevation_class = case_when(
-      elevation < 200 ~ "Low",
-      elevation >= 200 & elevation < 400 ~ "Mid",
-      elevation >= 400 ~ "High"
-    ),
-    elevation_class = factor(elevation_class, levels = c("Low", "Mid", "High"))  # Set the factor levels
-  )
-
-# Summarize species richness per elevation class
-elevation_summary <- enviro_data_df %>%
-  group_by(elevation_class) %>%
-  summarize(spec_richness = sum(n_species, na.rm = TRUE), .groups = "drop")
-
-# Plot species richness per elevation class
-ggplot(elevation_summary, aes(x = elevation_class, y = spec_richness)) +
-  geom_bar(stat = "identity", color = "black", fill = "steelblue") +
-  geom_text(
-    aes(label = paste0("n = ", spec_richness)),
-    vjust = -0.5, # Position the text above the bars
-    size = 3.5    # Adjust text size
-  ) +
-  theme_minimal() +
-  labs(
-    title = "Species Richness by Elevation Class",
-    x = "Elevation Class",
-    y = "Species Richness"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotate labels if needed
+events_matrix <- mauricie_birds_df %>%
+  dplyr::select(SiteCode, survey_year, survey_month, survey_day, ObservationCount, latitude, longitude) %>%
+  distinct() %>%
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 ```
 
-# 7.5 Principal Component Analysis
-
-Null values can bias the result of PCA. In `enviro_data_df`, PLAND null values represent land cover types not represented at a given observation site. Replace the NA's with zeros.
+Assign a point id identifier to each location based on its unique geometry and return the result as a dataframe.
 
 ```{r}
-pland_data <- enviro_data_df %>%
-  dplyr::select(starts_with("pland_")) %>% # filter for pland variables
-  mutate(across(everything(), ~ replace_na(., 0))) %>% # replace NA's withe zero
-  scale() # normalize the data 
+events_matrix <- events_matrix %>% 
+  group_by(SiteCode, geometry) %>% 
+  mutate(point_id = cur_group_id()) %>% 
+  ungroup()
 ```
 
-Compute the PCA using the `princomp()` and display the result using `summary()`.
+Restore the longitude and latitude columns, drop the geometry, convert to a dataframe, and keep only the relevant columns.
 
 ```{r}
-pland_data_pca <- princomp(pland_data)
-summary(pland_data_pca)
+events_matrix <- events_matrix %>%
+  mutate(longitude = sf::st_coordinates(.)[,1],  # Extract longitude
+         latitude = sf::st_coordinates(.)[,2]) %>%  # Extract latitude
+  sf::st_drop_geometry() %>%  # Drop geometry column
+  as.data.frame() %>%
+  dplyr::select(point_id, SiteCode, survey_year, survey_month, survey_day, longitude, latitude)  # Keep relevant columns
 ```
 
-Use a scree plot to visualize the importance of each PC.
+Join the environmental variables to the events matrix based on `point_id`.
 
 ```{r}
-fviz_eig(pland_data_pca, addlabels = TRUE)
+enviro_events_matrix <- left_join(events_matrix, enviro_data_df, by = "point_id")
 ```
 
-The first three PC's explain over 70% of the variance. Explore the loadings matrix of the first three principal components.
+Filter the NatureCounts data for a species of interest and then merge the events matrix with the species-specific data. This will result in NA values for events where the species was not observed.
 
 ```{r}
-pland_data_pca$loadings[, 1:3]
+search_species("Golden-crowned Kinglet") #species_id = 14960
+
+kinglet_events <- mauricie_birds_df %>%
+  filter(species_id == "14960")
+
+kinglet_events <- left_join(enviro_events_matrix, kinglet_events,
+                          by = c("SiteCode",
+                               "survey_year",
+                               "survey_month",
+                               "survey_day",
+                               "latitude",
+                               "longitude"))
 ```
 
-Create a biplot of the the PLAND variables.
+Zero-fill for specific species. Here, we replace the NA values in the `ObservationColumn` with 0 and select the column of interest to inspect your data.
 
 ```{r}
-fviz_pca_var(pland_data_pca, col.var = "black")
+kinglet_zero_fill <- kinglet_events %>% 
+  mutate(ObservationCount = replace(ObservationCount, is.na(ObservationCount), 0)) %>% dplyr::select(point_id, SiteCode, survey_day, survey_month, survey_year, latitude, longitude, elevation:n_individuals, ObservationCount) 
 ```
 
+Create a Presence/Absence column based on `ObservationCount`.
+
 ```{r}
-fviz_cos2(pland_data_pca, choice = "var", axes = 1:2)
+kinglet_presence_absence <- kinglet_zero_fill %>%
+  mutate(Presence = ifelse(ObservationCount > 0, 1, 0))  # 1 = Presence, 0 = Absence
 ```
 
+Summarize the presence/absence data by `point_id`.
+
 ```{r}
-fviz_pca_var(pland_data_pca, col.var = "cos2",
-            gradient.cols = c("black", "orange", "green"),
-            repel = TRUE)
+kinglet_PA_summary <- kinglet_presence_absence %>%
+  group_by(point_id) %>%
+  summarise(
+    total_presence = sum(Presence),  # Total presence
+    total_absence = sum(1 - Presence),  # Total absence
+    .groups = "drop"
+  ) %>%
+  pivot_longer(cols = c(total_presence, total_absence), 
+               names_to = "category", 
+               values_to = "count")
 ```
 
-# 7.6 K-Means Clustering
+View the summarized Presence/Absence table.
 
 ```{r}
-# Determine the optimal number of clusters using the elbow method
-wss <- sapply(1:10, function(k) kmeans(pland_data, centers = k, nstart = 25)$tot.withinss)
+print(kinglet_PA_summary)
+```
 
-# Plot Elbow Method
-plot(1:10, wss, type = "b", pch = 19, frame = FALSE, 
-     xlab = "Number of clusters", ylab = "Total Within-Cluster Sum of Squares")
+Pivot the data for plotting.
 
-# Choose optimal k
-set.seed(123)
-kmeans_result <- kmeans(pland_data, centers = 3, nstart = 25)
+```{r}
+kinglet_PA_summary_long <- PA_summary %>%
+  pivot_longer(cols = c(total_presence, total_absence), 
+               names_to = "category", 
+               values_to = "count")
+```
 
-# Add cluster assignments to the original dataframe
-enviro_data_df$cluster <- factor(kmeans_result$cluster)
+Create a bar plot to summarize the Presence/Absence data, grouped by `survey_year`.  
 
-# **Dimensionality Reduction for Visualization (PCA)**
-pca_result <- prcomp(pland_data, center = TRUE, scale. = TRUE)
-df_pca <- as.data.frame(pca_result$x[, 1:2])  # Extract first 2 PCs
-df_pca$cluster <- enviro_data_df$cluster  # Add cluster info
+```{r}
+kinglet_PA_summary_year <- kinglet_presence_absence %>%
+  group_by(survey_year, category = ifelse(ObservationCount > 0, "Presence", "Absence")) %>%
+  summarise(count = n(), .groups = "drop")
 
-# Plot clusters in PCA space
-ggplot(df_pca, aes(x = PC1, y = PC2, color = cluster)) +
-  geom_point(size = 3) +
-  labs(title = "K-Means Clustering of Species Richness and PLAND metrics",
-       x = "Principal Component 1", y = "Principal Component 2") +
+ggplot(kinglet_PA_summary_year, aes(x = as.factor(survey_year), y = count, fill = category)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("Presence" = "darkgreen", "Absence" = "lightgray")) +
+  labs(title = "Golden-crowned Kinglet Presence/Absence per Survey Year",
+       x = "Survey Year",
+       y = "Number of Observations") +
   theme_minimal()
 ```
+Create a bar plot representing Presence/Absence per `point_id`.
 
 ```{r}
-ggplot(enviro_data_df, aes(x = cluster, y = pland_mixed_forest, fill = cluster)) +
-  geom_boxplot() +
-  labs(title = "Forest Cover (%) Across Clusters", y = "PLAND (mixed forest)")
+ggplot(kinglet_PA_summary_long, aes(x = as.factor(point_id), y = count, fill = category)) +
+  geom_col(position = "dodge") +  # Grouped bars
+  scale_fill_manual(values = c("total_presence" = "darkgreen", "total_absence" = "lightgray"),
+                  labels = c("Absence", "Presence"),
+                  name = "Observation Type") +
+  labs(title = "Golden-crowned Kinglet Site-Level Presence/Absence Plot",
+       x = "Survey Location (point_id)",
+       y = "Number of Observations") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),  # Hide x-axis labels
+        axis.ticks.x = element_blank(),
+        legend.position = "right")
 ```
 
-------------------------------------------------------------------------
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
-Congratulations! You completed Chapter 7 - Summary Tools. In this chapter, you successfully transformed and created diagnostic and summary plots for NatureCounts data using environmental covariates. If you'd like to explore our Additional Resources, the Raster Tools article is available to you [here](Additional Resources - Raster Tools.Rmd).
+Congratulations! You completed Chapter 7 - Summary Tools. In this chapter, you successfully summarized and visualized environmental data, biodiversity counts, and presence/absence data using various plotting techniques . If you'd like to explore some Additional Resources based on previous Spatial Data chapters, the [Raster Tools](Additional%20Resources%20-%20Raster%20Tools.Rmd) article is also available.
