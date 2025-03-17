@@ -140,14 +140,14 @@ summary(enviro_data_df)
 
 Create a scatterplot matrix to assess the collinearity of the variables.
 
-```{r}
+```{r scatterplot_matrix}
 pairs(~ n_species + n_individuals + elevation + np + ed + pland_mixed_forest + ndvi, data=enviro_data_df, 
       main="Scatterplot Matrix of Environmental Variables")
 ```
 
 Inspect the distribution and 'skewness' of the environmental data using a histogram plot.
 
-```{r}
+```{r histogram_plots}
 # Select variables and pivot longer for faceting
 hist_data <- enviro_data_df %>%
   dplyr::select(elevation, ed, pland_mixed_forest, ndvi) %>%
@@ -162,61 +162,6 @@ ggplot(hist_data, aes(x = value)) +
        x = "Value",
        y = "Frequency")
 ```
-##Lets delete since this is redundant to creating a historgram which can also be used to assess distribution##
-<!-- Create Q-Q plots for each variable to visually assess if the data is normally distributed. -->
-
-<!-- ```{r} -->
-<!-- par(mfrow=c(2,3))  # set layout for multiple plots -->
-
-<!-- qqnorm(enviro_data_df$n_species, main = "Q-Q Plot: n_species") -->
-<!-- qqline(enviro_data_df$n_species, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$n_individuals, main = "Q-Q Plot: n_individuals") -->
-<!-- qqline(enviro_data_df$n_individuals, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$elevation, main = "Q-Q Plot: elevation") -->
-<!-- qqline(enviro_data_df$elevation, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$np, main = "Q-Q Plot: np") -->
-<!-- qqline(enviro_data_df$np, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$ed, main = "Q-Q Plot: ed") -->
-<!-- qqline(enviro_data_df$ed, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$pland_mixed_forest, main = "Q-Q Plot: pland_mixed_forest") -->
-<!-- qqline(enviro_data_df$pland_mixed_forest, col = "red") -->
-
-<!-- qqnorm(enviro_data_df$ndvi, main = "Q-Q Plot: ndvi") -->
-<!-- qqline(enviro_data_df$ndvi, col = "red") -->
-<!-- ``` -->
-
-##Since we explore relationship between each response and the predictor below, we probably don't need this##
-<!-- Create a model to describe species richness using elevation, edge denity, and ndvi. -->
-
-<!-- ```{r} -->
-<!-- model <- lm(n_species ~  elevation + ed + ndvi , data=enviro_data_df) -->
-
-<!-- summary(model) -->
-<!-- anova(model) -->
-<!-- ``` -->
-
-<!-- Create more diagnostic plots to evaluate the strength of the model. -->
-
-<!-- ```{r} -->
-<!-- enviro_data_df$yhat.1 <- fitted(model)   -->
-<!-- enviro_data_df$resid.1 <- resid(model)  -->
-<!-- enviro_data_df$stdresid.1 <- resid(model)/summary(model)$sigma  -->
-
-<!-- plot(yhat.1 ~ n_species, data=enviro_data_df, xlab="Observed n_species",  -->
-<!--      ylab="Predicted n_species", main="Predicted vs. observed n_species", -->
-<!--      pch=19) -->
-<!-- abline(a=0,b=1,col="red")   # plot a reference line  -->
-
-
-<!-- plot(resid.1 ~ yhat.1, data = enviro_data_df, xlab="Predicted n_species",  -->
-<!--      ylab="Residuals",main="Residual Plot",pch=19) -->
-<!-- abline(a=0,b=0,col="red") -->
-<!-- ``` -->
 
 # 7.3 Species Rank Plots {#7.3SpeciesRank}
 
@@ -236,7 +181,7 @@ species_rank <- mauricie_birds_summary %>%
 
 Plot the abundance of each species and its rank across the entire park.
 
-```{r}
+```{r speciesrank_plot}
 ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) +
   geom_line(group = 1, size = 1, color = "black") +
   geom_point(size = 2, color = "darkgreen") +
@@ -255,7 +200,7 @@ ggplot(species_rank, aes(x = reorder(english_name, rank), y = total_abundance)) 
 
 Create scatter plots with regression lines to explore the relationship of species richness with each environmental variable.
 
-```{r}
+```{r regression_plots}
 # Elevation vs. n_species
 ggplot(enviro_data_df, aes(x = elevation, y = n_species)) +
   geom_point() +
@@ -290,7 +235,6 @@ Create an events matrix containing the geometry for each unique survey event loc
 **Recall that most NatureCounts datasets will have a unique SiteCode for each survey point. However, this is not the case the the Quebec Breeding Bird Atlas, which is why this step is required**
 
 ```{r}
-
 events_matrix <- mauricie_birds_df %>%
   dplyr::select(SiteCode, survey_year, survey_month, survey_day, ObservationCount, latitude, longitude) %>%
   distinct() %>%
@@ -299,11 +243,10 @@ events_matrix <- mauricie_birds_df %>%
 
 Assign a point id identifier to each location based on its unique geometry and return the result as a dataframe. 
 
-
 ```{r}
 events_matrix <- events_matrix %>% 
   group_by(SiteCode, geometry) %>% 
-  mutate(point_id = cur_group_id()) %>% ###Are we positive that this point id will align with the point ID in the environmental data##
+  mutate(point_id = cur_group_id()) %>%
   ungroup()
 ```
 
@@ -357,7 +300,7 @@ kinglet_presence_absence <- kinglet_zero_fill %>%
 
 Create a bar plot to summarize the Presence/Absence data, grouped by `survey_year`.  
 
-```{r}
+```{r kinglet_PA_barplot}
 kinglet_PA_summary_year <- kinglet_presence_absence %>%
   group_by(survey_year, category = ifelse(ObservationCount > 0, "Presence", "Absence")) %>%
   summarise(count = n(), .groups = "drop")
@@ -375,7 +318,7 @@ Now we can explore how Golden-crowned Kinglet presence/absence are related to en
 
 First we will create a box plot for a single covariate.
 
-```{r}
+```{r ndvi_boxplot}
 ggplot(kinglet_presence_absence, aes(x = factor(Presence), y = ndvi, fill = factor(Presence))) +
   geom_boxplot() +
   labs(x = "Presence/Absence", y = "NDVI") +
@@ -385,7 +328,7 @@ ggplot(kinglet_presence_absence, aes(x = factor(Presence), y = ndvi, fill = fact
 
 Or you can create a boxplot of multiple covariates using the pivot_longer function.
 
-```{r}
+```{r covariate_boxplots}
 
 # Reshape data for plotting multiple covariates
 kinglet_presence_absence_long <- pivot_longer(kinglet_presence_absence, cols = c("elevation", "ed", "pland_needleleaf", "pland_broadleaf", "pland_shrubland", "ndvi"),  names_to = "Covariate", values_to = "Value")
@@ -401,10 +344,9 @@ ggplot(kinglet_presence_absence_long, aes(x = factor(Presence), y = Value, fill 
 
 ```
 
-Users may wish to explore these data using simple statistics, like logisitic regression, and create response curves showing the relationship between covariates and the probability of a species being present.
+Users may wish to explore these data using simple statistics, like logistic regression, and create response curves showing the relationship between covariates and the probability of a species being present.
 
-```{r}
-
+```{r logistic_regression_curve}
 # Fit logistic regression model
 model <- glm(Presence ~ ed + elevation + ndvi + pland_broadleaf + pland_needleleaf + pland_shrubland,
             data = kinglet_presence_absence, family = binomial)
@@ -431,56 +373,6 @@ plot(covar_range, pred_probs, type = "l",
 ```
 As edge density increase, the probability of a Golden Crown Kinglet increase slightly. Users can explore these relationships for other environmental covariates.  
 
-
-###DELETE###
-<!-- Summarize the presence/absence data by `point_id`. -->
-
-<!-- ```{r} -->
-<!-- kinglet_PA_summary <- kinglet_presence_absence %>% -->
-<!--   group_by(point_id) %>% -->
-<!--   summarise( -->
-<!--     total_presence = sum(Presence),  # Total presence -->
-<!--     total_absence = sum(1 - Presence),  # Total absence -->
-<!--     .groups = "drop" -->
-<!--   ) %>% -->
-<!--   pivot_longer(cols = c(total_presence, total_absence),  -->
-<!--                names_to = "category",  -->
-<!--                values_to = "count") -->
-<!-- ``` -->
-
-<!-- View the summarized Presence/Absence table. -->
-
-<!-- ```{r} -->
-<!-- print(kinglet_PA_summary) -->
-<!-- ``` -->
-
-<!-- Pivot the data for plotting. ###I don't think this code chunk is working or needed### -->
-
-<!-- <!-- ```{r} --> -->
-<!-- <!-- kinglet_PA_summary_long <- kinglet_PA_summary %>% --> -->
-<!-- <!--   pivot_longer(cols = c(total_presence, total_absence),  --> -->
-<!-- <!--                names_to = "category",  --> -->
-<!-- <!--                values_to = "count") --> -->
-<!-- <!-- ``` --> -->
-
-
-<!-- Create a bar plot representing Presence/Absence per `point_id`. -->
-
-<!-- ```{r} -->
-<!-- ggplot(kinglet_PA_summary_long, aes(x = as.factor(point_id), y = count, fill = category)) + -->
-<!--   geom_col(position = "dodge") +  # Grouped bars -->
-<!--   scale_fill_manual(values = c("total_presence" = "darkgreen", "total_absence" = "lightgray"), -->
-<!--                   labels = c("Absence", "Presence"), -->
-<!--                   name = "Observation Type") + -->
-<!--   labs(title = "Golden-crowned Kinglet Site-Level Presence/Absence Plot", -->
-<!--        x = "Survey Location (point_id)", -->
-<!--        y = "Number of Observations") + -->
-<!--   theme_minimal() + -->
-<!--   theme(axis.text.x = element_blank(),  # Hide x-axis labels -->
-<!--         axis.ticks.x = element_blank(), -->
-<!--         legend.position = "right") -->
-<!-- ``` -->
-
 \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
-Congratulations! You completed Chapter 7 - Summary Tools. In this chapter, you successfully summarized and visualized environmental data, biodiversity counts, and presence/absence data using various plotting techniques . If you'd like to explore some Additional Resources based on previous Spatial Data chapters, the [Raster Tools](Additional%20Resources%20-%20Raster%20Tools.Rmd) article is also available.
+Congratulations! You completed Chapter 7 - Summary Tools. In this chapter, you successfully summarized and visualized environmental data, biodiversity counts, and presence/absence data using various plotting techniques. If you'd like to explore some Additional Resources based on previous Spatial Data chapters, the [Raster Tools](Additional%20Resources%20-%20Raster%20Tools.Rmd) article is also available.
