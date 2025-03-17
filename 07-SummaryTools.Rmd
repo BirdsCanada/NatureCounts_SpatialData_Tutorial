@@ -23,7 +23,7 @@ By the end of **Chapter 7 - Spatial Summary Tools**, users will know how to:
 
 -   Explore variable relationships and data distribution: [Diagnostics Plots](#7.2DiagnosticPlots)
 -   Show the relative abundance (number of individuals) of a species in a community: [Species Rank Plots](#7.3SpeciesRank)
--   Explore the relationship of species richness with each environmental variable: [Regression Plots](#7.4Regression)
+-   Explore the relationship of species richness with environmental variables: [Regression Plots](#7.4Regression)
 -   Visualize species-specific distributions: [Presence/Absence Plots](#7.5PresenceAbsence)
 
 Load the required packages:
